@@ -49,9 +49,11 @@ module spi_fe (
    assign sclk_neg_edge = sclk_samples[2] & ~sclk_samples[1];     //negedge detect 
    
 
-   always @(posedge clk) begin //sclk sampling
+   always @(posedge clk) begin //sampling
       sclk_samples[2:1] <= sclk_samples[1:0];
       sclk_samples[0] <= sclk;
+      if(sclk_neg_edge)
+	ss_sample <= ss;
    end 
 
 
