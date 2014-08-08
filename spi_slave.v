@@ -1,17 +1,15 @@
-module spi slave(
+`include "spi-defines.v"
+
+module spi_slave(
 	input 				clk,
 	input				rst,
 	//spi slave signals
 	input 				sclk,
 	input				ss,
 	input				mosi,
-	output				miso,
+	output				miso
 
-	//signals used in reg_bank
-	input		[`DATA_W-1:0] 	data_in,
-	output reg	[`DATA_W-1:0] 	data_out,
-	output		[`ADDR_W-1:0] 	address,
-	output 				we
+
 );
 	//signals between spi_fe and spi_protocol
 	wire 				ss_pos_edge;
@@ -19,6 +17,11 @@ module spi slave(
 	wire 		[`DATA_W-1:0] 	data_fe_in;
 	wire 		[`DATA_W-1:0] 	data_fe_out;
 
+	//signals used in reg_bank
+	wire		[`DATA_W-1:0] 	data_in;
+	wire 		[`DATA_W-1:0] 	data_out;
+	wire		[`ADDR_W-1:0] 	address;
+	wire 				we;
 
 	spi_fe spi_fe (
 	       	.clk(clk),
@@ -47,4 +50,12 @@ module spi slave(
 		.we(we)
 	);
 
+	   register_bank  register_bank (
+				 .clk (clk),
+				 .rst (rst),
+				 .wr (we),
+				 .address (address),
+				 .data_in (data_out),
+				 .data_out (data_in)
+				 );
 endmodule

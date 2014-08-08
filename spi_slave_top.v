@@ -7,7 +7,7 @@ module spi slave top(
 	input				mosi,
 	output				miso,
 
-    input ext_req,
+   /* input ext_req,
     input ext_rnw,
     input [`CTRL_REGF_ADDR_W-1:0] ext_addr,
     input [`DATA_W-1:0] ext_data_in,
@@ -17,7 +17,7 @@ module spi slave top(
     input int_rnw,
     input [`CTRL_REGF_ADDR_W-1:0] int_addr,
     input [`DATA_W-1:0] int_data_in,
-    output [`DATA_W-1:0] int_data_out
+    output [`DATA_W-1:0] int_data_out*/
 );
 
 	//signals used in reg_bank

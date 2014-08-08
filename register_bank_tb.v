@@ -15,7 +15,7 @@ module register_bank_tb ();
   parameter clk_per= 100;
 
   
-  register_bank  dut(
+  register_bank  uut(
      .clk    (clk),
      .rst    (rst),
      .wr    (wr),
@@ -27,7 +27,7 @@ module register_bank_tb ();
 
   initial begin
      $dumpfile("register_bank.vcd");
-     $dumpvars(0,dut);
+     $dumpvars();
      rst = 1;
      clk = 1;
      wr = 0;
@@ -37,7 +37,7 @@ module register_bank_tb ();
      wr = 1;
 
     for (i=0 ; i<32 ; i=i+1) begin
-        #(clk_per) ;
+        #(clk_per) 
         address <= address + 1;
         data_in <= data_in + 1;
     end
@@ -45,10 +45,10 @@ module register_bank_tb ();
     address <= 5'd0;
     wr = 0;
 
-    #(clk_per*6);
+    #(clk_per*6)
 
     for (i=0 ; i<32 ; i=i+1) begin
-        #(clk_per) ;
+        #(clk_per) 
         address <= address + 1;
         if (i==31) address <= 5'd0;
     end

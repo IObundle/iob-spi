@@ -10,7 +10,7 @@ static int rw_calltf (char *userdata) {
   int value;
   static int sclk, ss, mosi, miso, rnw;
   int i;
-  static int k; 
+  static int k,m; 
   // Obtain a handle to the argument list
   systfref = vpi_handle(vpiSysTfCall, NULL);
   args_iter = vpi_iterate(vpiArgument, systfref);
@@ -32,9 +32,14 @@ static int rw_calltf (char *userdata) {
 		case(1): //mosi
 			vpi_printf("VPI mosi received %2d\n", value);
 			
-			if(sclk==0 && ss==0)
-				mosi=random()%2;
-			else
+			if(sclk==0 && ss==0){
+				if(m==0 || m==10|| m==15 )
+					mosi=1;
+				else
+					mosi=0;
+				
+				m++;
+			}else
 				mosi=value;
 			argval.value.integer=mosi;
 		break;
@@ -45,7 +50,7 @@ static int rw_calltf (char *userdata) {
 				miso=random()%2;
 			else
 				miso=value;
-			argval.value.integer=miso;
+			argval.value.integer=value;
 		break;
 
 		case(3): //ss
@@ -72,6 +77,7 @@ static int rw_calltf (char *userdata) {
 	  }
 	  vpi_put_value(argh, &argval, NULL, vpiNoDelay);
   }
+
   // Cleanup and return
   vpi_free_object(args_iter);
   return 0;
