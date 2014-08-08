@@ -21,7 +21,7 @@
 
 
 //core definitions
-`define LOG_N_REGISTERS 7 // number of configuration registers 
+`define LOG_N_REGISTERS 6 // number of configuration registers 
 
 `define LOG_FREQ 4 //log of frequency in megaherts
 

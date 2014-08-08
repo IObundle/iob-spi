@@ -42,18 +42,22 @@ module spi_fe (
    reg [`DATA_W-1:0] 	      data_rx_reg, data_tx_reg;
  	      
    
-   assign ss_pos_edge = ~ss_sample & ss & ss_neg_edge;     //posedge detect
-   assign ss_neg_edge = ss_sample & ~ss & ss_neg_edge;     //negedge detect 
+   assign ss_pos_edge = ~ss_sample & ss & sclk_neg_edge;     //posedge detect
+   assign ss_neg_edge = ss_sample & ~ss & sclk_neg_edge;     //negedge detect 
    
    assign sclk_pos_edge = ~sclk_samples[2] & sclk_samples[1];     //posedge detect
    assign sclk_neg_edge = sclk_samples[2] & ~sclk_samples[1];     //negedge detect 
    
 
-   always @(posedge clk) begin //sampling
-      sclk_samples[2:1] <= sclk_samples[1:0];
-      sclk_samples[0] <= sclk;
-      if(sclk_neg_edge)
-	ss_sample <= ss;
+   always @(posedge clk, posedge rst) begin //sampling
+      if(rst)
+	  ss_sample <= 1'b1;
+      else begin
+          sclk_samples[2:1] <= sclk_samples[1:0];
+          sclk_samples[0] <= sclk;
+          if(sclk_neg_edge)
+	     ss_sample <= ss;
+      end
    end 
 
 
