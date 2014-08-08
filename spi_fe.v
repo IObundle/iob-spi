@@ -22,7 +22,7 @@ module spi_fe (
 	       input 		    sclk, //serial clock
 	       input 		    ss, // slave select (active low)
 	       input 		    mosi, // MasterOut SlaveIN
-	       output reg		    miso, // MasterIn SlaveOut
+	       output 		    miso, // MasterIn SlaveOut
 
 	       //parallel interface
 	       input [`DATA_W-1:0]  data_in,
@@ -77,6 +77,6 @@ module spi_fe (
 	data_tx_reg[`DATA_W-1:1] <= data_tx_reg[`DATA_W-2:0];
    end
 
-   always @ * miso = data_tx_reg[`DATA_W-1];
+   assign miso = data_tx_reg[`DATA_W-1];
     
 endmodule 

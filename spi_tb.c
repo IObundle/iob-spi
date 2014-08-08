@@ -16,7 +16,7 @@ static int rw_calltf (char *userdata) {
   args_iter = vpi_iterate(vpiArgument, systfref);
 
   // Grab the value of the first argument
-  for(i=0; i<4;i++){
+  for(i=0; i<3;i++){
 	  argh = vpi_scan(args_iter);
 	  argval.format = vpiIntVal;
 	  vpi_get_value(argh, &argval); 
@@ -44,16 +44,16 @@ static int rw_calltf (char *userdata) {
 			argval.value.integer=mosi;
 		break;
 
-		case(2): //miso
+		/*case(2): //miso
 			vpi_printf("VPI miso received %2d\n", value);
 			if(sclk==0 && ss==0)
 				miso=random()%2;
 			else
 				miso=value;
 			argval.value.integer=value;
-		break;
+		break;*/
 
-		case(3): //ss
+		case(2): //ss
 			vpi_printf("VPI ss received %2d\n\n", value);
 			ss=value;
 			if(sclk==0){

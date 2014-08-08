@@ -38,7 +38,7 @@ module spi_tb;
 
       for (i = 0; i < 200; i=i+1) begin
 
-	 $vpi_rw(sclk, mosi, miso, ss);
+	 $vpi_rw(sclk, mosi, ss);
 	 #(sclk_per/2);
               	
       end	
