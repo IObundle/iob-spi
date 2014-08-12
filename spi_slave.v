@@ -1,4 +1,20 @@
+/* ****************************************************************************
+  This Source Code Form is subject to the terms of the
+  Open Hardware Description License, v. 1.0. If a copy
+  of the OHDL was not distributed with this file, You
+  can obtain one at http://juliusbaxter.net/ohdl/ohdl.txt
+
+  Description: SPI slave
+
+   Copyright (C) 2014 Authors
+
+  Author(s): 	Jose T. de Sousa <jose.t.de.sousa@gmail.com>
+		Guilherme Luz <gui_luz_93@hotmail.com>
+
+***************************************************************************** */
+
 `include "spi-defines.v"
+`timescale 1ns / 1ps
 
 module spi_slave(
 	input 				clk,
@@ -7,7 +23,12 @@ module spi_slave(
 	input 				sclk,
 	input				ss,
 	input				mosi,
-	output				miso
+	output				miso,
+	//signals used in reg_bank
+	input		[`DATA_W-1:0] 	data_in,
+	output	[`DATA_W-1:0] 	data_out,
+	output		[`ADDR_W-1:0] 	address,
+	output 				we
 
 
 );
@@ -17,11 +38,6 @@ module spi_slave(
 	wire 		[`DATA_W-1:0] 	data_fe_in;
 	wire 		[`DATA_W-1:0] 	data_fe_out;
 
-	//signals used in reg_bank
-	wire		[`DATA_W-1:0] 	data_in;
-	wire 		[`DATA_W-1:0] 	data_out;
-	wire		[`ADDR_W-1:0] 	address;
-	wire 				we;
 
 	spi_fe spi_fe (
 	       	.clk(clk),
@@ -50,12 +66,5 @@ module spi_slave(
 		.we(we)
 	);
 
-	   register_bank  register_bank (
-				 .clk (clk),
-				 .rst (rst),
-				 .wr (we),
-				 .address (address),
-				 .data_in (data_out),
-				 .data_out (data_in)
-				 );
+
 endmodule

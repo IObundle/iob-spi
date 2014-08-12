@@ -14,6 +14,7 @@
 ***************************************************************************** */
 
 `include "spi-defines.v"
+`timescale 1ns / 1ps
 
 module spi_fe (
 	       input 		    clk,
@@ -38,6 +39,7 @@ module spi_fe (
    reg [2:0] 		      sclk_samples;
    
    wire 		      sclk_pos_edge;
+   wire 		      sclk_neg_edge;
 
    reg [`DATA_W-1:0] 	      data_rx_reg, data_tx_reg;
  	      
