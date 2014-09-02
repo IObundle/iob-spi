@@ -48,7 +48,7 @@ module spi_protocol (
 							if(ss_pos_edge) begin
 								state <=	2'b01;
 								address <= data_fe_in[`ADDR_W-1:0];
-                                rnw <= data_fe_in[`ADDR_W+1];
+                                rnw <= data_fe_in[`ADDR_W];
 							end
 					end
 					2'b01: begin //read config word						
