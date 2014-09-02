@@ -32,7 +32,6 @@ module spi_fe (
 	       output 		    ss_neg_edge
 		  );
 
-   wire 		      sclk;
 
 
    reg 			      ss_sample;

@@ -1,7 +1,7 @@
 NET "clk" TNM_NET = "clk_grp";
 TIMESPEC "TS_clk" = PERIOD "clk_grp" 10 ns HIGH 50%;
 
-NET "sclk_in" CLOCK_DEDICATED_ROUTE = FALSE;
+NET "sclk" CLOCK_DEDICATED_ROUTE = FALSE;
 
 #NET  AUDIO_BIT_CLK        LOC="AF18";  # Bank 4, Vcco=3.3V, No DCI    
 #NET  AUDIO_SDATA_IN       LOC="AE18";  # Bank 4, Vcco=3.3V, No DCI    
@@ -244,11 +244,11 @@ NET  rst_led           LOC="AE24";  # Bank 21, Vcco=1.8V, DCI using 49.9 ohm res
 NET  rst            LOC="U8";    # Bank 18, Vcco=3.3V, No DCI     GPIO_SW_N
 #NET  GPIO_SW_S            LOC="V8";    # Bank 18, Vcco=3.3V, No DCI
 #NET  GPIO_SW_W            LOC="AJ7";   # Bank 18, Vcco=3.3V, No DCI
-NET  HDR1_2               LOC="H33";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
+NET  mosi               LOC="H33";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
 NET  miso               LOC="F34";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
-NET  sclk_in               LOC="H34";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
-NET  ss               LOC="G33";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
-NET  mosi              LOC="G32";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
+NET  ss               LOC="H34";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
+NET  sclk               LOC="G33";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
+#NET  HDR1_10              LOC="G32";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
 #NET  HDR1_12              LOC="H32";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
 #NET  HDR1_14              LOC="J32";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20
 #NET  HDR1_16              LOC="J34";   # Bank 11, Vcco=2.5V or 3.3V user selectable by J20

@@ -12,7 +12,7 @@ module register_bank (
   output wire [`DATA_WIDTH-1:0] data_out    
 );
 
-reg [7:0] my_bank [127:0];
+reg [`DATA_WIDTH-1:0] my_bank [2**`LOG_N_REGISTERS-1:0];
 integer i;
 
 genvar j;
