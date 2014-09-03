@@ -69,8 +69,8 @@ module spi_top_tb();
       i = 15;
       ss = 1;
       
-      addr = 7'b1010101;
-      data = 8'hFA;
+      addr = 4'b0101;
+      data = 32'hFAFAFAFA;
       wr = 1'b0;      
       mosi <= wr;  
             
@@ -91,8 +91,8 @@ module spi_top_tb();
 	 
 	 
       /*SECOND WORD WRITE*/
-      addr = 7'b0101010;
-      data = 8'h2F;
+      addr = 4'b1010;
+      data = 32'h2F2F2F2F;
       wr = 1'b0;      
       #(sclk_per)
       mosi <= wr;
@@ -109,8 +109,8 @@ module spi_top_tb();
 	 #(sclk_per) ss = 1;
 
       /*FIRST WORD READ*/
-      addr = 7'b1010101;
-      data = 8'h00;
+      addr = 4'b0101;
+      data = 32'h00000000;
       wr = 1'b1;
       #(sclk_per)
       mosi <= wr;
@@ -128,8 +128,8 @@ module spi_top_tb();
 
 
       /*THIRD WORD WRITE*/
-      addr = 7'b1101011;
-      data = 8'hAA;
+      addr = 4'b1011;
+      data = 32'hAAAAAAAA;
       wr = 1'b0;      
       #(sclk_per)
       mosi <= wr;
@@ -146,8 +146,8 @@ module spi_top_tb();
 	 #(sclk_per) ss = 1;
       
       /*SECOND WORD READ*/
-      addr = 7'b0101010;
-      data = 8'h00;
+      addr = 4'b1010;
+      data = 32'h00000000;
       wr = 1'b1;
       #(sclk_per)
       mosi <= wr;
