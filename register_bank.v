@@ -39,7 +39,7 @@ always @ (posedge clk, posedge rst) begin
       my_bank[address] <= data_in;
    end
 
-end 
+end
 
 
 endmodule
