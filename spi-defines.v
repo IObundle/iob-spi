@@ -13,5 +13,5 @@
 
 ***************************************************************************** */
 
-`define DATA_W 32
-`define ADDR_W 4
+`define DATA_W 32 //number of data bits
+`define ADDR_W 4  //number of address bits
