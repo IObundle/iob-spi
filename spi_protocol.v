@@ -14,7 +14,7 @@
 
 ***************************************************************************** */
 
-`include "spi-defines.v"
+`include "rcntlr_defines.v"
 `timescale 1ns / 1ps
 
 module spi_protocol (

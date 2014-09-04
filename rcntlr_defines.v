@@ -21,11 +21,11 @@
 
 
 //core definitions
-`define LOG_N_REGISTERS 4 // number of configuration registers 
+`define ADDR_W 4 // number of configuration registers 
 
 `define LOG_FREQ 4 //log of frequency in megaherts
 
-`define DATA_WIDTH 32
+`define DATA_W 32
 
 `define PKTCNTW 6
 `define MAXPKTSIZE 39

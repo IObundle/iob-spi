@@ -1,27 +1,6 @@
 
 `timescale 1ns / 1ps
 `include "rcntlr_defines.v"
-////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer:
-//
-// Create Date:   11:20:07 09/03/2014
-// Design Name:   spi_top
-// Module Name:   C:/Dokandre/School_Stuff/Estagio_INESC/spi/spi_top_tb.v
-// Project Name:  SPI_Slave
-// Target Device:  
-// Tool versions:  
-// Description: 
-//
-// Verilog Test Fixture created by ISE for module: spi_top
-//
-// Dependencies:
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-////////////////////////////////////////////////////////////////////////////////
 
 module spi_top_tb();
 
@@ -38,9 +17,9 @@ module spi_top_tb();
 	
 
 	
-   reg [`DATA_WIDTH-1:0] data;
-   reg [`LOG_N_REGISTERS+`DATA_WIDTH-1:0] data_out;
-   reg [`LOG_N_REGISTERS-1:0]  addr;
+   reg [`DATA_W-1:0] data;
+   reg [`ADDR_W+`DATA_W-1:0] data_out;
+   reg [`ADDR_W-1:0]  addr;
    reg 	      wr;
    
    integer    i;
@@ -78,13 +57,13 @@ module spi_top_tb();
 		ss = 0;
 
       /*FIRST WORD WRITE*/ 
-      for (i=`LOG_N_REGISTERS-1;i>=0;i=i-1) begin
+      for (i=`ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_WIDTH-1];
-		for(i=`DATA_WIDTH-2;i>=0; i=i-1) begin
+		mosi <= data[`DATA_W-1];
+		for(i=`DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
@@ -97,13 +76,13 @@ module spi_top_tb();
       #(sclk_per)
       mosi <= wr;
 		ss = 0;
-      for (i=`LOG_N_REGISTERS-1;i>=0;i=i-1) begin
+      for (i=`ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_WIDTH-1];
-		for(i=`DATA_WIDTH-2;i>=0; i=i-1) begin
+		mosi <= data[`DATA_W-1];
+		for(i=`DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
@@ -115,13 +94,13 @@ module spi_top_tb();
       #(sclk_per)
       mosi <= wr;
 		ss = 0;
-      for (i=`LOG_N_REGISTERS-1;i>=0;i=i-1) begin
+      for (i=`ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_WIDTH-1];
-		for(i=`DATA_WIDTH-2;i>=0; i=i-1) begin
+		mosi <= data[`DATA_W-1];
+		for(i=`DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
@@ -134,13 +113,13 @@ module spi_top_tb();
       #(sclk_per)
       mosi <= wr;
 		ss = 0;
-      for (i=`LOG_N_REGISTERS-1;i>=0;i=i-1) begin
+      for (i=`ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_WIDTH-1];
-		for(i=`DATA_WIDTH-2;i>=0; i=i-1) begin
+		mosi <= data[`DATA_W-1];
+		for(i=`DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
@@ -152,13 +131,13 @@ module spi_top_tb();
       #(sclk_per)
       mosi <= wr;
 		ss = 0;
-      for (i=`LOG_N_REGISTERS-1;i>=0;i=i-1) begin
+      for (i=`ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_WIDTH-1];
-		for(i=`DATA_WIDTH-2;i>=0; i=i-1) begin
+		mosi <= data[`DATA_W-1];
+		for(i=`DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
