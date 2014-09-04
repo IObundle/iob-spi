@@ -1,24 +1,4 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date:    15:48:07 09/02/2014 
-// Design Name: 
-// Module Name:    spi_top 
-// Project Name: 
-// Target Devices: 
-// Tool versions: 
-// Description: 
-//
-// Dependencies: 
-//
-// Revision: 
-// Revision 0.01 - File Created
-// Additional Comments: 
-//
-//////////////////////////////////////////////////////////////////////////////////
-`include "spi-defines.v"
+`include "rcntlr_defines.v"
 `timescale 1ns / 1ps
 module spi_top(
     input mosi,
