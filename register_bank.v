@@ -8,23 +8,23 @@ module register_bank (
   input             wr,
   input    [`LOG_N_REGISTERS-1:0] address,     
   input    [`DATA_WIDTH-1:0] data_in,   
-  output [2**`LOG_N_REGISTERS * `DATA_WIDTH - 1 :0] chip_out,    
+//  output [2**`LOG_N_REGISTERS * `DATA_WIDTH - 1 :0] chip_out,    
   output wire [`DATA_WIDTH-1:0] data_out    
 );
 
-reg [7:0] my_bank [127:0];
+reg [`DATA_WIDTH-1:0] my_bank [2**`LOG_N_REGISTERS-1:0];
 integer i;
 
 genvar j;
 
-generate
+//generate
 
-   for (j= 0; j < 2**`LOG_N_REGISTERS; j=j+1) begin : chip_out_gen
-	assign chip_out[(j+1) * `DATA_WIDTH - 1 -: `DATA_WIDTH] = my_bank[j][`DATA_WIDTH -1 -: `DATA_WIDTH ];
+//   for (j= 0; j < 2**`LOG_N_REGISTERS; j=j+1) begin : chip_out_gen
+//	assign chip_out[(j+1) * `DATA_WIDTH - 1 -: `DATA_WIDTH] = my_bank[j][`DATA_WIDTH -1 -: `DATA_WIDTH ];
 
-   end
+//   end
 
-endgenerate 
+//endgenerate 
 
 assign data_out = my_bank[address];
 
@@ -39,7 +39,7 @@ always @ (posedge clk, posedge rst) begin
       my_bank[address] <= data_in;
    end
 
-end 
+end
 
 
 endmodule

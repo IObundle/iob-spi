@@ -38,7 +38,7 @@ module spi_protocol (
 	always @(posedge clk, posedge rst) begin //states
 			if(rst) begin
 				state <= 2'b0;
-				rnw <= 1'b0;
+				rnw <= 1'b1;
                 we <= 1'b0;
                 address <= 0;
 				
@@ -48,7 +48,7 @@ module spi_protocol (
 							if(ss_pos_edge) begin
 								state <=	2'b01;
 								address <= data_fe_in[`ADDR_W-1:0];
-                                rnw <= data_fe_in[`ADDR_W+1];
+                                rnw <= data_fe_in[`ADDR_W];
 							end
 					end
 					2'b01: begin //read config word						
@@ -56,8 +56,8 @@ module spi_protocol (
 									state <= 2'b10;
 									if(~rnw) begin
 										data_out[`DATA_W-1 :0] <= data_fe_in[`DATA_W-1 :0];	
-                                        we <= 1'b1;
-                                    end								
+                              we <= 1'b1;
+                           end								
 								end 
 					end
 					2'b10: begin //data read /data write
