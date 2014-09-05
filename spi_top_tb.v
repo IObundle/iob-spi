@@ -18,7 +18,6 @@ module spi_top_tb();
 
 	
    reg [`DATA_W-1:0] data;
-   reg [`ADDR_W+`DATA_W-1:0] data_out;
    reg [`ADDR_W-1:0]  addr;
    reg 	      wr;
    
@@ -53,7 +52,7 @@ module spi_top_tb();
       wr = 1'b0;      
       mosi <= wr;  
             
-      #(sclk_per*1.5 + 1) rst = 0;
+      #(sclk_per + 1) rst = 0;
 		ss = 0;
 
       /*FIRST WORD WRITE*/ 

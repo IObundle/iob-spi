@@ -32,7 +32,7 @@ assign data_out = my_bank[address];
 always @ (posedge clk, posedge rst) begin
    if (rst == 1'b1) begin
       for (i=0 ; i< 2**`ADDR_W ; i=i+1) begin
-        my_bank[i] <= `DATA_W'b0;
+        my_bank[i] <= `ADDR_W'b0;
       end
     end
    else if (wr == 1'b1) begin

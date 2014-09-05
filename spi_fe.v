@@ -63,7 +63,7 @@ module spi_fe (
 
 
    always @(posedge clk) begin //read from mosi
-      if(~ss & sclk_neg_edge) begin
+      if(~ss & sclk_pos_edge) begin
 	 data_rx_reg <= {data_rx_reg[`DATA_W-2:0], mosi};
       end
    end
@@ -73,9 +73,10 @@ module spi_fe (
    
    always @ (posedge clk) begin //write to miso
       if (ss) begin
-	data_tx_reg <= 1;
+	data_tx_reg <= 0;
+	data_tx_reg[`DATA_W-1]<= 1'b1;
 		end
-      else if (sclk_pos_edge & ~ss_neg_edge)
+      else if (sclk_neg_edge & ~ss_neg_edge)
 	data_tx_reg <= {data_tx_reg[0],data_tx_reg[`DATA_W-1:1]};
    end
 
