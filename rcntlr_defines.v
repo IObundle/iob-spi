@@ -21,11 +21,11 @@
 
 
 //core definitions
-`define ADDR_W 4 // number of configuration registers 
+`define SPI_ADDR_W 4 // number of configuration registers 
 
 //`define LOG_FREQ 4 //log of frequency in megaherts
 
-`define DATA_W 32
+`define SPI_DATA_W 32
 /*
 `define PKTCNTW 6
 `define MAXPKTSIZE 39

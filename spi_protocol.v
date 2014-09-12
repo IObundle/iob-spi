@@ -20,13 +20,13 @@
 module spi_protocol (
 	input 						clk,
 	input						rst,
-	input 		[`DATA_W-1:0]	data_fe_in ,
-	input		[`DATA_W-1:0]	data_in,
+	input 		[`SPI_DATA_W-1:0]	data_fe_in ,
+	input		[`SPI_DATA_W-1:0]	data_in,
 	input 						ss_pos_edge,
 	input 						ss_neg_edge,
-	output reg 	[`DATA_W-1:0]	data_fe_out,
-	output reg	[`DATA_W-1:0]	data_out,
-	output reg	[`ADDR_W-1:0]	address,
+	output reg 	[`SPI_DATA_W-1:0]	data_fe_out,
+	output reg	[`SPI_DATA_W-1:0]	data_out,
+	output reg	[`SPI_ADDR_W-1:0]	address,
 	output reg					we
 );
 
@@ -40,7 +40,7 @@ module spi_protocol (
 			if(rst) begin
 				state <= 2'b0;
 				rnw <= 1'b1;
-				data_fe_out <= `DATA_W'b0;
+				data_fe_out <= `SPI_DATA_W'b0;
             we <= 1'b0;
             address <= 0;
 				
@@ -49,15 +49,15 @@ module spi_protocol (
 					2'b00: begin //idle
 							if(ss_pos_edge) begin
 								state <=	2'b01;
-								address <= data_fe_in[`ADDR_W-1:0];
-                        rnw <= data_fe_in[`ADDR_W];
+								address <= data_fe_in[`SPI_ADDR_W-1:0];
+                        rnw <= data_fe_in[`SPI_ADDR_W];
 							end
 					end
 					2'b01: begin //read config word			
 								if(rnw)
 									data_fe_out <= data_in;			
 								if(ss_pos_edge) begin
-									data_fe_out <= `DATA_W'b0;
+									data_fe_out <= `SPI_DATA_W'b0;
 									state <= 2'b10;
 									if(~rnw) begin
 										data_out <= data_fe_in;	

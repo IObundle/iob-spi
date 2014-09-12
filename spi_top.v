@@ -10,9 +10,9 @@ module spi_top(
 	 output rst_led
     );
 	 
-	wire		[`DATA_W-1:0] 	data_in;
-	wire	[`DATA_W-1:0] 	data_out;
-	wire		[`ADDR_W-1:0] 	address;
+	wire		[`SPI_DATA_W-1:0] 	data_in;
+	wire	[`SPI_DATA_W-1:0] 	data_out;
+	wire		[`SPI_ADDR_W-1:0] 	address;
 	wire 				we;
 	 
 	 assign rst_led = rst;

@@ -7,10 +7,10 @@ module register_bank_tb ();
   reg		    clk;
   reg  	            rst;
   reg                wr;
-  reg      [`ADDR_W-1:0]address;     
-  reg      [`DATA_W-1:0]data_in;   
-  wire    [2**`ADDR_W * `DATA_W - 1 :0]chip_out;    
-  wire    [`DATA_W-1:0] data_out;
+  reg      [`SPI_ADDR_W-1:0]address;     
+  reg      [`SPI_DATA_W-1:0]data_in;   
+  wire    [2**`SPI_ADDR_W * `SPI_DATA_W - 1 :0]chip_out;    
+  wire    [`SPI_DATA_W-1:0] data_out;
   integer i;
   parameter clk_per= 100;
 
@@ -19,10 +19,10 @@ module register_bank_tb ();
      .clk    (clk),
      .rst    (rst),
      .wr    (wr),
-     .address (address[`ADDR_W-1:0]),
-     .data_in (data_in[`DATA_W-1:0]),
-     .chip_out (chip_out[2**`ADDR_W * `DATA_W - 1 :0]),
-     .data_out (data_out[`DATA_W-1:0])
+     .address (address[`SPI_ADDR_W-1:0]),
+     .data_in (data_in[`SPI_DATA_W-1:0]),
+     .chip_out (chip_out[2**`SPI_ADDR_W * `SPI_DATA_W - 1 :0]),
+     .data_out (data_out[`SPI_DATA_W-1:0])
 );
 
   initial begin

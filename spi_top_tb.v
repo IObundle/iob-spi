@@ -17,8 +17,8 @@ module spi_top_tb();
 	
 
 	
-   reg [`DATA_W-1:0] data;
-   reg [`ADDR_W-1:0]  addr;
+   reg [`SPI_DATA_W-1:0] data;
+   reg [`SPI_ADDR_W-1:0]  addr;
    reg 	      wr;
    
    integer    i;
@@ -56,13 +56,13 @@ module spi_top_tb();
 		ss = 0;
 
       /*FIRST WORD WRITE*/ 
-      for (i=`ADDR_W-1;i>=0;i=i-1) begin
+      for (i=`SPI_ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_W-1];
-		for(i=`DATA_W-2;i>=0; i=i-1) begin
+		mosi <= data[`SPI_DATA_W-1];
+		for(i=`SPI_DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
@@ -75,13 +75,13 @@ module spi_top_tb();
       #(sclk_per)
       mosi <= wr;
 		ss = 0;
-      for (i=`ADDR_W-1;i>=0;i=i-1) begin
+      for (i=`SPI_ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_W-1];
-		for(i=`DATA_W-2;i>=0; i=i-1) begin
+		mosi <= data[`SPI_DATA_W-1];
+		for(i=`SPI_DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
@@ -93,13 +93,13 @@ module spi_top_tb();
       #(sclk_per)
       mosi <= wr;
 		ss = 0;
-      for (i=`ADDR_W-1;i>=0;i=i-1) begin
+      for (i=`SPI_ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_W-1];
-		for(i=`DATA_W-2;i>=0; i=i-1) begin
+		mosi <= data[`SPI_DATA_W-1];
+		for(i=`SPI_DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
@@ -112,13 +112,13 @@ module spi_top_tb();
       #(sclk_per)
       mosi <= wr;
 		ss = 0;
-      for (i=`ADDR_W-1;i>=0;i=i-1) begin
+      for (i=`SPI_ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_W-1];
-		for(i=`DATA_W-2;i>=0; i=i-1) begin
+		mosi <= data[`SPI_DATA_W-1];
+		for(i=`SPI_DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;
@@ -130,13 +130,13 @@ module spi_top_tb();
       #(sclk_per)
       mosi <= wr;
 		ss = 0;
-      for (i=`ADDR_W-1;i>=0;i=i-1) begin
+      for (i=`SPI_ADDR_W-1;i>=0;i=i-1) begin
 	 #(sclk_per) mosi <= addr[i];
       end
 	 #(sclk_per) ss = 1;
 	 #(2*sclk_per) ss = 0;
-		mosi <= data[`DATA_W-1];
-		for(i=`DATA_W-2;i>=0; i=i-1) begin
+		mosi <= data[`SPI_DATA_W-1];
+		for(i=`SPI_DATA_W-2;i>=0; i=i-1) begin
 			#(sclk_per) mosi <= data[i];
 		end
 	 #(sclk_per) ss = 1;

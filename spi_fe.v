@@ -26,8 +26,8 @@ module spi_fe (
 	       output 		    miso, // MasterIn SlaveOut
 
 	       //parallel interface
-	       input [`DATA_W-1:0]  data_in,
-	       output [`DATA_W-1:0] data_out,
+	       input [`SPI_DATA_W-1:0]  data_in,
+	       output [`SPI_DATA_W-1:0] data_out,
 	       output 		    ss_pos_edge,
 	       output 		    ss_neg_edge
 		  );
@@ -40,7 +40,7 @@ module spi_fe (
    wire 		      sclk_pos_edge;
    wire 		      sclk_neg_edge;
 
-   reg [`DATA_W-1:0] 	      data_rx_reg, data_tx_reg;
+   reg [`SPI_DATA_W-1:0] 	      data_rx_reg, data_tx_reg;
  	      
    
    assign ss_pos_edge = ~ss_sample & ss & sclk_neg_edge;     //posedge detect
@@ -64,7 +64,7 @@ module spi_fe (
 
    always @(posedge clk) begin //read from mosi
       if(~ss & sclk_pos_edge) begin
-	 data_rx_reg <= {data_rx_reg[`DATA_W-2:0], mosi};
+	 data_rx_reg <= {data_rx_reg[`SPI_DATA_W-2:0], mosi};
       end
    end
 
@@ -74,10 +74,10 @@ module spi_fe (
    always @ (posedge clk) begin //write to miso
       if (ss) begin
 	data_tx_reg <= 0;
-	data_tx_reg[`DATA_W-1]<= 1'b1;
+	data_tx_reg[`SPI_DATA_W-1]<= 1'b1;
 		end
       else if (sclk_neg_edge & ~ss_neg_edge)
-	data_tx_reg <= {data_tx_reg[0],data_tx_reg[`DATA_W-1:1]};
+	data_tx_reg <= {data_tx_reg[0],data_tx_reg[`SPI_DATA_W-1:1]};
    end
 
    assign miso = |(data_tx_reg & data_in);

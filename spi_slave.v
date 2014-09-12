@@ -25,9 +25,9 @@ module spi_slave(
 	input				mosi,
 	output				miso,
 	//signals used in reg_bank
-	input		[`DATA_W-1:0] 	data_in,
-	output	[`DATA_W-1:0] 	data_out,
-	output		[`ADDR_W-1:0] 	address,
+	input		[`SPI_DATA_W-1:0] 	data_in,
+	output	[`SPI_DATA_W-1:0] 	data_out,
+	output		[`SPI_ADDR_W-1:0] 	address,
 	output 				we
 
 
@@ -35,8 +35,8 @@ module spi_slave(
 	//signals between spi_fe and spi_protocol
 	wire 				ss_pos_edge;
 	wire 				ss_neg_edge;
-	wire 		[`DATA_W-1:0] 	data_fe_in;
-	wire 		[`DATA_W-1:0] 	data_fe_out;
+	wire 		[`SPI_DATA_W-1:0] 	data_fe_in;
+	wire 		[`SPI_DATA_W-1:0] 	data_fe_out;
 
 
 	spi_fe spi_fe (
