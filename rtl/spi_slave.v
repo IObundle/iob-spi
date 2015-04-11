@@ -13,7 +13,7 @@
 
 ***************************************************************************** */
 
-`include "rcntlr_defines.v"
+`include "spi_defines.v"
 `timescale 1ns / 1ps
 
 module spi_slave(

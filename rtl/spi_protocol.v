@@ -16,7 +16,7 @@
 
 `timescale 1ns / 1ps
 
-`include "rcntlr_defines.v"
+`include "spi_defines.v"
 
 module spi_protocol (
 		     input 			  clk,

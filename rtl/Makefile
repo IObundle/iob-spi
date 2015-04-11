@@ -1,13 +1,10 @@
-all: spi_tb.o spi_tb.vpi spi_tb.vvp
-	vvp -M. -m spi_tb spi_tb.vvp
+all : spi_master
+	./spi_master
 
-spi_tb.o spi_tb.vpi: spi_tb.c
-	iverilog-vpi spi_tb.c
-
-spi_tb.vvp: spi_tb.v
-	iverilog -o spi_tb.vvp spi_tb.v spi_slave.v spi_fe.v spi_protocol.v register_bank.v 
+spi_master : spi_master.v spi_master_tb.v
+	iverilog -o spi_master spi_fe.v spi_protocol.v spi_slave.v register_bank.v spi_master.v spi_master_tb.v
 
 clean: 
-	rm spi_tb.vvp spi_tb.vpi spi_tb.o *~ spi_tb.vcd
+	rm spi_master *~ *.vcd
 
-.PHONY: all clean
+.PHONY: clean
