@@ -1,0 +1,44 @@
+[*]
+[*] GTKWave Analyzer v3.3.61 (w)1999-2014 BSI
+[*] Wed Nov 14 20:30:19 2018
+[*]
+[dumpfile] "/home/jsousa/sandbox/spi/rtl/spi_tb.vcd"
+[dumpfile_mtime] "Wed Nov 14 20:27:42 2018"
+[dumpfile_size] 105753
+[savefile] "/home/jsousa/sandbox/spi/rtl/waves.gtkw"
+[timestart] 0
+[size] 2560 1376
+[pos] -39 -39
+*-21.000854 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 229
+[signals_width] 158
+[sst_expanded] 1
+[sst_vpaned_height] 409
+@28
+spi_master_tb.clk
+spi_master_tb.m_address[2:0]
+@22
+spi_master_tb.m_data_in[31:0]
+spi_master_tb.m_data_out[31:0]
+@28
+spi_master_tb.m_interrupt
+spi_master_tb.m_sel
+spi_master_tb.m_we
+spi_master_tb.rst
+spi_master_tb.s_address[2:0]
+@22
+spi_master_tb.s_data_in[31:0]
+spi_master_tb.s_data_out[31:0]
+@28
+spi_master_tb.s_interrupt
+spi_master_tb.s_sel
+spi_master_tb.s_we
+@201
+-SPI
+@28
+spi_master_tb.sclk
+spi_master_tb.ss
+spi_master_tb.miso
+spi_master_tb.mosi
+[pattern_trace] 1
+[pattern_trace] 0

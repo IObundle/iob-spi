@@ -12,6 +12,6 @@ spi_slave: spi_slave.v
 	$(VC) $(VFLAGS) spi_slave.v
 
 clean: 
-	@rm a.out *~ *.vcd
+	@rm -f a.out *~ *.vcd
 
 .PHONY: clean spi_master spi_slave
