@@ -1,10 +1,17 @@
-all : spi_master
-	./spi_master
+VC = iverilog
+VFLAGS = -W all -I.  -g2005-sv
 
-spi_master : spi_master.v spi_master_tb.v
-	iverilog -o spi_master spi_fe.v spi_protocol.v spi_slave.v register_bank.v spi_master.v spi_master_tb.v
+spi: 
+	$(VC) $(VFLAGS) spi_master.v spi_slave.v spi_tb.v	
+	./a.out
+
+spi_master: spi_master.v 
+	$(VC) $(VFLAGS) spi_master.v
+
+spi_slave: spi_slave.v 
+	$(VC) $(VFLAGS) spi_slave.v
 
 clean: 
-	rm spi_master *~ *.vcd
+	@rm a.out *~ *.vcd
 
-.PHONY: clean
+.PHONY: clean spi_master spi_slave

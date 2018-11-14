@@ -1,23 +1,15 @@
 /* ****************************************************************************
-  This Source Code Form is subject to the terms of the
-  Open Hardware Description License, v. 1.0. If a copy
-  of the OHDL was not distributed with this file, You
-  can obtain one at http://juliusbaxter.net/ohdl/ohdl.txt
 
   Description: SPI master
 
-   Copyright (C) 2014 Authors
-
-  Author(s): 	Jose T. de Sousa <jose.t.de.sousa@gmail.com>
+  Copyright (C) 2018 IObundle, Lda  All rights reserved
 
 ***************************************************************************** */
 
 /*
  Usage:
- 
-    Clock: sclk should be 5x slower than slave's system clock.
- 
-    Reset: the reset pulse must overlap sclk falling edge.
+  
+ WRITE
  
     Read: give an address, make rnw=1, issue a start pulse. Result will be at 
     data_out when ready=1 again.
@@ -26,99 +18,143 @@
  
  */
 
-`include "spi_defines.v"
 `timescale 1ns / 1ps
-
-`define IDLE 2'b00
-`define SEND_ADDR 2'b01
-`define SEND_PAUSE 2'b10
-`define ST_DATA 2'b11
+`include "spi_defines.v"
 
 module spi_master(
+	input 			     clk,
 	input 			     rst,
-	//spi  signals
+		  
+	//SPI INTERFACE
 	input 			     sclk,
 	output reg 		     ss,
 	output 			     mosi,
 	input 			     miso,
-	//signals used in parallel interface
-	input [`SPI_DATA_W-1:0]      data_in,
-	output reg [`SPI_DATA_W-1:0] data_out,
-	input [`SPI_ADDR_W-1:0]      address,
-	input 			     rnw,
-	input 			     start,
-	output reg 		     ready
+		  
+	//CONTROL INTERFACE
+	input [`DATA_W-1:0]      data_in,
+	output reg [`DATA_W-1:0] data_out,
+	input [`ADDR_W-1:0] 	     address,
+	input 			     we,
+	input 			     sel
 );
 
+   //SPI SIDE SIGNALS
 
-   reg [4:0]				 systimer;
-   reg [1:0] 				 state;
+   reg [5:0]				 spi_counter;
+   reg 					 spi_rst, spi_rst_1, spi_rst_2;
+   reg 					 spi_start;
+   reg 					 spi_start_1;
+   reg [`DATA_W-1:0] 			 spi_data_rcvd;
+   reg [`DATA_W-1:0] 			 spi_data2send;
+
+   //CONTROL SIDE SIGNALS
+
+   reg 					 ctr_start;
+   reg 					 ctr_ready;
+   reg [`DATA_W-1:0] 			 ctr_data_rcvd;
+   reg [`DATA_W-1:0] 			 ctr_data2send;
+   reg               			 ctr_data2send_en;
+   reg [7:0] 				 start_counter;
+   reg  				 start_counter_en;
+   reg 					 ctr_ss;
+   reg 					 ctr_ss_1;
+  
+
+   //SPI SIDE LOGIC
+
+   //reset sync
+   always @ (negedge sclk, negedge ~rst)
+     if(~rst) begin
+	spi_rst <= 1'b1;
+	spi_rst_1 <= 1'b1;
+	spi_rst_1 <= 1'b1;
+     end else begin
+	spi_rst <= spi_rst_2;
+	spi_rst_2 <= spi_rst_1;
+	spi_rst_1 <= 1'b0;
+     end
    
-   reg [`SPI_DATA_W-1:0] 		 dreg;
+   //counter
+   always @ (negedge sclk)
+      if(spi_start)
+	spi_counter <= 6'd0;
+      else if (spi_counter != 5'd31)
+	spi_counter <= spi_counter + 1'b1;
+
+   // spi slave select
+   assign ss = (spi_counter < 6'd16 || spi_counter > 6'd47)? 1'b1 : 1'b0;
+
+   //spi start
+   always @ (negedge sclk) begin 
+     spi_start_1 <= ctr_start;
+     spi_start <= spi_start_1;
+   end
+   
+   //data to send register
+   always @ (negedge sclk)
+     if(~ss)
+       spi_data2send <= ctr_data2send>>1;
+     else
+       spi_data2send <= ctr_data2send;
+   // spi master output slave input
+   assign mosi = spi_data2send[0];
+   
+   //data received register
+   always @ (negedge sclk)
+     if(~ss) begin 
+	spi_data_rcvd[`DATA_W-1] <= miso;
+	spi_data_rcvd[`DATA_W-2:0] <= spi_data_rcvd[`DATA_W-1:1];
+     end
+   
+   // spi read input data
+   always @ (posedge sclk)
+     if(~ss)
+       spi_data_rcvd[31] <= miso;
    
 
-   assign mosi = dreg[`SPI_DATA_W-1];
-   
+   //CONTROLLER SIDE LOGIC
 
-   //send address and data
-   always @ (negedge sclk) begin
-
-      if (rst == 1'b1) begin
-	 state <= `IDLE;
-	 ready <= 1'b1;
-	 ss <= 1'b1;
-      end
-      else begin
-	 systimer <= systimer- 1'b1;
-	 if(systimer == 5'd0)
-	   systimer <= 5'd0;
-	 
-	 dreg <= dreg << 1;
-	 
-	 case(state)
-	   `IDLE: begin
-	      ss <= 1'b1;
-	      systimer <=5'd`SPI_ADDR_W;
-	      dreg[`SPI_DATA_W - 1] <= rnw;
-	      dreg[`SPI_DATA_W-2 -: `SPI_ADDR_W] <= address;
-	      if(start == 1'b1) begin
-		 state <= `SEND_ADDR;
-		 ss <= 1'b0;
-		 ready <= 1'b0;
-	      end
-	   end
-	   `SEND_ADDR: begin
-	      if(systimer == 5'd0) begin
-		 ss <= 1'b1;
-		 state <= `SEND_PAUSE;
-	      end 
-	   end 
-	   `SEND_PAUSE: begin
-	      state <= `ST_DATA;
-	      systimer <= 32'd`SPI_DATA_W - 1'b1;
-	      dreg <= data_in;
-	      ss <= 1'b0;	 	      
-	   end
-	   `ST_DATA: begin
-	      if(systimer == 5'd0) begin
-		 ss <= 1'b1;
-		 ready <= 1'b1;
-		 state <= `IDLE;
-	      end 
-	   end 
-	 endcase
-      end // else: !if(rst == 1'b1)
-      
-   end 
-
-
-   //sample input data
-   always @ (posedge sclk) begin
-      if(state == `ST_DATA) begin
-	 data_out[0] <= miso;
-	 data_out[31:1] <= data_out[30:0];
-      end
+   // resample ready signal from SPI side
+   always @(posedge clk) begin
+      ctr_ready_1 <= ss;
+      ctr_ready <= ctr_ready_1;
    end
 
+   // address decoder
+   always @* begin
+      ctr_start = 1'b0;
+      data_out = `DATA_W'd0;
+      ctr_data2send_en = 1'b0;
+      case (address)
+	`START_REG: ctr_start = sel&we;                       //start register
+	`READY_REG: data_out = { {`DATA_W-1{1'b0}}, ctr_ready}; //ready register
+	`IN_REG: ctr_data2send_en = sel&we;
+	`OUT_REG: data_out = ctr_data_rcvd;
+	default:;
+      endcase
+   end
+
+   // write data to send in respective register 
+   always @ (posedge clk)
+     if(ctr_data2send_en)
+       ctr_data2send <= data_in;
+   
+   //start signal for SPI side
+   assign spi_start = ~start_counter[7];
+   
+   always @ (posedge clk)
+     if(ctr_start)
+       start_counter <= 8'd0;
+     else if(start_counter != 8'hFF)
+       start_counter <= start_counter + 1'b1;
+
+  // ctr_ready sync 
+   always @ (posedge clk) begin
+      ctr_ss_1 <= ss;
+      ctr_ss <= ctr_ss_1;
+      ctr_ready <= ctr_ss;
+   end
+ 
    
 endmodule

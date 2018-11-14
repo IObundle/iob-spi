@@ -1,2 +1,10 @@
-//`define SPI_ADDR_W 6 // number of configuration registers 
-`define SPI_DATA_W 32 // data_width
+`define ADDR_W 3 // data_width
+`define DATA_W 32 // data_width
+
+
+// MEMORY MAP
+
+`define START_REG 0
+`define READY_REG 0
+`define IN_REG 0
+`define OUT_REG 0
