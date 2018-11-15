@@ -29,7 +29,6 @@ module spi_slave(
 );
 
    //SPI SIDE SIGNALS
-   reg 				 spi_rst, spi_rst_1, spi_rst_2;
    reg [`SPI_DATA_W-1:0] 	 spi_data_rcvd;
    reg [`SPI_DATA_W-1:0] 	 spi_data2send;
 
@@ -45,25 +44,14 @@ module spi_slave(
    //
    //SPI SIDE LOGIC
    //
-   
-   //reset sync
-   always @ (negedge sclk, negedge ~rst)
-     if(~rst) begin
-	spi_rst <= 1'b1;
-	spi_rst_1 <= 1'b1;
-	spi_rst_1 <= 1'b1;
-     end else begin
-	spi_rst <= spi_rst_2;
-	spi_rst_2 <= spi_rst_1;
-	spi_rst_1 <= 1'b0;
-     end
 
    //data to send shift register
    always @ (negedge sclk)
-     if(~ss)
-       spi_data2send <= ctr_data2send>>1;
-     else
+     if(ss)
        spi_data2send <= ctr_data2send;
+     else
+       spi_data2send <= spi_data2send>>1;
+   
    // spi master input slave output
    assign miso = spi_data2send[0];
    
@@ -108,20 +96,31 @@ module spi_slave(
        ctr_data2send <= data_in;
    
    //
-   // RECEIVE
+   // CONTROL
    //
 
-   // ctr_ready sync 
-   always @ (posedge clk) begin
-      ctr_ss <= ss;
-      ctr_ss <= ctr_ss_1;
-      if(interrupt)
-	ctr_ready <= 1'b1;
-      else if(ctr_clr_ready)
-	ctr_ready <= 1'b0;
+   // resample slave select
+   always @ (posedge clk, posedge rst) begin
+      if(rst) begin	 
+	 ctr_ss_1 <= 1'b1;
+	 ctr_ss <= 1'b1;
+      end else begin
+	 ctr_ss_1 <= ss;
+	 ctr_ss <= ctr_ss_1;
+      end
    end
+
+   // ctr_ready
+   always @ (posedge clk, posedge rst)
+     if (rst)
+       ctr_ready <= 1'b0;
+     else if (ctr_clr_ready)
+       ctr_ready <= 1'b0;
+     else if (interrupt)
+       ctr_ready <= 1'b1;
+
      
    // interrupt 
-   assign interrupt = ctr_ss & ~ctr_ss_1;
+   assign interrupt = ~ctr_ss & ctr_ss_1;
    
 endmodule

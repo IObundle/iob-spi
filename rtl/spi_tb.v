@@ -34,23 +34,23 @@ module spi_master_tb;
 
 
    // Instantiate the Units Under Test (UUTs)
-   spi_master uut (
-		   .clk			(clk),
-		   .rst			(rst),
-
-		    // SPI 
-		   .ss			(ss),
-		   .mosi		(mosi),
-		   .sclk		(sclk),
-		   .miso		(miso),
-
-		    // CONTROL
-		   .data_in		(m_data_in[`SPI_DATA_W-1:0]),
-		   .address		(m_address[`SPI_ADDR_W-1:0]),
-		   .data_out		(m_data_out[`SPI_DATA_W-1:0]),
-		   .interrupt		(m_interrupt),
-		   .we			(m_we),
-		   .sel			(m_sel));
+   spi_master spi_m (
+		     .clk			(clk),
+		     .rst			(rst),
+		     
+		     // SPI 
+		     .ss			(ss),
+		     .mosi		(mosi),
+		     .sclk		(sclk),
+		     .miso		(miso),
+		     
+		     // CONTROL
+		     .data_in		(m_data_in[`SPI_DATA_W-1:0]),
+		     .address		(m_address[`SPI_ADDR_W-1:0]),
+		     .data_out		(m_data_out[`SPI_DATA_W-1:0]),
+		     .interrupt		(m_interrupt),
+		     .we			(m_we),
+		     .sel			(m_sel));
    
    spi_slave spi_s (
 		    .clk		(clk),
@@ -61,7 +61,7 @@ module spi_master_tb;
 		    .sclk		(sclk),
 		    .ss			(ss),
 		    .mosi		(mosi),
-
+		    
 		    // CONTROL
 		    .data_out		(s_data_out[`SPI_DATA_W-1:0]),
 		    .interrupt		(s_interrupt),
@@ -93,7 +93,9 @@ module spi_master_tb;
    //
 
    initial begin
-
+      m_sel = 0;
+      m_we = 0;
+      
       // POLLING TEST 
 
       // write command word to send
@@ -113,8 +115,10 @@ module spi_master_tb;
 
       // wait spi master to finish
       #clk_per m_address = `SPI_READY;
+      m_sel = 1;
       while(m_data_out == 0) 
 	#clk_per m_address = `SPI_READY;
+      m_sel = 0;
 
       // start spi master later to read response word
       #(1000*clk_per) m_address = `SPI_START;
@@ -125,15 +129,19 @@ module spi_master_tb;
       
       // wait spi master to finish
       #clk_per m_address = `SPI_READY;
+      m_sel = 1;
       while(m_data_out == 0) 
 	#clk_per m_address = `SPI_READY;
+      m_sel = 0;
 
 
       // read word in RX register
       #clk_per m_address = `SPI_RX;
-
-      if(m_data_out != 32'hF0F0F0F)
+      m_sel = 1;
+      #clk_per;
+      if(m_data_out != 32'hF0F0F0F0)
 	$display("Polling test failed");
+      m_sel = 0;
       
 
       // INTERRUPT TEST 
@@ -155,9 +163,10 @@ module spi_master_tb;
 
       // wait spi master to finish
       #clk_per m_address = `SPI_READY;
+      m_sel = 1;
       while(m_interrupt == 0) 
 	#clk_per m_address = `SPI_READY;
-
+      m_sel = 0;
 
       // start spi master much later to read response word
       #(1000*clk_per) m_address = `SPI_START;
@@ -168,15 +177,19 @@ module spi_master_tb;
       
       // wait spi master to finish
       #clk_per m_address = `SPI_READY;
+      m_sel = 1;
       while(m_data_out == 0) 
 	#clk_per m_address = `SPI_READY;
+      m_sel = 0;
 
 
       // read word in RX register
       #clk_per m_address = `SPI_RX;
-
-      if(m_data_out != 32'hF0F0F0F)
+      m_sel = 1;
+      #clk_per;
+      if(m_data_out != 32'hF0F0F0F0)
 	$display("Interrupt test failed");
+      m_sel = 0;
 
       $finish;
       
@@ -188,7 +201,9 @@ module spi_master_tb;
    //
    initial begin
 
-
+      s_sel = 0;
+      s_we = 0;
+      
       // POLLING TEST 
 
       // wait spi slave to become ready after receiving data
@@ -196,17 +211,18 @@ module spi_master_tb;
       s_address = `SPI_READY;
       while(s_data_out == 0) 
 	#clk_per s_address = `SPI_READY;
+      s_sel = 0;
 
       #clk_per s_address = `SPI_RX;
       #clk_per s_data_in = s_data_out;
-      #clk_per s_sel = 0;
             
       // write response word to send
-      #(20*clk_per+1) m_address = `SPI_TX;
+      #(20*clk_per+1) s_address = `SPI_TX;
       s_sel = 1;
       s_we = 1;
-      #clk_per m_we = 0;
+      #clk_per s_we = 0;
       s_sel = 0;
+      s_we = 0;
 
       
       // INTERRUPT TEST 
@@ -215,15 +231,16 @@ module spi_master_tb;
       #clk_per s_sel = 1;
       while(s_interrupt == 0) 
 	#clk_per s_address = `SPI_RX;
-      #clk_per s_sel = 0;
+      s_sel = 0;
 
       // write response word to send
-      #(20*clk_per+1) m_address = `SPI_TX;
+      #(20*clk_per+1) s_address = `SPI_TX;
       s_data_in = s_data_out;
       s_sel = 1;
       s_we = 1;
-      #clk_per m_we = 0;
+      #clk_per s_we = 0;
       s_sel = 0;
+      s_we = 1;
 
    end
 

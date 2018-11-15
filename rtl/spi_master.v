@@ -30,7 +30,7 @@ module spi_master(
 		  
 	//SPI INTERFACE
 	input 			     sclk,
-	output reg 		     ss,
+	output 			     ss,
 	output 			     mosi,
 	input 			     miso,
 		  
@@ -45,20 +45,19 @@ module spi_master(
 
    //SPI SIDE SIGNALS
 
-   reg 				     spi_rst, spi_rst_1, spi_rst_2;
+   reg 				     spi_nrst, spi_nrst_1, spi_nrst_2;
    reg [5:0] 			     spi_counter;
-   reg 				     spi_start;
+   wire 			     spi_start;
    reg [`SPI_DATA_W-1:0] 	     spi_data_rcvd;
    reg [`SPI_DATA_W-1:0] 	     spi_data2send;
 
    //CONTROL SIDE SIGNALS
 
    reg 				     ctr_start;
+   wire 			     ctr_nrst;
    reg 				     ctr_ready;
    reg [`SPI_DATA_W-1:0] 	     ctr_data2send;
    reg 				     ctr_data2send_en;
-   reg [6:0] 			     start_counter;
-   reg 				     start_counter_en;
    reg 				     ctr_ss, ctr_ss_1;
    
 
@@ -69,16 +68,18 @@ module spi_master(
    //
    //
 
+   assign ctr_nrst = ~(rst | ctr_start);
+   
    //reset sync
-   always @ (negedge sclk, negedge ~rst)
-     if(~rst) begin
-	spi_rst <= 1'b1;
-	spi_rst_1 <= 1'b1;
-	spi_rst_1 <= 1'b1;
+   always @ (negedge sclk, negedge ctr_nrst)
+     if(~ctr_nrst) begin
+	spi_nrst <= 1'b0;
+	spi_nrst_1 <= 1'b0;
+	spi_nrst_2 <= 1'b0;
      end else begin
-	spi_rst <= spi_rst_2;
-	spi_rst_2 <= spi_rst_1;
-	spi_rst_1 <= 1'b0;
+	spi_nrst <= spi_nrst_2;
+	spi_nrst_2 <= spi_nrst_1;
+	spi_nrst_1 <= 1'b1;
      end
    
    //
@@ -87,11 +88,10 @@ module spi_master(
 
    //start signal for SPI side (false path, no sync needed) 
    //and counter
-   always @ (negedge sclk) begin
-      spi_start <= ~start_counter[6];
-      if(spi_start)
+   always @ (negedge sclk, negedge spi_nrst) begin
+      if (~spi_nrst)
 	spi_counter <= 6'd0;
-      else if (spi_counter != 5'd31)
+      else if (spi_counter != 6'd63)
 	spi_counter <= spi_counter + 1'b1;
    end
    
@@ -105,7 +105,7 @@ module spi_master(
    //data to send register
    always @ (negedge sclk)
      if(~ss)
-       spi_data2send <= ctr_data2send>>1;
+       spi_data2send <= spi_data2send>>1;
      else
        spi_data2send <= ctr_data2send; // false path, no sync needed
    // spi master output slave input
@@ -139,21 +139,12 @@ module spi_master(
       ctr_data2send_en = 1'b0;
       case (address)
 	`SPI_START: ctr_start = sel&we;                             
-	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ss};    //false path, no sync needed)
+	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready};    //false path, no sync needed)
 	`SPI_TX: ctr_data2send_en = sel&we;                         
 	`SPI_RX: data_out = spi_data_rcvd;                          //false path, no sync needed)
 	default:;
       endcase
    end
- 
-   //
-   //  STARTP UP
-   //
-   always @ (posedge clk)
-     if(ctr_start)
-       start_counter <= 8'd0;
-     else if(start_counter != 8'hFF)
-       start_counter <= start_counter + 1'b1;
  
 
    //
@@ -167,16 +158,29 @@ module spi_master(
 
    
    //
-   // RECEIVE
+   // CONTROL
    //
 
-   // ctr_ready sync 
-   always @ (posedge clk) begin
-      ctr_ss_1 <= ss;
-      ctr_ss <= ctr_ss_1;
+   // resample slave select
+   always @ (posedge clk, posedge rst) begin
+      if(rst) begin	 
+	 ctr_ss_1 <= 1'b1;
+	 ctr_ss <= 1'b1;
+      end else begin
+	 ctr_ss_1 <= ss;
+	 ctr_ss <= ctr_ss_1;
+      end
    end
-     
+
+   // ctr_ready
+   always @ (posedge clk)
+     if(ctr_start)
+       ctr_ready <= 1'b0;
+     else if(interrupt)
+       ctr_ready <= 1'b1;
+
+   
    // interrupt 
-   assign interrupt = ctr_ss & ~ctr_ss_1;
+   assign interrupt = ~ctr_ss & ctr_ss_1;
    
 endmodule
