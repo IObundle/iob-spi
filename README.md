@@ -38,4 +38,4 @@
 
 ## How do I instantiate the cores ##
 
-Just refer to rtl/spi_tb.v and you'll see Master and Slave instantiated
+Just refer to file rtl/spi_top.v and you'll see Master and Slave instantiated
