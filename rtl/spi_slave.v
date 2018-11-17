@@ -74,6 +74,7 @@ module spi_slave(
       data_out = `SPI_DATA_W'd0;
       ctr_data2send_en = 1'b0;
       ctr_clr_ready = 1'b0;
+      ctr_interrupt_en_en = 1'b0;
       
       case (address)
 	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&we;

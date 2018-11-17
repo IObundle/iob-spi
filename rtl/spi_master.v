@@ -124,6 +124,7 @@ module spi_master(
       ctr_start = 1'b0;
       data_out = `SPI_DATA_W'd0;
       ctr_data2send_en = 1'b0;
+      ctr_interrupt_en_en = 1'b0;
       case (address)
 	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&we;
 	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready};    //false path, no sync needed)
