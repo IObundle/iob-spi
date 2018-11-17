@@ -23,17 +23,20 @@
 
 ### Master ###
 
+	0. Write 1 to the SPI_INTRRPT_EN address to enable Interrupt if you wish
     1. Write the word to be transmitted to the SPI_TX address
     2. Poll the SPI_READY address until it is 1 or wait for Interrupt from Master
-    3. Read the SPI_RX address to get the word received from Slave
+    3. Read the SPI_RX address to get the word received from Slave. This action will reset Interrupt.
+	4. Write 0 to the SPI_INTRRPT_EN address to disable Interrupt if you wish
 
 
 ### Slave ###
 
     1. Poll the SPI_READY address until it is 1 or wait for Interrupt from Master
-    2. Read the SPI_RX address to get the word received from Master
+    2. Read the SPI_RX address to get the word received from Master. This action will reset Interrupt.
     3. Write the response word to the SPI_TX address to be sent to Master on the next SPI cycle
-  
+	4. Write 0 to the SPI_INTRRPT_EN address to disable Interrupt if you wish
+ 
 
 
 ## How do I instantiate the cores ##
