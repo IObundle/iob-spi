@@ -1,19 +1,17 @@
 [*]
-[*] GTKWave Analyzer v3.3.61 (w)1999-2014 BSI
-[*] Thu Nov 15 01:19:16 2018
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Sat Nov 17 15:07:04 2018
 [*]
-[dumpfile] "/home/jsousa/sandbox/spi/rtl/spi_tb.vcd"
-[dumpfile_mtime] "Thu Nov 15 01:14:30 2018"
-[dumpfile_size] 109935
+[dumpfile] "(null)"
 [savefile] "/home/jsousa/sandbox/spi/rtl/waves.gtkw"
-[timestart] 7570000
+[timestart] 0
 [size] 1368 719
 [pos] -1 -1
-*-21.734739 12900000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-22.818277 14138800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] spi_master_tb.
 [sst_width] 287
 [signals_width] 264
-[sst_expanded] 1
+[sst_expanded] 0
 [sst_vpaned_height] 107
 @28
 spi_master_tb.rst
@@ -25,17 +23,21 @@ spi_master_tb.spi_m.ctr_nrst
 spi_master_tb.spi_m.ctr_ss
 spi_master_tb.spi_m.ctr_ss_1
 spi_master_tb.spi_m.ctr_start
+spi_master_tb.spi_m.ctr_ready
 @22
 spi_master_tb.spi_m.ctr_data2send[31:0]
 @28
 spi_master_tb.m_sel
 spi_master_tb.m_we
-@29
+spi_master_tb.spi_m.clk
 spi_master_tb.m_address[1:0]
 @22
 spi_master_tb.m_data_in[31:0]
 spi_master_tb.m_data_out[31:0]
 @28
+spi_master_tb.spi_m.ctr_start
+spi_master_tb.spi_m.ctr_ready
+spi_master_tb.spi_m.ctr_interrupt_en
 spi_master_tb.m_interrupt
 spi_master_tb.spi_m.spi_nrst
 @22
@@ -53,9 +55,13 @@ spi_master_tb.s_data_in[31:0]
 spi_master_tb.s_data_out[31:0]
 @28
 spi_master_tb.s_interrupt
+spi_master_tb.spi_s.ctr_interrupt_en
+@29
 spi_master_tb.s_sel
+@28
 spi_master_tb.s_we
 spi_master_tb.spi_s.ctr_ready
+spi_master_tb.spi_s.ctr_ready_clr
 @22
 spi_master_tb.spi_s.ctr_data2send[31:0]
 spi_master_tb.spi_s.spi_data2send[31:0]
