@@ -40,7 +40,7 @@ module spi_master(
 	input [`SPI_ADDR_W-1:0]      address,
 	input 			     we,
 	input 			     sel,
-	output 			     interrupt
+	output reg 		     interrupt
 );
 
    //SPI SIDE SIGNALS
@@ -59,7 +59,8 @@ module spi_master(
    reg [`SPI_DATA_W-1:0] 	     ctr_data2send;
    reg 				     ctr_data2send_en;
    reg 				     ctr_ss, ctr_ss_1;
-   
+   reg 				     ctr_interrupt_en;
+   reg 				     ctr_interrupt_en_en;
 
 
    //
@@ -138,9 +139,12 @@ module spi_master(
       data_out = `SPI_DATA_W'd0;
       ctr_data2send_en = 1'b0;
       case (address)
-	`SPI_START: ctr_start = sel&we;                             
+	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&we;
 	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready};    //false path, no sync needed)
-	`SPI_TX: ctr_data2send_en = sel&we;                         
+	`SPI_TX: begin
+	   ctr_start = sel&we;
+	   ctr_data2send_en = sel&we;
+	end
 	`SPI_RX: data_out = spi_data_rcvd;                          //false path, no sync needed)
 	default:;
       endcase
@@ -151,7 +155,7 @@ module spi_master(
    // SEND
    //
    
-   // write data to send 
+   // WRITE DATA TO SEND 
    always @ (posedge clk)
      if(ctr_data2send_en)
        ctr_data2send <= data_in;
@@ -161,7 +165,7 @@ module spi_master(
    // CONTROL
    //
 
-   // resample slave select
+   // RESAMPLE SLAVE SELECT
    always @ (posedge clk, posedge rst) begin
       if(rst) begin	 
 	 ctr_ss_1 <= 1'b1;
@@ -172,15 +176,27 @@ module spi_master(
       end
    end
 
-   // ctr_ready
+   // CTR_READY
    always @ (posedge clk)
      if(ctr_start)
        ctr_ready <= 1'b0;
-     else if(interrupt)
+     else if(~ctr_ss & ctr_ss_1)
        ctr_ready <= 1'b1;
 
    
-   // interrupt 
-   assign interrupt = ~ctr_ss & ctr_ss_1;
+   // INTERRUPT
+
+   always @ (posedge clk)
+     if(rst)
+       ctr_interrupt_en <= 1'b0;
+     else if(ctr_interrupt_en_en)
+       ctr_interrupt_en <= data_in[0];
+
+   always @ (posedge clk) begin
+      if (ctr_interrupt_en)
+	interrupt <= ~ctr_ss & ctr_ss_1;
+      else
+	interrupt <= 1'b0;
+   end
    
 endmodule

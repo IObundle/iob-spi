@@ -34,7 +34,7 @@ module spi_slave(
 	input [`SPI_ADDR_W-1:0]      address,
 	input 			     we,
 	input 			     sel,
-	output 			     interrupt
+	output reg 		     interrupt
 );
 
    //SPI SIDE SIGNALS
@@ -48,6 +48,8 @@ module spi_slave(
    reg 				 ctr_ss_1;
    reg [`SPI_DATA_W-1:0] 	 ctr_data2send;
    reg 				 ctr_data2send_en;
+   reg 				 ctr_interrupt_en;
+   reg 				 ctr_interrupt_en_en;
 
 
    //
@@ -65,7 +67,7 @@ module spi_slave(
    assign miso = spi_data2send[0];
    
    //data received shift register
-   always @ (negedge sclk)
+   always @ (posedge sclk)
      if(~ss) begin 
 	spi_data_rcvd[`SPI_DATA_W-1] <= mosi;
 	spi_data_rcvd[`SPI_DATA_W-2:0] <= spi_data_rcvd[`SPI_DATA_W-1:1];
@@ -83,6 +85,7 @@ module spi_slave(
       ctr_clr_ready = 1'b0;
       
       case (address)
+	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&we;
 	`SPI_READY: begin
 	   data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready}; 
 	end
@@ -119,17 +122,28 @@ module spi_slave(
       end
    end
 
-   // ctr_ready
+   // CTR_READY
    always @ (posedge clk, posedge rst)
      if (rst)
        ctr_ready <= 1'b0;
      else if (ctr_clr_ready)
        ctr_ready <= 1'b0;
-     else if (interrupt)
+     else if (~ctr_ss & ctr_ss_1)
        ctr_ready <= 1'b1;
 
      
-   // interrupt 
-   assign interrupt = ~ctr_ss & ctr_ss_1;
-   
+   // INTERRUPT 
+    always @ (posedge clk)
+      if(rst)
+	ctr_interrupt_en <= 1'b0;
+      else if(ctr_interrupt_en_en)
+	ctr_interrupt_en <= data_in[0];
+
+   always @ (posedge clk) begin
+      if (ctr_interrupt_en)
+	interrupt <= ~ctr_ss & ctr_ss_1;
+      else
+	interrupt <= 1'b0;
+   end
+  
 endmodule

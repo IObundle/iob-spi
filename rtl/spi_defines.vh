@@ -3,8 +3,7 @@
 
 
 // MEMORY MAP
-
-`define SPI_START 0
+`define SPI_INTRRPT_EN 0
 `define SPI_READY 1
 `define SPI_TX 2
 `define SPI_RX 3
