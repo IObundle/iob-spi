@@ -32,6 +32,7 @@
 
 ### Slave ###
 
+	0. Write 1 to the SPI_INTRRPT_EN address to enable Interrupt if you wish
     1. Poll the SPI_READY address until it is 1 or wait for Interrupt from Master
     2. Read the SPI_RX address to get the word received from Master. This action will reset Interrupt.
     3. Write the response word to the SPI_TX address to be sent to Master on the next SPI cycle
