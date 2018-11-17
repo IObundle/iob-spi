@@ -133,8 +133,10 @@ module spi_master_tb;
       #clk_per m_address = `SPI_RX;
       m_sel = 1;
       #clk_per;
-      if(m_data_out != 32'hF0F0F0F0)
-	$display("Polling test failed");
+      if(m_data_out != 32'hF0F0F0F0) begin
+	 $display("Polling test failed");
+	 $finish;
+      end
       m_sel = 0;
       
 
@@ -201,10 +203,13 @@ module spi_master_tb;
       #clk_per m_address = `SPI_RX;
       m_sel = 1;
       #clk_per;
-      if(m_data_out != 32'hABABABAB)
-	$display("Interrupt test failed");
+      if(m_data_out != 32'hABABABAB) begin 
+	 $display("Interrupt test failed");
+	 $finish;
+      end
       m_sel = 0;
 
+      $display("Test Passed!");
       $finish;
       
    end

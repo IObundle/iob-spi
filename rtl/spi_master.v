@@ -6,20 +6,6 @@
 
 ***************************************************************************** */
 
-/*
- Usage:
-
- READ
-    1. Write anything to the SPI_START address
-    2. Poll READY until it is one or wait for INTERRUPT
-    3. Read SPI_RX address
-
- WRITE
-    1. Write the word to send to the SPI_TX address
-    2. Write anything to the SPI_START address
-    3. Poll READY until it is 1 or wait for INTERRUPT
-  
- */
 
 `timescale 1ns / 1ps
 `include "spi_defines.vh"

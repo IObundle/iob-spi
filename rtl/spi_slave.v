@@ -6,15 +6,6 @@
 
 ******************************************************************************/
 
-/*
- Usage:
-
-    1. Poll READY until it is one or wait for INTERRUPT
-    2. Read SPI_RX address
-    3. Write the response word to send to the SPI_TX address
-  
- */
-
 `timescale 1ns / 1ps
 `include "spi_defines.vh"
 
