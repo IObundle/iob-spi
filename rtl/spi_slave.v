@@ -36,7 +36,7 @@ module spi_slave(
    reg 				 ctr_ready;
    reg 				 ctr_ready_clr;
    reg 				 ctr_ss;
-   reg 				 ctr_ss_1;
+   reg 				 ctr_ss_1, ctr_ss_2;
    reg [`SPI_DATA_W-1:0] 	 ctr_data2send;
    reg 				 ctr_data2send_en;
    reg 				 ctr_interrupt_en;
@@ -106,10 +106,12 @@ module spi_slave(
    always @ (posedge clk, posedge rst) begin
       if(rst) begin	 
 	 ctr_ss_1 <= 1'b1;
+	 ctr_ss_2 <= 1'b1;
 	 ctr_ss <= 1'b1;
       end else begin
 	 ctr_ss_1 <= ss;
-	 ctr_ss <= ctr_ss_1;
+	 ctr_ss_2 <= ctr_ss_1;
+	 ctr_ss <= ctr_ss_2;
       end
    end
 
@@ -119,7 +121,7 @@ module spi_slave(
        ctr_ready <= 1'b0;
      else if (ctr_ready_clr)
        ctr_ready <= 1'b0;
-     else if (~ctr_ss & ctr_ss_1)
+     else if (~ctr_ss & ctr_ss_2)
        ctr_ready <= 1'b1;
 
      
