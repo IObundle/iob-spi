@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 `include "spi_defines.vh"
 
-module spi_master_tb;
+module spi_tb;
 
    parameter sclk_per= 39;
    parameter clk_per= 10;
