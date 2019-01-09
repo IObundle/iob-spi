@@ -10,14 +10,16 @@ module spi_top (
 		input [`SPI_ADDR_W-1:0]  m_address,
 		input [`SPI_DATA_W-1:0]  m_data_in,
 		input 			 m_sel,
-		input 			 m_we,
+		input 			 m_read,
+		input 			 m_write,
 		output [`SPI_DATA_W-1:0] m_data_out,
 		output 			 m_interrupt,
 
 		//spi slave control
 		input [`SPI_ADDR_W-1:0]  s_address, 
 		input 			 s_sel,
-		input 			 s_we, 
+		input 			 s_read, 
+		input 			 s_write, 
 		output [`SPI_DATA_W-1:0] s_data_out,
 		input [`SPI_DATA_W-1:0]  s_data_in, 
 		output			 s_interrupt
@@ -41,12 +43,14 @@ module spi_top (
 		     .miso		(miso),
 		     
 		     // CONTROL
-		     .data_in		(m_data_in[`SPI_DATA_W-1:0]),
-		     .address		(m_address[`SPI_ADDR_W-1:0]),
-		     .data_out		(m_data_out[`SPI_DATA_W-1:0]),
+		     .data_in		(m_data_in),
+		     .address		(m_address),
+		     .data_out		(m_data_out),
 		     .interrupt		(m_interrupt),
-		     .we		(m_we),
-		     .sel		(m_sel));
+		     .sel		(m_sel),
+		     .read		(m_read),
+		     .write		(m_write)
+                     );
    
    spi_slave spi_s (
 		    .clk		(clk),
@@ -63,8 +67,10 @@ module spi_top (
 		    .interrupt		(s_interrupt),
 		    .data_in		(s_data_in[`SPI_DATA_W-1:0]),
 		    .address		(s_address[`SPI_ADDR_W-1:0]),
-		    .we			(s_we),
-		    .sel		(s_sel));
+		    .sel		(s_sel),
+		    .read		(s_read),
+		    .write		(s_write)
+                    );
 
  
 endmodule

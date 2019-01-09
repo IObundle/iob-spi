@@ -24,21 +24,26 @@ module spi_master(
 	input [`SPI_DATA_W-1:0]      data_in,
 	output reg [`SPI_DATA_W-1:0] data_out,
 	input [`SPI_ADDR_W-1:0]      address,
-	input 			     we,
 	input 			     sel,
+	input 			     read,
+	input 			     write,
 	output 			     interrupt
 );
 
    //SPI SIDE SIGNALS
-   reg 				     spi_nrst, spi_nrst_1, spi_nrst_2;
    reg [5:0] 			     spi_counter;
-   wire 			     spi_start;
+   wire                              spi_start;
+   reg                               spi_start_1;
+   reg                               spi_start_2;
    reg [`SPI_DATA_W-1:0] 	     spi_data_rcvd;
    reg [`SPI_DATA_W-1:0] 	     spi_data2send;
 
+   reg                               spi_nrst;
+   reg                               spi_nrst_1;
+   
+
    //CONTROL SIDE SIGNALS
    reg 				     ctr_start;
-   wire 			     ctr_nrst;
    reg 				     ctr_ready;
    reg 				     ctr_ready_clr;
    reg [`SPI_DATA_W-1:0] 	     ctr_data2send;
@@ -47,6 +52,8 @@ module spi_master(
    reg 				     ctr_interrupt_en;
    reg 				     ctr_interrupt_en_en;
 
+   reg [31:0]                       dummy_reg;
+   reg                              dummy_reg_en;
 
 
    //
@@ -55,20 +62,28 @@ module spi_master(
    //
    //
 
-   assign ctr_nrst = ~(rst | ctr_start);
-   
-   //reset sync
-   always @ (negedge sclk, negedge ctr_nrst)
-     if(~ctr_nrst) begin
+   //spi_nrst
+   always @ (negedge sclk, posedge rst)
+     if(rst) begin
 	spi_nrst <= 1'b0;
 	spi_nrst_1 <= 1'b0;
-	spi_nrst_2 <= 1'b0;
      end else begin
-	spi_nrst <= spi_nrst_2;
-	spi_nrst_2 <= spi_nrst_1;
+	spi_nrst <= spi_nrst_1;
 	spi_nrst_1 <= 1'b1;
      end
    
+   //spi_start
+   always @ (negedge sclk, posedge ctr_start)
+     if(ctr_start) begin
+	spi_start_2 <= 1'b1;
+	spi_start_1 <= 1'b1;
+     end else begin
+	spi_start_2 <= spi_start_1;
+	spi_start_1 <= 1'b0;
+     end
+
+   assign spi_start = spi_nrst & spi_start_2 & (spi_counter == 6'd63);
+
    //
    // START UP
    //
@@ -77,7 +92,9 @@ module spi_master(
    //and counter
    always @ (negedge sclk, negedge spi_nrst) begin
       if (~spi_nrst)
-	spi_counter <= 6'd0;
+	spi_counter <= 6'd63;
+      else if (spi_start)
+	spi_counter <= 6'd0;        
       else if (spi_counter != 6'd63)
 	spi_counter <= spi_counter + 1'b1;
    end
@@ -116,6 +133,12 @@ module spi_master(
    //
    //
    
+   //dummy reg
+   always @(posedge clk)
+     if(rst)
+       dummy_reg <= 32'b0;  
+     else if(dummy_reg_en)
+       dummy_reg <= data_in;
 
    //
    // ADDRESS DECODER
@@ -126,17 +149,23 @@ module spi_master(
       ctr_data2send_en = 1'b0;
       ctr_interrupt_en_en = 1'b0;
       ctr_ready_clr = 1'b0;
+      dummy_reg_en = 0;
+
       case (address)
-	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&we;
-	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready};    //false path, no sync needed)
+	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&write;
+	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready & (spi_counter == 6'd63)};    //false path, no sync needed)
 	`SPI_TX: begin
-	   ctr_start = sel&we;
-	   ctr_data2send_en = sel&we;
+	   ctr_start = sel&write;
+	   ctr_data2send_en = sel&write;
 	end
 	`SPI_RX: begin
 	   data_out = spi_data_rcvd;                          //false path, no sync needed)
-	   ctr_ready_clr = sel&~we;
+	   ctr_ready_clr = sel&read;
 	end
+        `DUMMY_REG: begin
+           data_out = dummy_reg;
+           dummy_reg_en = sel&write;
+        end
 	default:;
       endcase
    end
@@ -147,8 +176,10 @@ module spi_master(
    //
    
    // WRITE DATA TO SEND 
-   always @ (posedge clk)
-     if(ctr_data2send_en)
+   always @ (posedge clk, posedge rst)
+     if(rst)
+       ctr_data2send <= 32'hF0F0F0F0;
+     else if(ctr_data2send_en)
        ctr_data2send <= data_in;
 
    
@@ -170,18 +201,18 @@ module spi_master(
    end
 
    // CTR_READY
-   always @ (posedge clk)
-     if(ctr_start)
+   always @ (posedge clk, posedge rst)
+     if(rst)
        ctr_ready <= 1'b0;
-     else if (ctr_ready_clr)
+     else if(ctr_start | ctr_ready_clr)
        ctr_ready <= 1'b0;
-     else if(~ctr_ss & ctr_ss_2)
+     else if( ~ctr_ss & ctr_ss_2)
        ctr_ready <= 1'b1;
 
    
    // INTERRUPT
 
-   always @ (posedge clk)
+   always @ (posedge clk, posedge rst)
      if(rst)
        ctr_interrupt_en <= 1'b0;
      else if(ctr_interrupt_en_en)

@@ -20,14 +20,16 @@ module spi_tb;
    reg [`SPI_ADDR_W-1:0] m_address;
    reg [`SPI_DATA_W-1:0] m_data_in;
    reg 			 m_sel;
-   reg 			 m_we;
+   reg 			 m_read;
+   reg 			 m_write;
    wire [`SPI_DATA_W-1:0] m_data_out;
    wire 		  m_interrupt;
 
    //spi slave control
    reg [`SPI_ADDR_W-1:0] s_address;		
    reg 			  s_sel;
-   reg 			  s_we;			
+   reg                    s_read;
+   reg 			  s_write;			
    wire [`SPI_DATA_W-1:0] s_data_out;
    reg [`SPI_DATA_W-1:0]  s_data_in; 
    wire 		  s_interrupt;		
@@ -35,11 +37,11 @@ module spi_tb;
 
    // Instantiate the Units Under Test (UUTs)
    spi_master spi_m (
-		     .clk			(clk),
-		     .rst			(rst),
+		     .clk		(clk),
+		     .rst		(rst),
 		     
 		     // SPI 
-		     .ss			(ss),
+		     .ss		(ss),
 		     .mosi		(mosi),
 		     .sclk		(sclk),
 		     .miso		(miso),
@@ -49,8 +51,10 @@ module spi_tb;
 		     .address		(m_address[`SPI_ADDR_W-1:0]),
 		     .data_out		(m_data_out[`SPI_DATA_W-1:0]),
 		     .interrupt		(m_interrupt),
-		     .we			(m_we),
-		     .sel			(m_sel));
+		     .sel		(m_sel),
+		     .read		(m_read),
+		     .write		(m_write)
+                     );
    
    spi_slave spi_s (
 		    .clk		(clk),
@@ -67,8 +71,10 @@ module spi_tb;
 		    .interrupt		(s_interrupt),
 		    .data_in		(s_data_in[`SPI_DATA_W-1:0]),
 		    .address		(s_address[`SPI_ADDR_W-1:0]),
-		    .we			(s_we),
-		    .sel		(s_sel));
+		    .sel		(s_sel),
+		    .read		(s_read),
+		    .write		(s_write)
+                    );
 
  
    // general process  
@@ -94,7 +100,9 @@ module spi_tb;
 
    initial begin
       m_sel = 0;
-      m_we = 0;
+      m_read = 0;
+      m_write = 0;
+
       
       // POLLING TEST 
 
@@ -102,43 +110,55 @@ module spi_tb;
       #(20*clk_per+1) m_address = `SPI_TX;
       m_data_in = 32'hF0F0F0F0;
       m_sel = 1;
-      m_we = 1;
-      #clk_per m_we = 0;
+      m_write = 1;
+      #clk_per m_write = 0;
       m_sel = 0;
 
       // wait spi master to finish
       #clk_per m_address = `SPI_READY;
       m_sel = 1;
+      m_read = 1;
       while(m_data_out == 0) 
 	#clk_per m_address = `SPI_READY;
       m_sel = 0;
+      m_read = 0;
+
+      $display("Poll test, word 1 sent");
+      
 
       // write nop to be sent next
       #(1000*clk_per) m_address = `SPI_TX;
       m_data_in = 32'h0;                
       m_sel = 1;
-      m_we = 1;
-      #clk_per m_we = 0;
+      m_write = 1;
+      #clk_per m_write = 0;
       m_sel = 0;
       
       // poll SPI_READY until word received
       #clk_per m_address = `SPI_READY;
       m_sel = 1;
+      m_read = 1;
       while(m_data_out == 0) 
 	#clk_per m_address = `SPI_READY;
       m_sel = 0;
+      m_read = 0;
+
+      $display("Poll test, word 1 received");
+      
 
 
       // read word, compare with expected and clear ready
       #clk_per m_address = `SPI_RX;
       m_sel = 1;
+      m_read = 1;
       #clk_per;
       if(m_data_out != 32'hF0F0F0F0) begin
 	 $display("Polling test failed");
 	 $finish;
       end
       m_sel = 0;
-      
+      m_read = 0;
+
 
       // INTERRUPT TEST 
 
@@ -146,8 +166,8 @@ module spi_tb;
       #clk_per m_address = `SPI_INTRRPT_EN;
       m_data_in = 32'h1;
       m_sel = 1;
-      m_we = 1;
-      #clk_per m_we = 0;
+      m_write = 1;
+      #clk_per m_write = 0;
       m_sel = 0;
       
 
@@ -155,42 +175,52 @@ module spi_tb;
       #(20*clk_per+1) m_address = `SPI_TX;
       m_data_in = 32'hABABABAB;
       m_sel = 1;
-      m_we = 1;
-      #clk_per m_we = 0;
+      m_write = 1;
+      #clk_per m_write = 0;
       m_sel = 0;
       
 
       // wait interrupt on word sent
       while(~m_interrupt)
 	#clk_per;
+
+      $display("Interrupt test, word 1 sent");
       
+
 
       // read RX register to clear interrupt
       #clk_per m_address = `SPI_RX;
       m_sel = 1;
+      m_read = 1;
       #clk_per m_sel = 0;
+      m_read = 0;
  
       // write nop to be sent next
       #(1000*clk_per) m_address = `SPI_TX;
       m_data_in = 32'h0;                     //send nop
       m_sel = 1;
-      m_we = 1;
-      #clk_per m_we = 0;
+      m_write = 1;
+      #clk_per m_write = 0;
       m_sel = 0;
  
      // wait interrupt on nop sent
       while(~m_interrupt)
 	#clk_per;
 
+      $display("Interrupt test, word 1 received");
+      
+
       // read word in RX register
       #clk_per m_address = `SPI_RX;
       m_sel = 1;
+      m_read = 1;
       #clk_per;
       if(m_data_out != 32'hABABABAB) begin 
-	 $display("Interrupt test failed");
+	 $display("Interrupt test failed: expected 32'hABABABAB, got %x", m_data_out);
 	 $finish;
       end
       m_sel = 0;
+      m_read = 0;
 
       $display("Test Passed!");
       $finish;
@@ -204,7 +234,8 @@ module spi_tb;
    initial begin
 
       s_sel = 0;
-      s_we = 0;
+      s_read = 0;
+      s_write = 0;
 
       //
       // POLLING TEST 
@@ -213,36 +244,44 @@ module spi_tb;
       // poll SPI_READY address until word received
       #clk_per s_sel = 1;
       s_address = `SPI_READY;
+      s_read = 1;
       while(s_data_out == 0) 
 	#clk_per s_address = `SPI_READY;
       s_sel = 0;
+      s_read = 0;
 
       // read word
       #clk_per s_address = `SPI_RX;
       s_sel = 1;
+      s_read = 1;
       #clk_per s_data_in = s_data_out;
       s_sel = 0;
+      s_read = 0;
    
       // write word to send it back to master 
       #(20*clk_per+1) s_address = `SPI_TX;
       s_sel = 1;
-      s_we = 1;
-      #clk_per s_we = 0;
+      s_write = 1;
+      #clk_per s_write = 0;
       s_sel = 0;
-      s_we = 0;
+      s_write = 0;
 
   
       // poll SPI_READY address until word sent
       #clk_per s_sel = 1;
+      s_read = 1;
       s_address = `SPI_READY;
       while(s_data_out == 0) 
 	#clk_per s_address = `SPI_READY;
       s_sel = 0;
+      s_read = 0;
     
       // read nop word to clear ready
       #clk_per s_address = `SPI_RX;
       s_sel = 1;
+      s_read = 1;
       #clk_per s_sel = 0;
+      s_read = 0;
 
 
       //
@@ -253,9 +292,9 @@ module spi_tb;
       #clk_per s_address = `SPI_INTRRPT_EN;
       s_data_in = 32'h1;
       s_sel = 1;
-      s_we = 1;
+      s_write = 1;
       #clk_per s_sel = 0;
-      s_we = 0;
+      s_write = 0;
 
       // wait for interrupt until data is received
       while(~s_interrupt)
@@ -264,15 +303,16 @@ module spi_tb;
       // read word and clear interrupt
       #clk_per s_address = `SPI_RX;
       s_sel = 1;
-      s_data_in = s_data_out;
-      #clk_per s_sel = 0;
+      s_read = 1;
+      #clk_per s_data_in = s_data_out;
+      s_sel = 0;
+      s_read = 0;
 
-     // write word to send it back to master
+      // write word to send it back to master
       #(20*clk_per+1) s_address = `SPI_TX;
-      s_data_in = s_data_out;
       s_sel = 1;
-      s_we = 1;
-      #clk_per s_we = 0;
+      s_write = 1;
+      #clk_per s_write = 0;
       s_sel = 0;
  
       // wait for interrupt on word is sent and nop received
@@ -282,7 +322,9 @@ module spi_tb;
        // read nop to clear interrupt 
       #clk_per s_address = `SPI_RX;
       s_sel = 1;
+      s_read = 1;
       #clk_per s_sel = 0;
+      s_read = 0;
 
   end
 

@@ -23,8 +23,9 @@ module spi_slave(
 	input [`SPI_DATA_W-1:0]      data_in,
 	output reg [`SPI_DATA_W-1:0] data_out,
 	input [`SPI_ADDR_W-1:0]      address,
-	input 			     we,
 	input 			     sel,
+	input 			     read,
+	input 			     write,
 	output 			     interrupt
 );
 
@@ -41,6 +42,9 @@ module spi_slave(
    reg 				 ctr_data2send_en;
    reg 				 ctr_interrupt_en;
    reg 				 ctr_interrupt_en_en;
+
+   reg [31:0]                    dummy_reg;
+   reg                           dummy_reg_en;
 
    //
    //SPI SIDE LOGIC
@@ -68,6 +72,13 @@ module spi_slave(
    //CONTROLLER SIDE LOGIC
    //
    
+   //dummy reg
+   always @(posedge clk)
+     if(rst)
+       dummy_reg <= 32'b0;  
+     else if(dummy_reg_en)
+       dummy_reg <= data_in;
+   
    //
    // ADDRESS DECODER
    //
@@ -76,15 +87,20 @@ module spi_slave(
       ctr_data2send_en = 1'b0;
       ctr_ready_clr = 1'b0;
       ctr_interrupt_en_en = 1'b0;
-      
+      dummy_reg_en = 0;
+    
       case (address)
-	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&we;
+	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&write;
 	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready}; 
-	`SPI_TX: ctr_data2send_en = sel&we;
+	`SPI_TX: ctr_data2send_en = sel&write;
 	`SPI_RX: begin 
 	   data_out = spi_data_rcvd;
-	   ctr_ready_clr = sel&~we;
+	   ctr_ready_clr = sel&read;
 	end
+        `DUMMY_REG: begin
+           data_out = dummy_reg;
+           dummy_reg_en = sel&write;
+        end
 	default:;
       endcase
    end

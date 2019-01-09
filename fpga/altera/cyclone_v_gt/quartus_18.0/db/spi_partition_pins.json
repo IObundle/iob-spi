@@ -160,6 +160,10 @@
 					"strict" : false
 				},
 				{
+					"name" : "m_address[2]",
+					"strict" : false
+				},
+				{
 					"name" : "m_data_in[0]",
 					"strict" : false
 				},
@@ -288,11 +292,15 @@
 					"strict" : false
 				},
 				{
+					"name" : "m_read",
+					"strict" : false
+				},
+				{
 					"name" : "m_sel",
 					"strict" : false
 				},
 				{
-					"name" : "m_we",
+					"name" : "m_write",
 					"strict" : false
 				}
 			]
@@ -441,6 +449,10 @@
 					"strict" : false
 				},
 				{
+					"name" : "s_address[2]",
+					"strict" : false
+				},
+				{
 					"name" : "clk",
 					"strict" : false
 				},
@@ -573,6 +585,10 @@
 					"strict" : false
 				},
 				{
+					"name" : "s_read",
+					"strict" : false
+				},
+				{
 					"name" : "rst",
 					"strict" : false
 				},
@@ -585,7 +601,7 @@
 					"strict" : false
 				},
 				{
-					"name" : "s_we",
+					"name" : "s_write",
 					"strict" : false
 				}
 			]
