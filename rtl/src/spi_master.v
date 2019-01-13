@@ -11,24 +11,39 @@
 `include "spi_defines.vh"
 
 module spi_master(
+
+	//CONTROLLER INTERFACE
 	input 			     clk,
 	input 			     rst,
 		  
-	//SPI INTERFACE
-	input 			     sclk,
-	output 			     ss,
-	output 			     mosi,
-	input 			     miso,
-		  
-	//CONTROL INTERFACE
 	input [`SPI_DATA_W-1:0]      data_in,
 	output reg [`SPI_DATA_W-1:0] data_out,
 	input [`SPI_ADDR_W-1:0]      address,
 	input 			     sel,
 	input 			     read,
 	input 			     write,
-	output 			     interrupt
+	output 			     interrupt,
+
+	//SPI INTERFACE
+	input 			     sclk,
+	output 			     ss,
+	output 			     mosi,
+	input 			     miso
 );
+
+   //CONTROLLER SIDE SIGNALS
+   reg 				     ctr_start;
+   reg 				     ctr_ready;
+   reg 				     ctr_ready_clr;
+   reg [`SPI_DATA_W-1:0] 	     ctr_data2send;
+   reg 				     ctr_data2send_en;
+   reg 				     ctr_ss, ctr_ss_1, ctr_ss_2;
+   reg 				     ctr_interrupt_en;
+   reg 				     ctr_interrupt_en_en;
+   reg                               rst_soft;
+   wire                              rst_int;   
+   reg [31:0]                        dummy_reg;
+   reg                               dummy_reg_en;
 
    //SPI SIDE SIGNALS
    reg [5:0] 			     spi_counter;
@@ -42,19 +57,94 @@ module spi_master(
    reg                               spi_nrst_1;
    
 
-   //CONTROL SIDE SIGNALS
-   reg 				     ctr_start;
-   reg 				     ctr_ready;
-   reg 				     ctr_ready_clr;
-   reg [`SPI_DATA_W-1:0] 	     ctr_data2send;
-   reg 				     ctr_data2send_en;
-   reg 				     ctr_ss, ctr_ss_1, ctr_ss_2;
-   reg 				     ctr_interrupt_en;
-   reg 				     ctr_interrupt_en_en;
+   //
+   //CONTROLLER SIDE LOGIC
+   //
+   
+   assign rst_int = rst | rst_soft;
+   
+   // ADDRESS DECODER
+   always @* begin
+      ctr_start = 1'b0;
+      data_out = `SPI_DATA_W'd0;
+      ctr_data2send_en = 1'b0;
+      ctr_interrupt_en_en = 1'b0;
+      ctr_ready_clr = 1'b0;
+      dummy_reg_en = 0;
+      rst_soft = 1'b0;
+      
+      case (address)
+	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&write;
+	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready & (spi_counter == 6'd63)};    //false path, no sync needed)
+	`SPI_TX: begin
+	   ctr_start = sel&write;
+	   ctr_data2send_en = sel&write;
+	end
+	`SPI_RX: begin
+	   data_out = spi_data_rcvd;                          //false path, no sync needed)
+	   ctr_ready_clr = sel&read;
+	end
+	`SPI_SOFT_RST: begin
+	   rst_soft = sel&write;
+	end
+        `DUMMY_REG: begin
+           data_out = dummy_reg;
+           dummy_reg_en = sel&write;
+        end
+	default:;
+      endcase
+   end
+ 
 
-   reg [31:0]                       dummy_reg;
-   reg                              dummy_reg_en;
+   // DATA TO SEND REG 
+   always @ (posedge clk, posedge rst_int)
+     if(rst_int)
+       ctr_data2send <= 32'hF0F0F0F0;
+     else if(ctr_data2send_en)
+       ctr_data2send <= data_in;
 
+   
+   // RESAMPLE SLAVE SELECT SIGNAL
+   always @ (posedge clk, posedge rst_int) begin
+      if(rst_int) begin	 
+	 ctr_ss_1 <= 1'b1;
+	 ctr_ss_2 <= 1'b1;
+	 ctr_ss <= 1'b1;
+      end else begin
+	 ctr_ss_1 <= ss;
+	 ctr_ss_2 <= ctr_ss_1;
+	 ctr_ss <= ctr_ss_2;
+      end
+   end
+
+   // READY REG
+   always @ (posedge clk, posedge rst_int)
+     if(rst_int)
+       ctr_ready <= 1'b0;
+     else if(ctr_start | ctr_ready_clr)
+       ctr_ready <= 1'b0;
+     else if( ~ctr_ss & ctr_ss_2)
+       ctr_ready <= 1'b1;
+   
+   // INTERRUPT ENABLE REG
+   always @ (posedge clk, posedge rst_int)
+     if(rst_int)
+       ctr_interrupt_en <= 1'b0;
+     else if(ctr_interrupt_en_en)
+       ctr_interrupt_en <= data_in[0];
+
+   // INETRRUPT SIGNAL
+   assign interrupt = ctr_interrupt_en & ctr_ready;
+
+
+   //dummy reg
+   always @(posedge clk)
+     if(rst_int)
+       dummy_reg <= 32'b0;  
+     else if(dummy_reg_en)
+       dummy_reg <= data_in;
+
+   
 
    //
    //
@@ -63,8 +153,8 @@ module spi_master(
    //
 
    //spi_nrst
-   always @ (negedge sclk, posedge rst)
-     if(rst) begin
+   always @ (negedge sclk, posedge rst_int)
+     if(rst_int) begin
 	spi_nrst <= 1'b0;
 	spi_nrst_1 <= 1'b0;
      end else begin
@@ -126,98 +216,4 @@ module spi_master(
 	spi_data_rcvd[`SPI_DATA_W-2:0] <= spi_data_rcvd[`SPI_DATA_W-1:1];  //shift right
      end
    
-   
-   //
-   //
-   //CONTROLLER SIDE LOGIC
-   //
-   //
-   
-   //dummy reg
-   always @(posedge clk)
-     if(rst)
-       dummy_reg <= 32'b0;  
-     else if(dummy_reg_en)
-       dummy_reg <= data_in;
-
-   //
-   // ADDRESS DECODER
-   //
-   always @* begin
-      ctr_start = 1'b0;
-      data_out = `SPI_DATA_W'd0;
-      ctr_data2send_en = 1'b0;
-      ctr_interrupt_en_en = 1'b0;
-      ctr_ready_clr = 1'b0;
-      dummy_reg_en = 0;
-
-      case (address)
-	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&write;
-	`SPI_READY: data_out = { {`SPI_DATA_W-1{1'b0}}, ctr_ready & (spi_counter == 6'd63)};    //false path, no sync needed)
-	`SPI_TX: begin
-	   ctr_start = sel&write;
-	   ctr_data2send_en = sel&write;
-	end
-	`SPI_RX: begin
-	   data_out = spi_data_rcvd;                          //false path, no sync needed)
-	   ctr_ready_clr = sel&read;
-	end
-        `DUMMY_REG: begin
-           data_out = dummy_reg;
-           dummy_reg_en = sel&write;
-        end
-	default:;
-      endcase
-   end
- 
-
-   //
-   // SEND
-   //
-   
-   // WRITE DATA TO SEND 
-   always @ (posedge clk, posedge rst)
-     if(rst)
-       ctr_data2send <= 32'hF0F0F0F0;
-     else if(ctr_data2send_en)
-       ctr_data2send <= data_in;
-
-   
-   //
-   // CONTROL
-   //
-
-   // RESAMPLE SLAVE SELECT
-   always @ (posedge clk, posedge rst) begin
-      if(rst) begin	 
-	 ctr_ss_1 <= 1'b1;
-	 ctr_ss_2 <= 1'b1;
-	 ctr_ss <= 1'b1;
-      end else begin
-	 ctr_ss_1 <= ss;
-	 ctr_ss_2 <= ctr_ss_1;
-	 ctr_ss <= ctr_ss_2;
-      end
-   end
-
-   // CTR_READY
-   always @ (posedge clk, posedge rst)
-     if(rst)
-       ctr_ready <= 1'b0;
-     else if(ctr_start | ctr_ready_clr)
-       ctr_ready <= 1'b0;
-     else if( ~ctr_ss & ctr_ss_2)
-       ctr_ready <= 1'b1;
-
-   
-   // INTERRUPT
-
-   always @ (posedge clk, posedge rst)
-     if(rst)
-       ctr_interrupt_en <= 1'b0;
-     else if(ctr_interrupt_en_en)
-       ctr_interrupt_en <= data_in[0];
-
-   assign interrupt = ctr_interrupt_en & ctr_ready;
-
 endmodule

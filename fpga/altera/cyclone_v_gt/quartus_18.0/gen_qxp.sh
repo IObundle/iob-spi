@@ -18,3 +18,11 @@ quartus_cdb spi -c spi --incremental_compilation_export=spi_slave-spi_s.qxp --in
 
 cp spi_master-spi_m.qxp ../../../../../iob-2es-mp3-e/hardware/cyclone_v_gt/netlists/
 cp spi_slave-spi_s.qxp ../../../../../iob-2es-mp3-e/hardware/cyclone_v_gt/netlists/
+
+quartus_sh --clean spi
+
+rm *.qarlog spi.qws
+
+rm -rf db
+
+

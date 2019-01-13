@@ -7,4 +7,5 @@
 `define SPI_READY 1
 `define SPI_TX 2
 `define SPI_RX 3
+`define SPI_SOFT_RST 6
 `define DUMMY_REG 7
