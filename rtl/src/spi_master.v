@@ -84,6 +84,9 @@ module spi_master(
 	   data_out = spi_data_rcvd;                          //false path, no sync needed)
 	   ctr_ready_clr = sel&read;
 	end
+	`SPI_VERSION: begin
+	   data_out = `SPI_VERSION_STR; 
+	end
 	`SPI_SOFT_RST: begin
 	   rst_soft = sel&write;
 	end

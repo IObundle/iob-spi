@@ -21,7 +21,7 @@ cp spi_slave-spi_s.qxp ../../../../../iob-2es-mp3-e/hardware/cyclone_v_gt/netlis
 
 quartus_sh --clean spi
 
-rm *.qarlog spi.qws
+rm *.qarlog
 
 rm -rf db
 
