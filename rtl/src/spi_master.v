@@ -123,7 +123,7 @@ module spi_master(
    // READY REG
    always @ (posedge clk, posedge rst_int)
      if(rst_int)
-       ctr_ready <= 1'b0;
+       ctr_ready <= 1'b1;
      else if(ctr_start | ctr_ready_clr)
        ctr_ready <= 1'b0;
      else if( ~ctr_ss & ctr_ss_2)
