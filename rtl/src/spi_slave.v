@@ -105,8 +105,8 @@ module spi_slave(
    //
 
    // resample slave select
-   always @ (posedge clk, posedge rst) begin
-      if(rst) begin	 
+   always @ (posedge clk, posedge rst_int) begin
+      if(rst_int) begin	 
 	 ctr_ss_1 <= 1'b1;
 	 ctr_ss_2 <= 1'b1;
 	 ctr_ss <= 1'b1;
@@ -118,8 +118,8 @@ module spi_slave(
    end
 
    // CTR_READY
-   always @ (posedge clk, posedge rst)
-     if (rst)
+   always @ (posedge clk, posedge rst_int)
+     if (rst_int)
        ctr_ready <= 1'b0;
      else if (ctr_ready_clr)
        ctr_ready <= 1'b0;
@@ -129,7 +129,7 @@ module spi_slave(
      
    // INTERRUPT 
     always @ (posedge clk)
-      if(rst)
+      if(rst_int)
 	ctr_interrupt_en <= 1'b0;
       else if(ctr_interrupt_en_en)
 	ctr_interrupt_en <= data_in[0];
@@ -139,7 +139,7 @@ module spi_slave(
 
    //dummy reg
    always @(posedge clk)
-     if(rst)
+     if(rst_int)
        dummy_reg <= 32'b0;  
      else if(dummy_reg_en)
        dummy_reg <= data_in;
