@@ -13,22 +13,22 @@
 module spi_master(
 
 	//CONTROLLER INTERFACE
-	input 			     clk,
-	input 			     rst,
+	input                        clk,
+	input                        rst,
 		  
 	input [`SPI_DATA_W-1:0]      data_in,
 	output reg [`SPI_DATA_W-1:0] data_out,
 	input [`SPI_ADDR_W-1:0]      address,
-	input 			     sel,
-	input 			     read,
-	input 			     write,
-	output 			     interrupt,
+	input                        sel,
+	input                        read,
+	input                        write,
+	output                       interrupt,
 
 	//SPI INTERFACE
-	input 			     sclk,
-	output 			     ss,
-	output 			     mosi,
-	input 			     miso
+	input                        sclk,
+	output reg                   ss,
+	output                       mosi,
+	input                        miso
 );
 
    //CONTROLLER SIDE SIGNALS
@@ -175,7 +175,7 @@ module spi_master(
 	spi_start_1 <= 1'b0;
      end
 
-   assign spi_start = spi_nrst & spi_start_2 & (spi_counter == 6'd63);
+   assign spi_start = spi_start_2 & (spi_counter == 6'd63);
 
    //
    // START UP
@@ -193,15 +193,23 @@ module spi_master(
    end
    
    // spi slave select
-   assign ss = (spi_counter < 6'd16 || spi_counter > 6'd47)? 1'b1 : 1'b0;
-   
+   always @ (negedge sclk, negedge spi_nrst)
+      if(!spi_nrst)
+        ss <= 1'b1;
+      else if (spi_counter == 6'd15)
+        ss <= 1'b0;
+      else if (spi_counter == 6'd47)
+        ss <= 1'b1;
+      
    //
    // SEND
    //
 
    //data to send register
-   always @ (negedge sclk)
-     if(~ss)
+   always @ (negedge sclk, negedge spi_nrst)
+     if(!spi_nrst)
+       spi_data2send <= 0;
+     else if(~ss)
        spi_data2send <= spi_data2send>>1;
      else
        spi_data2send <= ctr_data2send; // false path, no sync needed
@@ -213,8 +221,10 @@ module spi_master(
    //
 
    //data received register
-   always @ (negedge sclk)
-     if(~ss) begin 
+   always @ (negedge sclk, negedge spi_nrst)
+     if(!spi_nrst)
+       spi_data_rcvd[`SPI_DATA_W-1] <= 0;                              //miso input 
+     else if(~ss) begin 
 	spi_data_rcvd[`SPI_DATA_W-1] <= miso;                              //miso input 
 	spi_data_rcvd[`SPI_DATA_W-2:0] <= spi_data_rcvd[`SPI_DATA_W-1:1];  //shift right
      end
