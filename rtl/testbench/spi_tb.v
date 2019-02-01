@@ -3,8 +3,8 @@
 
 module spi_tb;
 
-   parameter sclk_per= 39;
-   parameter clk_per= 10;
+   parameter sclk_per= 24;
+   parameter clk_per= 20;
    
    reg 		rst;
    reg 		clk;
@@ -47,9 +47,9 @@ module spi_tb;
 		     .miso		(miso),
 		     
 		     // CONTROL
-		     .data_in		(m_data_in[`SPI_DATA_W-1:0]),
-		     .address		(m_address[`SPI_ADDR_W-1:0]),
-		     .data_out		(m_data_out[`SPI_DATA_W-1:0]),
+		     .data_in		(m_data_in),
+		     .address		(m_address),
+		     .data_out		(m_data_out),
 		     .interrupt		(m_interrupt),
 		     .sel		(m_sel),
 		     .read		(m_read),
@@ -98,131 +98,88 @@ module spi_tb;
    // MASTER PROCESS
    //
 
+   //cpu read word
+   reg [31:0] mreg;
+    
    initial begin
+      
       m_sel = 0;
       m_read = 0;
       m_write = 0;
 
+      //sync up 
+      #(10*sclk_per);
+      @(posedge clk) #1;
       
+
       // POLLING TEST 
 
-      // write command word to send
-      #(20*clk_per+1) m_address = `SPI_TX;
-      m_data_in = 32'hF0F0F0F0;
-      m_sel = 1;
-      m_write = 1;
-      #clk_per m_write = 0;
-      m_sel = 0;
+      // write word to send
+      cpu_mwrite(`SPI_TX, 32'hf0f0f0f0);
 
-      // wait spi master to finish
-      #clk_per m_address = `SPI_READY;
-      m_sel = 1;
-      m_read = 1;
-      while(m_data_out == 0) 
-	#clk_per m_address = `SPI_READY;
-      m_sel = 0;
-      m_read = 0;
+      // wait spi master ready
+      cpu_mread (`SPI_READY, mreg);
+      while(!mreg) 
+        cpu_mread (`SPI_READY, mreg);
 
       $display("Poll test, word 1 sent");
-      
 
-      // write nop to be sent next
-      #(1000*clk_per) m_address = `SPI_TX;
-      m_data_in = 32'h0;                
-      m_sel = 1;
-      m_write = 1;
-      #clk_per m_write = 0;
-      m_sel = 0;
+      //write something to sent next and get response     
+      cpu_mwrite(`SPI_TX, 32'h0);
       
-      // poll SPI_READY until word received
-      #clk_per m_address = `SPI_READY;
-      m_sel = 1;
-      m_read = 1;
-      while(m_data_out == 0) 
-	#clk_per m_address = `SPI_READY;
-      m_sel = 0;
-      m_read = 0;
-
-      $display("Poll test, word 1 received");
-      
-
+      // wait spi master ready
+      cpu_mread (`SPI_READY, mreg);
+      while(!mreg) 
+        cpu_mread (`SPI_READY, mreg);
 
       // read word, compare with expected and clear ready
-      #clk_per m_address = `SPI_RX;
-      m_sel = 1;
-      m_read = 1;
-      #clk_per;
-      if(m_data_out != 32'hF0F0F0F0) begin
+      cpu_mread (`SPI_RX, mreg);
+      if(mreg != 32'hF0F0F0F0) begin
 	 $display("Polling test failed");
 	 $finish;
-      end
-      m_sel = 0;
-      m_read = 0;
+      end else
+        $display("Poll test, word 1 received");
+      
 
 
       // INTERRUPT TEST 
 
-      // enable interrupt
-      #clk_per m_address = `SPI_INTRRPT_EN;
-      m_data_in = 32'h1;
-      m_sel = 1;
-      m_write = 1;
-      #clk_per m_write = 0;
-      m_sel = 0;
-      
-
       // write word to send next
-      #(20*clk_per+1) m_address = `SPI_TX;
-      m_data_in = 32'hABABABAB;
-      m_sel = 1;
-      m_write = 1;
-      #clk_per m_write = 0;
-      m_sel = 0;
-      
+      cpu_mwrite(`SPI_TX, 32'hABABABAB);
 
+      // enable interrupt
+      cpu_mwrite(`SPI_INTRRPT_EN, 32'h1);
+      
       // wait interrupt on word sent
       while(~m_interrupt)
-	#clk_per;
+	@(posedge clk) #1;
 
       $display("Interrupt test, word 1 sent");
       
+      // disable interrupt
+      cpu_mwrite(`SPI_INTRRPT_EN, 32'h0);
 
+      // send someting to get response
+      cpu_mwrite(`SPI_TX, 32'h0);
 
-      // read RX register to clear interrupt
-      #clk_per m_address = `SPI_RX;
-      m_sel = 1;
-      m_read = 1;
-      #clk_per m_sel = 0;
-      m_read = 0;
- 
-      // write nop to be sent next
-      #(1000*clk_per) m_address = `SPI_TX;
-      m_data_in = 32'h0;                     //send nop
-      m_sel = 1;
-      m_write = 1;
-      #clk_per m_write = 0;
-      m_sel = 0;
- 
-     // wait interrupt on nop sent
-      while(~m_interrupt)
-	#clk_per;
-
-      $display("Interrupt test, word 1 received");
+      // enable interrupt
+      cpu_mwrite(`SPI_INTRRPT_EN, 32'h1);
       
+      // wait interrupt on word sent
+      while(~m_interrupt)
+	@(posedge clk) #1;
 
-      // read word in RX register
-      #clk_per m_address = `SPI_RX;
-      m_sel = 1;
-      m_read = 1;
-      #clk_per;
-      if(m_data_out != 32'hABABABAB) begin 
-	 $display("Interrupt test failed: expected 32'hABABABAB, got %x", m_data_out);
-	 $finish;
+      // disable interrupt
+      cpu_mwrite(`SPI_INTRRPT_EN, 32'h0);
+
+      cpu_mread (`SPI_RX, mreg);
+
+      if(mreg != 32'hABABABAB)
+        $display("Interrupt test failed: expected 32'hABABABAB, got %x", m_data_out);
+      else begin 
+        $display("Interrupt test, word 1 received\n\n\n");
+        $display("Test Passed!");
       end
-      m_sel = 0;
-      m_read = 0;
-
-      $display("Test Passed!");
       $finish;
       
    end
@@ -231,6 +188,10 @@ module spi_tb;
    //
    // SLAVE PROCESS
    //
+
+   //cpu read word
+   reg [31:0]   sreg;
+    
    initial begin
 
       s_sel = 0;
@@ -242,46 +203,26 @@ module spi_tb;
       //
       
       // poll SPI_READY address until word received
-      #clk_per s_sel = 1;
-      s_address = `SPI_READY;
-      s_read = 1;
-      while(s_data_out == 0) 
-	#clk_per s_address = `SPI_READY;
-      s_sel = 0;
-      s_read = 0;
+      cpu_sread (`SPI_READY, sreg);
+      while(!sreg) 
+        cpu_sread (`SPI_READY, sreg);
 
-      // read word
-      #clk_per s_address = `SPI_RX;
-      s_sel = 1;
-      s_read = 1;
-      #clk_per s_data_in = s_data_out;
-      s_sel = 0;
-      s_read = 0;
+      // read word and clear ready
+      cpu_sread (`SPI_RX, sreg);
    
       // write word to send it back to master 
-      #(20*clk_per+1) s_address = `SPI_TX;
-      s_sel = 1;
-      s_write = 1;
-      #clk_per s_write = 0;
-      s_sel = 0;
-      s_write = 0;
+      cpu_swrite (`SPI_TX, sreg);
 
   
       // poll SPI_READY address until word sent
-      #clk_per s_sel = 1;
-      s_read = 1;
-      s_address = `SPI_READY;
-      while(s_data_out == 0) 
-	#clk_per s_address = `SPI_READY;
-      s_sel = 0;
-      s_read = 0;
+      cpu_sread (`SPI_READY, sreg);
+      while(!sreg) 
+        cpu_sread (`SPI_READY, sreg);
+
     
       // read nop word to clear ready
-      #clk_per s_address = `SPI_RX;
-      s_sel = 1;
-      s_read = 1;
-      #clk_per s_sel = 0;
-      s_read = 0;
+      cpu_sread (`SPI_RX, sreg);
+
 
 
       //
@@ -289,42 +230,25 @@ module spi_tb;
       //
       
       // enable interrupt
-      #clk_per s_address = `SPI_INTRRPT_EN;
-      s_data_in = 32'h1;
-      s_sel = 1;
-      s_write = 1;
-      #clk_per s_sel = 0;
-      s_write = 0;
-
+      cpu_swrite (`SPI_INTRRPT_EN, 1);
+ 
       // wait for interrupt until data is received
       while(~s_interrupt)
- 	#clk_per;
+ 	@(posedge clk) #1;
      
       // read word and clear interrupt
-      #clk_per s_address = `SPI_RX;
-      s_sel = 1;
-      s_read = 1;
-      #clk_per s_data_in = s_data_out;
-      s_sel = 0;
-      s_read = 0;
-
+      cpu_sread (`SPI_RX, sreg);
+ 
       // write word to send it back to master
-      #(20*clk_per+1) s_address = `SPI_TX;
-      s_sel = 1;
-      s_write = 1;
-      #clk_per s_write = 0;
-      s_sel = 0;
+      cpu_swrite (`SPI_TX, sreg);
+ 
  
       // wait for interrupt on word is sent and nop received
       while(~s_interrupt)
-  	#clk_per;
+  	@(posedge clk) #1;
 
-       // read nop to clear interrupt 
-      #clk_per s_address = `SPI_RX;
-      s_sel = 1;
-      s_read = 1;
-      #clk_per s_sel = 0;
-      s_read = 0;
+      // read nop to clear interrupt 
+      cpu_sread (`SPI_RX, sreg);
 
   end
 
@@ -338,7 +262,64 @@ module spi_tb;
    
    always
      #(clk_per/2) clk = ~clk;
+
+ 
    
+   // TASKS
+
+   // 1-cycle write
+   task cpu_mwrite;
+      input [2:0]  cpu_address;
+      input [31:0]  cpu_data;
+
+      #1 m_address = cpu_address;
+      m_sel = 1;
+      m_write = 1;
+      m_data_in = cpu_data;
+      @ (posedge clk) #1 m_write = 0;
+      m_sel = 0;
+   endtask
+
+  // 1-cycle write
+   task cpu_swrite;
+      input [2:0]  cpu_address;
+      input [31:0] cpu_data;
+
+      # 1 s_address = cpu_address;
+      s_sel = 1;
+      s_write = 1;
+      s_data_in = cpu_data;
+      @ (posedge clk) #1 s_write = 0;
+      s_sel = 0;
+   endtask
+
+
+   // 2-cycle read
+   task cpu_mread;
+      input [2:0]   cpu_address;
+      output [31:0] mreadreg;
+
+      #1 m_address = cpu_address;
+      m_sel = 1;
+      m_read = 1;
+      @ (posedge clk) #1 m_read = 1;
+      mreadreg = m_data_out;
+      @ (posedge clk) #1 m_read = 0;
+      m_sel = 0;
+   endtask
+
+   task cpu_sread;
+      input [2:0]   cpu_address;
+      output [31:0] sreadreg;
+
+      # 1 s_address = cpu_address;
+      s_sel = 1;
+      s_read = 1;
+      @ (posedge clk) #1 s_read = 1;
+      sreadreg = s_data_out;
+      @ (posedge clk) #1 s_read = 0;
+      s_sel = 0;
+   endtask
 
 endmodule
 

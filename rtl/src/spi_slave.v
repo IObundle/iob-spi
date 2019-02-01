@@ -10,34 +10,34 @@
 `include "spi_defines.vh"
 
 module spi_slave(
-	input 			     clk,
-	input 			     rst,
+	input                        clk,
+	input                        rst,
 
 	//SPI INTERFACE
-	input 			     sclk,
-	input 			     ss,
-	input 			     mosi,
-	output 			     miso,
+	input                        sclk,
+	input                        ss,
+	input                        mosi,
+	output                       miso,
 
 	//CONTROL INTERFACE
 	input [`SPI_DATA_W-1:0]      data_in,
 	output reg [`SPI_DATA_W-1:0] data_out,
 	input [`SPI_ADDR_W-1:0]      address,
-	input 			     sel,
-	input 			     read,
-	input 			     write,
-	output 			     interrupt
+	input                        sel,
+	input                        read,
+	input                        write,
+	output                       interrupt
 );
 
   
-   //CONTROL SIDE SIGNALS
+   //CPU SIDE SIGNALS
    reg                           rst_soft;
    wire                          rst_int;   
 
    reg 				 ctr_ready;
    reg 				 ctr_ready_clr;
-   reg 				 ctr_ss;
-   reg 				 ctr_ss_1, ctr_ss_2;
+   reg [2:0]                     ctr_ss;
+
    reg [`SPI_DATA_W-1:0] 	 ctr_data2send;
    reg 				 ctr_data2send_en;
    reg 				 ctr_interrupt_en;
@@ -91,43 +91,22 @@ module spi_slave(
       endcase
    end
 
-   //
-   // SEND
-   //
- 
-   // write data to send in respective register 
-   always @ (posedge clk)
-     if(ctr_data2send_en)
-       ctr_data2send <= data_in;
-   
-   //
-   // CONTROL
-   //
-
-   // resample slave select
-   always @ (posedge clk, posedge rst_int) begin
-      if(rst_int) begin	 
-	 ctr_ss_1 <= 1'b1;
-	 ctr_ss_2 <= 1'b1;
-	 ctr_ss <= 1'b1;
-      end else begin
-	 ctr_ss_1 <= ss;
-	 ctr_ss_2 <= ctr_ss_1;
-	 ctr_ss <= ctr_ss_2;
-      end
-   end
-
-   // CTR_READY
+  
+   // READY REGISTER
    always @ (posedge clk, posedge rst_int)
      if (rst_int)
        ctr_ready <= 1'b0;
      else if (ctr_ready_clr)
        ctr_ready <= 1'b0;
-     else if (~ctr_ss & ctr_ss_2)
+     else if (!ctr_ss[2] & ctr_ss[1])
        ctr_ready <= 1'b1;
-
      
-   // INTERRUPT 
+   // DATA TO SEND REGISTER 
+   always @ (posedge clk)
+     if(ctr_data2send_en)
+       ctr_data2send <= data_in;
+   
+   // INTERRUPT ENABLE REG
     always @ (posedge clk)
       if(rst_int)
 	ctr_interrupt_en <= 1'b0;
@@ -136,35 +115,39 @@ module spi_slave(
 
    assign interrupt = ctr_interrupt_en & ctr_ready;
 
-
-   //dummy reg
+   //dummy register
    always @(posedge clk)
      if(rst_int)
        dummy_reg <= 32'b0;  
      else if(dummy_reg_en)
        dummy_reg <= data_in;
-   
+
+   // RESAMPLE SLAVE SELECT SIGNAL
+   always @ (posedge clk, posedge rst_int)
+      if(rst_int) 
+        ctr_ss <= 3'b111;
+      else
+        ctr_ss <= {ctr_ss[1:0], ss};
+
+   //
    //
    //SPI SIDE LOGIC
    //
-
-   //data to send shift register
+   //
+   
+    //DATA TO SEND REGISTER
    always @ (negedge sclk)
-     if(ss)
-       spi_data2send <= ctr_data2send;
+     if (ss)
+       spi_data2send <= ctr_data2send; // false path, no sync needed
      else
        spi_data2send <= spi_data2send>>1;
-   
-   // spi master input slave output
+
+   // SPI MASTER INPUT SLAVE OUTPUT
    assign miso = spi_data2send[0];
    
-   //data received shift register
+   //DATA RECEIVED SHIFT REGISTER
    always @ (posedge sclk)
-     if(~ss) begin 
-	spi_data_rcvd[`SPI_DATA_W-1] <= mosi;
-	spi_data_rcvd[`SPI_DATA_W-2:0] <= spi_data_rcvd[`SPI_DATA_W-1:1];
-     end
+     if(~ss)
+       spi_data_rcvd <= {mosi, spi_data_rcvd[`SPI_DATA_W-1:1]};
 
-   
-    
 endmodule
