@@ -25,8 +25,6 @@ void spi_master_send(int base, int word)
 
 int spi_master_rcv(int base)
 {
-  int word;
-
   // send null command
   IOB_MEMSET(base, SPI_TXDATA, 0x0);
 
