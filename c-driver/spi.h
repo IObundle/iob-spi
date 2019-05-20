@@ -13,15 +13,15 @@
 #define SPI_DUMMY 7
 
 //slave
-void spi_slave_init(int base);
-int  spi_slave_ready(int base);
-int spi_slave_rx(int base);
-int spi_slave_rcv(int base);
-void spi_slave_tx(int base, int word);
+int spi_ready(int base);
+int spi_slave_read(int base);
+void spi_slave_write(int base, int data);
 
 //master 
-void spi_master_init(int base);
 void spi_master_send(int base, int word);
 int spi_master_rcv(int base);
-int spi_master_cycle(int base, int mcw);
+
+//common
+void spi_init(int base);
+
 #endif

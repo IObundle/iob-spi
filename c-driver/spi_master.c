@@ -1,19 +1,5 @@
 #include "spi.h"
 
-void spi_master_init(int base)
-{
-  int dummy = 0;
-
-  //soft reset the core
-  IOB_MEMSET(base, SPI_SOFTRST, 1);
-
-   //check dummy reg
-  IOB_MEMSET(base, SPI_DUMMY, 0xDEADBEEF);
-  dummy = IOB_MEMGET(base, SPI_DUMMY);
-  if (dummy != 0xDEADBEEF)
-    uart_printf("SPI ERROR: %x/DEADBEEF)\n", dummy);
-}
-
 void spi_master_send(int base, int word)
 {
   // write the word to send
