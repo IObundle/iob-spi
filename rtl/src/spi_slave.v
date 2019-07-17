@@ -49,8 +49,10 @@ module spi_slave(
    //SPI SIDE SIGNALS
    reg [`SPI_DATA_W-1:0] 	 spi_data_rcvd;
    reg [`SPI_DATA_W-1:0] 	 spi_data2send;
-
-  //
+   
+   reg [`SPI_DATA_W-1:0]         ctr_data2send_spi[1:0];
+   
+   //
    //CONTROLLER SIDE LOGIC
    //
    
@@ -134,11 +136,17 @@ module spi_slave(
    //SPI SIDE LOGIC
    //
    //
-   
-    //DATA TO SEND REGISTER
+   // ctr_data2send synchronizer                    
+   always @(posedge sclk)                           
+     begin                                         
+       ctr_data2send_spi[0] <= ctr_data2send;       
+       ctr_data2send_spi[1] <= ctr_data2send_spi[0];
+     end                                           
+
+   //DATA TO SEND REGISTER
    always @ (negedge sclk)
      if (ss)
-       spi_data2send <= ctr_data2send; // false path, no sync needed
+       spi_data2send <= ctr_data2send_spi[1]; // false path, but sync added anyway
      else
        spi_data2send <= spi_data2send>>1;
 

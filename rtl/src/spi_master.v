@@ -52,6 +52,7 @@ module spi_master(
 
    reg [1:0]                         spi_nrst;
    
+   reg [`SPI_DATA_W-1:0]	     ctr_data2send_spi[1:0]; 
 
    //
    //CONTROLLER SIDE LOGIC
@@ -125,20 +126,25 @@ module spi_master(
       else
 	ctr_ss <= {ctr_ss[1:0], ss};
 
-
-
    //
    //
    // SPI SIDE LOGIC
    //
    //
+   
+   // ctr_data2send synchronizer
+   always @(posedge sclk)
+      begin
+      	ctr_data2send_spi[0] <= ctr_data2send;
+	ctr_data2send_spi[1] <= ctr_data2send_spi[0];
+      end
 
    //spi_nrst sync
    always @ (negedge sclk, posedge rst_int)
      if(rst_int)
 	spi_nrst <= 2'b00;
-     else
-       spi_nrst <= {spi_nrst[0], 1'b1};
+     else 
+        spi_nrst <= {spi_nrst[0], 1'b1};
 
    //spi_start
    always @ (negedge sclk, posedge ctr_data2send_en)
@@ -168,7 +174,7 @@ module spi_master(
    //data to send register
    always @ (negedge sclk)
      if(spi_counter == 6'd8)
-       spi_data2send <= ctr_data2send; // false path, no sync needed
+       spi_data2send <= ctr_data2send_spi[1]; // false path, but sync added anyway
      else if(~ss)
        spi_data2send <= spi_data2send>>1;
 
