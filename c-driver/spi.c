@@ -1,3 +1,5 @@
+#include "iob_memrw.h"
+#include "iob-uart.h"
 #include "spi.h"
 
 void spi_init(int base)

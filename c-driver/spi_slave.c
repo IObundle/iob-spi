@@ -1,3 +1,4 @@
+#include "iob_memrw.h"
 #include "spi.h"
 
 int spi_ready(int base)

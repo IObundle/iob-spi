@@ -1,9 +1,6 @@
 #ifndef SPI_H
 #define SPI_H
 
-#include "iob_memrw.h"
-#include "uart.h"
-
 #define SPI_READY 1
 #define SPI_TXDATA 2
 #define SPI_RXDATA 3

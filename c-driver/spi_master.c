@@ -1,3 +1,4 @@
+#include "iob_memrw.h"
 #include "spi.h"
 
 void spi_master_send(int base, int word)
