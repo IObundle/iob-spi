@@ -20,5 +20,6 @@ int spi_master_rcv(int base);
 
 //common
 void spi_init(int base);
+#define spi_reset(base) IOB_MEMSET(base, SPI_SOFTRST, 1)
 
 #endif

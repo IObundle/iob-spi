@@ -8,7 +8,7 @@ void spi_init(int base)
   IOB_MEMSET(base, SPI_SOFTRST, 1);
 
   // initialize tx register
-  IOB_MEMSET(base, SPI_TXDATA, 0x0);
+  //IOB_MEMSET(base, SPI_TXDATA, 0x0);
 
    //check dummy reg
   IOB_MEMSET(base, SPI_DUMMY, 0xDEADBEEF);
