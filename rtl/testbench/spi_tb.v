@@ -23,7 +23,6 @@ module spi_tb;
    reg 			 m_read;
    reg 			 m_write;
    wire [`SPI_DATA_W-1:0] m_data_out;
-   wire 		  m_interrupt;
 
    //spi slave control
    reg [`SPI_ADDR_W-1:0] s_address;		
@@ -32,7 +31,6 @@ module spi_tb;
    reg 			  s_write;			
    wire [`SPI_DATA_W-1:0] s_data_out;
    reg [`SPI_DATA_W-1:0]  s_data_in; 
-   wire 		  s_interrupt;		
 
 
    // Instantiate the Units Under Test (UUTs)
@@ -50,7 +48,6 @@ module spi_tb;
 		     .data_in		(m_data_in),
 		     .address		(m_address),
 		     .data_out		(m_data_out),
-		     .interrupt		(m_interrupt),
 		     .sel		(m_sel),
 		     .read		(m_read),
 		     .write		(m_write)
@@ -68,7 +65,6 @@ module spi_tb;
 		    
 		    // CONTROL
 		    .data_out		(s_data_out[`SPI_DATA_W-1:0]),
-		    .interrupt		(s_interrupt),
 		    .data_in		(s_data_in[`SPI_DATA_W-1:0]),
 		    .address		(s_address[`SPI_ADDR_W-1:0]),
 		    .sel		(s_sel),
@@ -114,6 +110,11 @@ module spi_tb;
 
       // POLLING TEST 
 
+      // wait spi master ready
+      cpu_mread (`SPI_READY, mreg);
+      while(!mreg) 
+        cpu_mread (`SPI_READY, mreg);
+
       // write word to send
       cpu_mwrite(`SPI_TX, 32'hf0f0f0f0);
 
@@ -122,11 +123,12 @@ module spi_tb;
       while(!mreg) 
         cpu_mread (`SPI_READY, mreg);
 
-      $display("Poll test, word 1 sent");
+      $display("Word sent to slave");
 
-      //write something to sent next and get response     
+      //ignore received word 
+      //write 0 to get response of previous word    
       cpu_mwrite(`SPI_TX, 32'h0);
-      
+
       // wait spi master ready
       cpu_mread (`SPI_READY, mreg);
       while(!mreg) 
@@ -135,51 +137,12 @@ module spi_tb;
       // read word, compare with expected and clear ready
       cpu_mread (`SPI_RX, mreg);
       if(mreg != 32'hF0F0F0F0) begin
-	 $display("Polling test failed");
+	 $display("Test failed: 0x%x / 0xFOFOFOFO", mreg);
 	 $finish;
       end else
-        $display("Poll test, word 1 received");
+        $display("Word received back from slave correctly");
+
       
-
-
-      // INTERRUPT TEST 
-
-      // write word to send next
-      cpu_mwrite(`SPI_TX, 32'hABABABAB);
-
-      // enable interrupt
-      cpu_mwrite(`SPI_INTRRPT_EN, 32'h1);
-      
-      // wait interrupt on word sent
-      while(~m_interrupt)
-	@(posedge clk) #1;
-
-      $display("Interrupt test, word 1 sent");
-      
-      // disable interrupt
-      cpu_mwrite(`SPI_INTRRPT_EN, 32'h0);
-
-      // send someting to get response
-      cpu_mwrite(`SPI_TX, 32'h0);
-
-      // enable interrupt
-      cpu_mwrite(`SPI_INTRRPT_EN, 32'h1);
-      
-      // wait interrupt on word sent
-      while(~m_interrupt)
-	@(posedge clk) #1;
-
-      // disable interrupt
-      cpu_mwrite(`SPI_INTRRPT_EN, 32'h0);
-
-      cpu_mread (`SPI_RX, mreg);
-
-      if(mreg != 32'hABABABAB)
-        $display("Interrupt test failed: expected 32'hABABABAB, got %x", m_data_out);
-      else begin 
-        $display("Interrupt test, word 1 received\n\n\n");
-        $display("Test Passed!");
-      end
       $finish;
       
    end
@@ -223,32 +186,6 @@ module spi_tb;
       // read nop word to clear ready
       cpu_sread (`SPI_RX, sreg);
 
-
-
-      //
-      // INTERRUPT TEST 
-      //
-      
-      // enable interrupt
-      cpu_swrite (`SPI_INTRRPT_EN, 1);
- 
-      // wait for interrupt until data is received
-      while(~s_interrupt)
- 	@(posedge clk) #1;
-     
-      // read word and clear interrupt
-      cpu_sread (`SPI_RX, sreg);
- 
-      // write word to send it back to master
-      cpu_swrite (`SPI_TX, sreg);
- 
- 
-      // wait for interrupt on word is sent and nop received
-      while(~s_interrupt)
-  	@(posedge clk) #1;
-
-      // read nop to clear interrupt 
-      cpu_sread (`SPI_RX, sreg);
 
   end
 

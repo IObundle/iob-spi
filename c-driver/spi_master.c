@@ -1,23 +1,32 @@
 #include "iob_memrw.h"
 #include "spi.h"
+#include "uart.h"
 
-void spi_master_send(int base, int word)
+void spi_master_send(int base, int mcw)
 {
-  // write the word to send
-  IOB_MEMSET(base, SPI_TXDATA, word);
-
-  // wait until all bit are transmitted
+  // wait for ready
   while (!IOB_MEMGET(base, SPI_READY));
+
+  // write the word to send
+  IOB_MEMSET(base, SPI_TXDATA, mcw);
+
+  //uart_printf("0x%x\n", mcw);
 }
 
 int spi_master_rcv(int base)
 {
-  // send null command
+  // wait for ready
+  while (!IOB_MEMGET(base, SPI_READY));
+
+  // send null word
   IOB_MEMSET(base, SPI_TXDATA, 0x0);
 
-  // wait until all bits are transmitted
+  // wait for ready
   while (!IOB_MEMGET(base, SPI_READY));
 
   //read and returned the received word
-  return IOB_MEMGET(base, SPI_RXDATA);
+  int srw = IOB_MEMGET(base, SPI_RXDATA);
+  //uart_printf("0x%x\n", srw);
+
+  return srw;
 }

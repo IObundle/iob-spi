@@ -10,9 +10,9 @@
 #define SPI_DUMMY 7
 
 //slave
-int spi_ready(int base);
-int spi_slave_read(int base);
-void spi_slave_write(int base, int data);
+#define spi_ready(base) IOB_MEMGET(base, SPI_READY)
+#define spi_slave_read(base) IOB_MEMGET(base, SPI_RXDATA)
+#define spi_slave_write(base, data) IOB_MEMSET(base, SPI_TXDATA, data)
 
 //master 
 void spi_master_send(int base, int word);

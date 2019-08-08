@@ -22,7 +22,6 @@ module spi_master(
 	input                        sel,
 	input                        read,
 	input                        write,
-	output                       interrupt,
 
 	//SPI INTERFACE
 	input                        sclk,
@@ -32,15 +31,16 @@ module spi_master(
 );
 
    //CONTROLLER SIDE SIGNALS
-   reg 				     ctr_ready;
-   reg                               ctr_ready_clr;
+   reg [1:0]                         ctr_ready;
+
+   reg [`SPI_DATA_W-1:0]             ctr_data_rcvd[1:0];
+
    reg [`SPI_DATA_W-1:0] 	     ctr_data2send;
    reg 				     ctr_data2send_en;
-   reg [2:0]			     ctr_ss;
-   reg 				     ctr_interrupt_en;
-   reg 				     ctr_interrupt_en_en;
+
    reg                               rst_soft;
    wire                              rst_int;   
+
    reg [31:0]                        dummy_reg;
    reg                               dummy_reg_en;
 
@@ -50,101 +50,101 @@ module spi_master(
    reg [`SPI_DATA_W-1:0] 	     spi_data_rcvd;
    reg [`SPI_DATA_W-1:0] 	     spi_data2send;
 
-   reg [1:0]                         spi_nrst;
+   reg [1:0]                         spi_rst;   
+   reg [`SPI_DATA_W-1:0]	     spi_ctr_data2send[1:0]; 
+   reg                               spi_ready;
    
-   reg [`SPI_DATA_W-1:0]	     ctr_data2send_spi[1:0]; 
-
+   
    //
    //CONTROLLER SIDE LOGIC
    //
-   
+
+   //reset 
    assign rst_int = rst | rst_soft;
+
+
+   // READY REGISTER SYNC
+   always @ (posedge clk, posedge rst_int)
+     if (rst_int)
+       ctr_ready <= 2'b0;
+     else 
+       ctr_ready <= {ctr_ready[0], spi_ready};
+     
+   // DATA RECEIVED REGISTER SYNC
+   always @ (posedge clk, posedge rst_int)
+     if (rst_int) begin
+       ctr_data_rcvd[0] <= 0;
+       ctr_data_rcvd[1] <= 0;
+     end else begin
+       ctr_data_rcvd[0] <= spi_data_rcvd;
+       ctr_data_rcvd[1] <= ctr_data_rcvd[0];
+     end
+
    
    // ADDRESS DECODER
+
+   //write
    always @* begin
-      data_out = `SPI_DATA_W'd0;
       ctr_data2send_en = 1'b0;
-      ctr_ready_clr = 1'b0;
-      ctr_interrupt_en_en = 1'b0;
       dummy_reg_en = 0;
       rst_soft = 1'b0;
       
       case (address)
-	`SPI_INTRRPT_EN: ctr_interrupt_en_en = sel&write;
-	`SPI_READY: data_out = {31'd0, ctr_ready};
 	`SPI_TX: ctr_data2send_en = sel&write;
-	`SPI_RX: begin 
-           data_out = spi_data_rcvd;
-	   ctr_ready_clr = sel&read;
-        end
-	`SPI_VERSION: data_out = `SPI_VERSION_STR; 
 	`SPI_SOFT_RST: rst_soft = sel&write;
-        `DUMMY_REG: begin
-           data_out = dummy_reg;
-           dummy_reg_en = sel&write;
-        end
+        `DUMMY_REG: dummy_reg_en = sel&write;
 	default:;
       endcase
    end
  
-   // READY REGISTER
+   //read
+   always @* begin
+      data_out = `SPI_DATA_W'd0;
+      if(read)
+        case (address)
+	  `SPI_READY: data_out = {31'd0, ctr_ready[1]};
+	  `SPI_RX: data_out = ctr_data_rcvd[1];
+	  `SPI_VERSION: data_out = `SPI_VERSION_STR; 
+          `DUMMY_REG: data_out = dummy_reg;
+	  default:;
+        endcase
+   end 
+
+
+
+   // DATA TO SEND REG 
    always @ (posedge clk, posedge rst_int)
      if(rst_int)
-       ctr_ready <= 1'b1;
-     else if(ctr_data2send_en | ctr_ready_clr)
-       ctr_ready <= 1'b0;
-     else if( ~ctr_ss[2] & ctr_ss[1])
-       ctr_ready <= 1'b1;
-   
-   // DATA TO SEND REG 
-   always @ (posedge clk)
-     if(ctr_data2send_en)
+       ctr_data2send <= 0;
+     else if(ctr_data2send_en)
        ctr_data2send <= data_in;
 
-   // INTERRUPT ENABLE REG
-   always @ (posedge clk, posedge rst_int)
-     if(rst_int)
-       ctr_interrupt_en <= 1'b0;
-     else if(ctr_interrupt_en_en)
-       ctr_interrupt_en <= data_in[0];
-
-   // INTERRUPT SIGNAL
-   assign interrupt = ctr_interrupt_en & ctr_ready;
-
    // DUMMY REG
-   always @(posedge clk)
+   always @(posedge clk,  posedge rst_int)
      if(rst_int)
        dummy_reg <= 32'b0;  
      else if(dummy_reg_en)
        dummy_reg <= data_in;
 
 
-   // RESAMPLE SLAVE SELECT SIGNAL
-   always @ (posedge clk, posedge rst_int)
-      if(rst_int)
-	ctr_ss <= 3'b111;
-      else
-	ctr_ss <= {ctr_ss[1:0], ss};
-
    //
    //
    // SPI SIDE LOGIC
    //
    //
-   
-   // ctr_data2send synchronizer
-   always @(posedge sclk)
-      begin
-      	ctr_data2send_spi[0] <= ctr_data2send;
-	ctr_data2send_spi[1] <= ctr_data2send_spi[0];
-      end
 
-   //spi_nrst sync
+   //spi_rst  synchronizer
    always @ (negedge sclk, posedge rst_int)
      if(rst_int)
-	spi_nrst <= 2'b00;
+	spi_rst <= 2'b11;
      else 
-        spi_nrst <= {spi_nrst[0], 1'b1};
+        spi_rst <= {spi_rst[0], 1'b0};
+
+   // spi_ctr_data2send synchronizer                    
+   always @(posedge sclk) begin                                         
+      spi_ctr_data2send[0] <= ctr_data2send;       
+      spi_ctr_data2send[1] <= spi_ctr_data2send[0];
+   end                                           
 
    //spi_start
    always @ (negedge sclk, posedge ctr_data2send_en)
@@ -153,9 +153,34 @@ module spi_master(
      else
 	spi_start <= {spi_start[0], 1'b0};
 
+
+   //ready register
+   reg  ss_reg;
+   always @(posedge sclk, posedge spi_rst[1])
+     if(spi_rst[1]) begin
+        spi_ready <= 1'b1;
+        ss_reg <= 1'b1;
+     end else begin
+        ss_reg <= ss;
+        if(spi_ready && spi_start)
+          spi_ready <= 0;
+        if(!spi_ready && ss && !ss_reg)
+          spi_ready <= 1'b1;
+     end
+
+   
+   //data to send register
+   always @ (negedge sclk, posedge spi_rst[1])
+     if (spi_rst[1])
+       spi_data2send <= 0;
+     else if(spi_counter == 6'd8)
+       spi_data2send <= spi_ctr_data2send[1]; //load
+     else if(~ss)
+       spi_data2send <= spi_data2send>>1; //shift
+
    //spi control counter
-   always @ (negedge sclk, negedge spi_nrst[1])
-      if (!spi_nrst[1])
+   always @ (negedge sclk, posedge spi_rst[1])
+      if (spi_rst[1])
 	spi_counter <= 6'd63;
       else if (spi_start[1])
 	spi_counter <= 6'd0;        
@@ -163,21 +188,14 @@ module spi_master(
 	spi_counter <= spi_counter + 1'b1;
    
    // spi slave select
-   always @ (negedge sclk, negedge spi_nrst[1])
-      if(!spi_nrst[1])
+   always @ (negedge sclk, posedge spi_rst[1])
+      if(spi_rst[1])
         ss <= 1'b1;
       else if (spi_counter == 6'd15)
         ss <= 1'b0;
       else if (spi_counter == 6'd47)
         ss <= 1'b1;
       
-   //data to send register
-   always @ (negedge sclk)
-     if(spi_counter == 6'd8)
-       spi_data2send <= ctr_data2send_spi[1]; // false path, but sync added anyway
-     else if(~ss)
-       spi_data2send <= spi_data2send>>1;
-
    // spi master output slave input
    assign mosi = spi_data2send[0];
    
