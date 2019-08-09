@@ -1,32 +1,22 @@
-#include "iob_memrw.h"
 #include "spi.h"
-#include "uart.h"
 
-void spi_master_send(int base, int mcw)
+int spi_master_cycle(int base, int word)
 {
-  // wait for ready
-  while (!IOB_MEMGET(base, SPI_READY));
+  // send word
+  if(!spi_ready(base))
+    uart_printf("ERROR: spi should be ready\n");
+  spi_write(base, word);
 
-  // write the word to send
-  IOB_MEMSET(base, SPI_TXDATA, mcw);
+  // wait for transmission to start (until ready = 0)
+  while (spi_ready(base));
 
-  //uart_printf("0x%x\n", mcw);
-}
-
-int spi_master_rcv(int base)
-{
-  // wait for ready
-  while (!IOB_MEMGET(base, SPI_READY));
-
-  // send null word
-  IOB_MEMSET(base, SPI_TXDATA, 0x0);
-
-  // wait for ready
-  while (!IOB_MEMGET(base, SPI_READY));
-
-  //read and returned the received word
-  int srw = IOB_MEMGET(base, SPI_RXDATA);
+  // wait for trasmission to end (until ready = 1)
+  while (!spi_ready(base));
+  usleep(100);
+  //read the received word
+  int srw = spi_read(base);
   //uart_printf("0x%x\n", srw);
 
+  //return it
   return srw;
 }

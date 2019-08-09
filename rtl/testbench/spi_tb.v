@@ -108,15 +108,13 @@ module spi_tb;
       @(posedge clk) #1;
       
 
-      // POLLING TEST 
-
-      // wait spi master ready
-      cpu_mread (`SPI_READY, mreg);
-      while(!mreg) 
-        cpu_mread (`SPI_READY, mreg);
-
       // write word to send
       cpu_mwrite(`SPI_TX, 32'hf0f0f0f0);
+
+      // wait spi master not ready
+      cpu_mread (`SPI_READY, mreg);
+      while(mreg) 
+        cpu_mread (`SPI_READY, mreg);
 
       // wait spi master ready
       cpu_mread (`SPI_READY, mreg);
@@ -127,7 +125,12 @@ module spi_tb;
 
       //ignore received word 
       //write 0 to get response of previous word    
-      cpu_mwrite(`SPI_TX, 32'h0);
+      cpu_mwrite(`SPI_TX, 0);
+
+      // wait spi master not ready
+      cpu_mread (`SPI_READY, mreg);
+      while(mreg) 
+        cpu_mread (`SPI_READY, mreg);
 
       // wait spi master ready
       cpu_mread (`SPI_READY, mreg);
@@ -160,32 +163,22 @@ module spi_tb;
       s_sel = 0;
       s_read = 0;
       s_write = 0;
-
-      //
-      // POLLING TEST 
-      //
       
-      // poll SPI_READY address until word received
+      // wait for spi not ready
+      cpu_sread (`SPI_READY, sreg);
+      while(sreg) 
+        cpu_sread (`SPI_READY, sreg);
+
+      // wait for spi ready
       cpu_sread (`SPI_READY, sreg);
       while(!sreg) 
         cpu_sread (`SPI_READY, sreg);
 
-      // read word and clear ready
+      // read word
       cpu_sread (`SPI_RX, sreg);
    
-      // write word to send it back to master 
+      // write word to send back to master 
       cpu_swrite (`SPI_TX, sreg);
-
-  
-      // poll SPI_READY address until word sent
-      cpu_sread (`SPI_READY, sreg);
-      while(!sreg) 
-        cpu_sread (`SPI_READY, sreg);
-
-    
-      // read nop word to clear ready
-      cpu_sread (`SPI_RX, sreg);
-
 
   end
 

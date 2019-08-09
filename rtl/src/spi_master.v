@@ -100,7 +100,7 @@ module spi_master(
    //read
    always @* begin
       data_out = `SPI_DATA_W'd0;
-      if(read)
+      if(sel&read)
         case (address)
 	  `SPI_READY: data_out = {31'd0, ctr_ready[1]};
 	  `SPI_RX: data_out = ctr_data_rcvd[1];
@@ -158,14 +158,11 @@ module spi_master(
    reg  ss_reg;
    always @(posedge sclk, posedge spi_rst[1])
      if(spi_rst[1]) begin
-        spi_ready <= 1'b1;
         ss_reg <= 1'b1;
+        spi_ready <= 1'b1;
      end else begin
         ss_reg <= ss;
-        if(spi_ready && spi_start)
-          spi_ready <= 0;
-        if(!spi_ready && ss && !ss_reg)
-          spi_ready <= 1'b1;
+        spi_ready <= ss_reg;
      end
 
    

@@ -34,7 +34,6 @@ module spi_slave(
    wire                          rst_int;   
 
    reg [1:0]                     ctr_ready;
-   reg 				 ctr_ready_clr;
 
    reg [`SPI_DATA_W-1:0]         ctr_data_rcvd[1:0];
 
@@ -50,7 +49,6 @@ module spi_slave(
    reg [`SPI_DATA_W-1:0] 	 spi_data_rcvd;
    reg [`SPI_DATA_W-1:0] 	 spi_data2send;
    reg                           spi_ready;
-   
    reg [`SPI_DATA_W-1:0]         spi_ctr_data2send[1:0];
    
    //
@@ -83,36 +81,34 @@ module spi_slave(
    // ADDRESS DECODER
    //
    
+   //write
    always @* begin
-      data_out = `SPI_DATA_W'd0;
       ctr_data2send_en = 1'b0;
-      ctr_ready_clr = 1'b0;
       dummy_reg_en = 0;
       rst_soft = 1'b0;
   
       case (address)
-	`SPI_READY: data_out = ctr_ready[1] | 0;
 	`SPI_TX: ctr_data2send_en = sel&write;
-	`SPI_RX: begin 
-	   data_out = ctr_data_rcvd[1];
-	   ctr_ready_clr = sel&read;
-	end
-	`SPI_VERSION: begin
-	   data_out = `SPI_VERSION_STR; 
-	end
-	`SPI_SOFT_RST: begin
-	   rst_soft = sel&write;
-	end
-        `DUMMY_REG: begin
-           data_out = dummy_reg;
-           dummy_reg_en = sel&write;
-        end
+	`SPI_SOFT_RST: rst_soft = sel&write;
+        `DUMMY_REG: dummy_reg_en = sel&write;
 	default:;
       endcase
    end
 
-  
-   // DATA TO SEND REGISTER 
+   //read
+   always @* begin
+      data_out = `SPI_DATA_W'd0;
+      if(sel&read)
+        case (address)
+	  `SPI_READY: data_out = ctr_ready[1] | 0;
+	  `SPI_RX: data_out = ctr_data_rcvd[1];
+	  `SPI_VERSION: data_out = `SPI_VERSION_STR; 
+          `DUMMY_REG: data_out = dummy_reg;
+	  default:;
+        endcase
+   end
+
+   // data to send register 
    always @ (posedge clk, posedge rst_int)
      if (rst_int)
        ctr_data2send <=0;
@@ -133,14 +129,13 @@ module spi_slave(
    //
 
    //reset
-   wire spi_rst_async = rst_int | ctr_ready_clr;
    reg [1:0] spi_rst;
 
    //synchronizers
 
    //reset
-   always @(posedge sclk, posedge spi_rst_async)
-     if(spi_rst_async)
+   always @(posedge sclk, posedge rst_int)
+     if(rst_int)
        spi_rst <= 2'b11;
      else
        spi_rst <= {spi_rst[0], 1'b0};
@@ -149,12 +144,11 @@ module spi_slave(
    reg  ss_reg;
    always @(posedge sclk, posedge spi_rst[1])
      if(spi_rst[1]) begin
-        spi_ready <= 0;
+        spi_ready <= 1'b1;
         ss_reg <= 1'b1;
      end else begin
         ss_reg <= ss;
-        if(ss && !ss_reg)
-          spi_ready <= 1'b1;
+        spi_ready <= ss_reg;
      end
 
 
