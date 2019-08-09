@@ -31,6 +31,7 @@ module spi_slave(
   
    //CPU SIDE SIGNALS
    reg                           rst_soft;
+   reg                           rst_soft_en;
    wire                          rst_int;   
 
    reg [1:0]                     ctr_ready;
@@ -85,11 +86,11 @@ module spi_slave(
    always @* begin
       ctr_data2send_en = 1'b0;
       dummy_reg_en = 0;
-      rst_soft = 1'b0;
+      rst_soft_en = 1'b0;
   
       case (address)
 	`SPI_TX: ctr_data2send_en = sel&write;
-	`SPI_SOFT_RST: rst_soft = sel&write;
+	`SPI_SOFT_RST: rst_soft_en = sel&write;
         `DUMMY_REG: dummy_reg_en = sel&write;
 	default:;
       endcase
@@ -108,6 +109,21 @@ module spi_slave(
         endcase
    end
 
+
+   //
+   // REGISTERS
+   //
+
+   //soft reset self-clearing register
+   always @ (posedge clk, posedge rst)
+     if (rst)
+       rst_soft <= 1'b1;
+     else if (rst_soft_en && !rst_soft)
+       rst_soft <= 1'b1;
+     else
+       rst_soft <= 1'b0;
+
+   
    // data to send register 
    always @ (posedge clk, posedge rst_int)
      if (rst_int)
