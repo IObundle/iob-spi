@@ -31,17 +31,22 @@ module spi_master(
 );
 
    //CONTROLLER SIDE SIGNALS
-   reg [1:0]                         ctr_ready;
 
-   reg [`SPI_DATA_W-1:0]             ctr_data_rcvd[1:0];
-
-   reg [`SPI_DATA_W-1:0] 	     ctr_data2send;
-   reg 				     ctr_data2send_en;
-
+   //reset
    reg                               rst_soft;
-   reg                           rst_soft_en;
+   reg                               rst_soft_en;
    wire                              rst_int;   
 
+   //control 
+   reg [1:0]                         ctr_ready;
+   reg 				     ctr_start_en;
+   reg 				     ctr_start;
+
+   //data
+   reg [`SPI_DATA_W-1:0]             ctr_data_rcvd[1:0];
+   reg [`SPI_DATA_W-1:0] 	     ctr_data2send;
+
+   //dummy register
    reg [31:0]                        dummy_reg;
    reg                               dummy_reg_en;
 
@@ -87,12 +92,12 @@ module spi_master(
 
    //write
    always @* begin
-      ctr_data2send_en = 1'b0;
+      ctr_start_en = 1'b0;
       dummy_reg_en = 0;
       rst_soft_en = 1'b0;
       
       case (address)
-	`SPI_TX: ctr_data2send_en = sel&write;
+	`SPI_TX: ctr_start_en = sel&write;
 	`SPI_SOFT_RST: rst_soft_en = sel&write;
         `DUMMY_REG: dummy_reg_en = sel&write;
 	default:;
@@ -128,11 +133,21 @@ module spi_master(
        rst_soft <= 1'b0;
 
    
+   //start self-clearing register
+   always @ (posedge clk, posedge rst_int)
+     if (rst_int)
+       ctr_start <= 1'b0;
+     else if (ctr_start_en)
+       ctr_start <= 1'b1;
+     else
+       ctr_start <= 1'b0;
+
+   
   // DATA TO SEND REG 
    always @ (posedge clk, posedge rst_int)
      if(rst_int)
        ctr_data2send <= 0;
-     else if(ctr_data2send_en)
+     else if(ctr_start_en)
        ctr_data2send <= data_in;
 
    // DUMMY REG
@@ -163,8 +178,8 @@ module spi_master(
    end                                           
 
    //spi_start
-   always @ (negedge sclk, posedge ctr_data2send_en)
-     if(ctr_data2send_en)
+   always @ (negedge sclk, posedge ctr_start)
+     if(ctr_start)
 	spi_start <= 2'b11;
      else
 	spi_start <= {spi_start[0], 1'b0};
