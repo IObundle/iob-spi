@@ -1,6 +1,7 @@
 #ifndef SPI_H
 #define SPI_H
 
+#include <unistd.h>
 #include "iob_memrw.h"
 #include "iob-uart.h"
 
