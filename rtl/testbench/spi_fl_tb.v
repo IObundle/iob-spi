@@ -7,7 +7,7 @@ module spi_tb;
 	reg rst;
 	reg clk;
 
-	wire miso;
+	reg miso;
 	wire mosi;
 	wire ss;
 	wire sclk;
@@ -17,6 +17,7 @@ module spi_tb;
 	reg [23:0] address;
 	reg [7:0] command;
 	reg validflag; //check later
+	wire validflag_out; //check
 	wire tready;
 
 	//Controller signals
@@ -38,6 +39,7 @@ module spi_tb;
 			.address	(address),
 			.command	(command),
 			.validflag	(validflag),
+			.validflag_out	(validflag_out),
 			.tready		(tready)
 			);
 			
@@ -67,7 +69,16 @@ module spi_tb;
 		validflag=1'b1;
 		#20
 		validflag=1'b0;
-		#1500 $finish;
+		#1330 //Drive miso
+		miso <= 1'b1; #40;
+		miso <= 1'b0; #40;
+		miso <= 1'b1; #40;
+		miso <= 1'b1; #40;
+		miso <= 1'b1; #40;
+		miso <= 1'b1; #40;
+		miso <= 1'b0; #40;
+		miso <= 1'b1; #40;
+		#100 $finish;
 	end
 
 	//CLK driving
