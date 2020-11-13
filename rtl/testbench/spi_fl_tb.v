@@ -17,6 +17,7 @@ module spi_tb;
 	reg [23:0] address;
 	reg [7:0] command;
 	reg validflag; //check later
+	wire validflag_out; //check
 	wire tready;
 
 	//Controller signals
@@ -38,6 +39,7 @@ module spi_tb;
 			.address	(address),
 			.command	(command),
 			.validflag	(validflag),
+			.validflag_out	(validflag_out),
 			.tready		(tready)
 			);
 			

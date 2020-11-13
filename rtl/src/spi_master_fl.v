@@ -16,6 +16,7 @@ module spi_master_fl(
 	input [`SPI_ADDR_W-1:0]				address,
 	input [`SPI_COM_W-1:0]				command,
 	input 								validflag,
+	output reg							validflag_out,
 	output reg							tready,
 
 	//SPI INTERFACE
@@ -97,7 +98,7 @@ module spi_master_fl(
 						r_mosibusy <= 1'b0;
 						r_misostart <= 1'b1; //Assumes reply on miso line right after mosi busy
 					//	ss <= 1'b1;
-					//	mosicounter reinitialied TODO
+					//	mosicounter reinitialized TODO
 					end
 				end
 			end else begin
@@ -147,12 +148,32 @@ module spi_master_fl(
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			r_misovalid <= 1'b0;
+			validflag_out <= 1'b0;
+			tready <= 1'b0;//in this version
 		end	else begin 
 			if (r_misovalid) begin //Data will be available on data_out after sclk_per/2
 				data_out <= r_misodata;
 				r_misovalid <= 1'b0;
 				//TODO Drive valid data_out signal
+				validflag_out <= 1'b1;
+				tready <= 1'b1; //Check
+
 			end
 		end
 	end
+	//Drive validflag_out to make as pulse
+	//Synchro it to which clk?
+	always @(posedge clk) begin//allow more clks for polling?
+		if (validflag_out) begin
+			validflag_out <= 1'b0;
+			tready <= 1'b0;
+		end
+	end
+	
+	//Drive tready
+	//This version: drive tready 1 only after mosi and miso completed, but
+	//same behaviour/function as validflag_out 
+	//Extensible to allow more parallelization
+	//Eg.: drive tready after mosi sent
+
 endmodule
