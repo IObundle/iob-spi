@@ -7,7 +7,7 @@ module spi_tb;
 	reg rst;
 	reg clk;
 
-	wire miso;
+	reg miso;
 	wire mosi;
 	wire ss;
 	wire sclk;
@@ -67,7 +67,16 @@ module spi_tb;
 		validflag=1'b1;
 		#20
 		validflag=1'b0;
-		#1500 $finish;
+		#1330 //Drive miso
+		miso <= 1'b1; #40;
+		miso <= 1'b0; #40;
+		miso <= 1'b1; #40;
+		miso <= 1'b1; #40;
+		miso <= 1'b1; #40;
+		miso <= 1'b1; #40;
+		miso <= 1'b0; #40;
+		miso <= 1'b1; #40;
+		#100 $finish;
 	end
 
 	//CLK driving
