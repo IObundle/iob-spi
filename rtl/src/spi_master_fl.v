@@ -44,6 +44,9 @@ module spi_master_fl(
 	reg [`SPI_DATA_W-1:0]	r_misodata;
 	reg 					r_misovalid;
 	
+	//Synchronization signals
+	wire onOperation;
+
 	//CLK generation signals
 	reg [3:0] clk_counter = 4'd0;
 	parameter DIVISOR = 4'd2;
@@ -149,15 +152,12 @@ module spi_master_fl(
 		if (rst) begin
 			r_misovalid <= 1'b0;
 			validflag_out <= 1'b0;
-			tready <= 1'b0;//in this version
 		end	else begin 
 			if (r_misovalid) begin //Data will be available on data_out after sclk_per/2
 				data_out <= r_misodata;
 				r_misovalid <= 1'b0;
 				//TODO Drive valid data_out signal
 				validflag_out <= 1'b1;
-				tready <= 1'b1; //Check
-
 			end
 		end
 	end
@@ -166,14 +166,19 @@ module spi_master_fl(
 	always @(posedge clk) begin//allow more clks for polling?
 		if (validflag_out) begin
 			validflag_out <= 1'b0;
-			tready <= 1'b0;
 		end
 	end
 	
 	//Drive tready
-	//This version: drive tready 1 only after mosi and miso completed, but
-	//same behaviour/function as validflag_out 
 	//Extensible to allow more parallelization
 	//Eg.: drive tready after mosi sent
-
+	//Same behavior as ss for now
+	assign onOperation = r_mosiready | r_mosibusy | r_misostart | r_misobusy;//simplify
+	always @(posedge clk, posedge rst) begin
+		if (rst) begin
+			tready <= 1'b1;
+		end else begin
+			tready <= ~onOperation;	
+		end
+	end
 endmodule
