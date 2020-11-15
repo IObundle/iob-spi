@@ -19,6 +19,7 @@ module spi_tb;
 	reg validflag; //check later
 	wire validflag_out; //check
 	wire tready;
+	reg tofrom_fl;
 
 	//Controller signals
 	
@@ -40,7 +41,8 @@ module spi_tb;
 			.command	(command),
 			.validflag	(validflag),
 			.validflag_out	(validflag_out),
-			.tready		(tready)
+			.tready		(tready),
+			.tofrom_fl	(tofrom_fl)
 			);
 			
 
@@ -61,9 +63,10 @@ module spi_tb;
 	//Master Process
 	initial begin
 		#100
-		data_in=8'hFC;
+		data_in=8'h5A;
 		command=8'h55;
 		address=24'h555555;
+		tofrom_fl=1'b1;
 
 		#50
 		validflag=1'b1;
