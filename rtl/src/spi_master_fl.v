@@ -19,6 +19,9 @@ module spi_master_fl(
 	output reg							validflag_out,
 	output reg							tready,
 
+	//MODE CONTROLLING SIGNALS
+	input 								tofrom_fl,//0 from flash, 1 to flash
+
 	//SPI INTERFACE
 	output  	sclk,
 	output reg	ss,
@@ -31,11 +34,14 @@ module spi_master_fl(
 	reg [`SPI_ADDR_W-1:0]	r_address;
 	reg [`SPI_COM_W-1:0]	r_command;
 
+	//Extra reg for mode controlling
+	reg			r_tofromfl;
+
 	//MOSI controller signals
 	reg 		r_mosiready;
 	reg 		r_mosibusy;
-	reg [4:0]	r_mosicounter;
-	wire [31:0]	str2send;
+	reg [5:0]	r_mosicounter;
+	wire [39:0]	str2send;//Parameterize
 
 	//MISO controller signals
 	reg						r_misostart;
@@ -66,25 +72,27 @@ module spi_master_fl(
 			r_datain <= `SPI_DATA_W'b0;
 			r_address <= `SPI_ADDR_W'b0;
 			r_command <= `SPI_COM_W'b0;
+			r_tofromfl <= 1'b0; //Default READ
 		end else begin
 			if (validflag) begin
 				r_datain <= data_in;
 				r_address <= address;
 				r_command <= command;
 				r_mosiready <= 1'b1;
+				r_tofromfl <= tofrom_fl;
 			end
 		end
 	end
 	
 	//MOSI 
-	assign str2send = {r_command, r_address};
+	assign str2send = {r_command, r_address, r_datain};//r_datain included for WRITE op
 	//Send a byte through mosi line
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			ss <= 1'b1;	
 			r_mosiready <= 1'b0;
 			r_mosibusy <= 1'b0;
-			r_mosicounter <= 5'd31;
+			r_mosicounter <= 6'd39;//Changed to accomodate WRITE
 			r_misostart <= 1'b0;
 			r_misobusy <= 1'b0;
 		end else begin
@@ -96,12 +104,19 @@ module spi_master_fl(
 
 				if(r_mosibusy) begin//one-cycle delay
 					mosi <= str2send[r_mosicounter];
-					r_mosicounter <= r_mosicounter - 5'd1;
-					if (r_mosicounter == 5'd0) begin
-						r_mosibusy <= 1'b0;
-						r_misostart <= 1'b1; //Assumes reply on miso line right after mosi busy
+					r_mosicounter <= r_mosicounter - 6'd1;
+					if (r_mosicounter == 6'd8) begin
+						//Simple switch implementation for READ or WRITE
+						//operations, upgrade later
+						if (~r_tofromfl) begin
+							r_mosibusy <= 1'b0;
+							r_misostart <= 1'b1; //Assumes reply on miso line right after mosi busy
+							r_mosicounter <= 6'd39;
+						end
 					//	ss <= 1'b1;
 					//	mosicounter reinitialized TODO
+					end else if(r_mosicounter == 6'd0) begin
+						r_mosibusy <= 1'b0;	
 					end
 				end
 			end else begin
@@ -173,12 +188,14 @@ module spi_master_fl(
 	//Extensible to allow more parallelization
 	//Eg.: drive tready after mosi sent
 	//Same behavior as ss for now
-	assign onOperation = r_mosiready | r_mosibusy | r_misostart | r_misobusy;//simplify
-	always @(posedge clk, posedge rst) begin
+	//Synchronizing on sclk may cause excessive delay for next command from controller
+	assign onOperation = r_mosiready | r_mosibusy | r_misostart | r_misobusy;//Reuse
+	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			tready <= 1'b1;
 		end else begin
-			tready <= ~onOperation;	
+			//tready <= ss;
+			tready <= ~onOperation;
 		end
 	end
 endmodule
