@@ -22,6 +22,9 @@ module spi_tb;
 	wire tready;
 	reg tofrom_fl;
 
+	integer i;
+	reg [31:0]	mem;
+
 	//Controller signals
 	
 	// UUT Instantiation
@@ -67,21 +70,17 @@ module spi_tb;
 		data_in=8'h5A;
 		command=8'h55;
 		address=24'h555555;
-		commtype = 3'b000;
+		commtype = 3'b001;
+		mem	= 32'hA0A0A0A3;
 
 		#50
 		validflag=1'b1;
 		#20
 		validflag=1'b0;
-		#1330 //Drive miso
-		miso <= 1'b1; #40;
-		miso <= 1'b0; #40;
-		miso <= 1'b1; #40;
-		miso <= 1'b1; #40;
-		miso <= 1'b1; #40;
-		miso <= 1'b1; #40;
-		miso <= 1'b0; #40;
-		miso <= 1'b1; #40;
+		#370 //Drive miso
+		for(i=31;i>=0;i=i-1) begin
+			miso <= mem[i]; #40;
+		end
 		#250 $finish;
 	end
 

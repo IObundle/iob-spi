@@ -45,7 +45,7 @@ module spi_master_fl(
 	//MISO controller signals
 	reg						r_misostart;
 	reg 					r_misobusy;
-	reg [2:0]				r_misocounter;//8 bits counter
+	reg [4:0]				r_misocounter;
 	reg [`SPI_DATA_W-1:0]	r_misodata;
 	reg 					r_misovalid;
 	
@@ -146,7 +146,7 @@ module spi_master_fl(
 	//TODO keep ss low
 	always @(posedge sclk, posedge rst) begin
 		if (rst) begin
-			r_misocounter <= 3'b111;
+			r_misocounter <= 5'd31;
 			r_misovalid <= 1'b0;
 		end else begin
 			if (r_misobusy) begin
@@ -155,9 +155,9 @@ module spi_master_fl(
 				r_misodata[r_misocounter] <= miso;
 				r_misocounter <= r_misocounter - 1;
 
-				if (r_misocounter == 3'b0) begin
+				if (r_misocounter == 5'b0) begin
 					r_misovalid <= 1'b1;
-					r_misocounter <= 3'b111;
+					r_misocounter <= 5'd31;
 					r_misobusy <= 1'b0;
 				end
 			end
