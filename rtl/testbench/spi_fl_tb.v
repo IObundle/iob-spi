@@ -12,10 +12,11 @@ module spi_tb;
 	wire ss;
 	wire sclk;
 	
-	reg [7:0] data_in;
-	wire [7:0] data_out;
+	reg [31:0] data_in;
+	wire [31:0] data_out;
 	reg [23:0] address;
 	reg [7:0] command;
+	reg [2:0] commtype;
 	reg validflag; //check later
 	wire validflag_out; //check
 	wire tready;
@@ -39,10 +40,10 @@ module spi_tb;
 			.data_out	(data_out),
 			.address	(address),
 			.command	(command),
+			.commtype	(commtype),
 			.validflag	(validflag),
 			.validflag_out	(validflag_out),
-			.tready		(tready),
-			.tofrom_fl	(tofrom_fl)
+			.tready		(tready)
 			);
 			
 
@@ -66,7 +67,7 @@ module spi_tb;
 		data_in=8'h5A;
 		command=8'h55;
 		address=24'h555555;
-		tofrom_fl=1'b1;
+		commtype = 3'b000;
 
 		#50
 		validflag=1'b1;
@@ -81,7 +82,7 @@ module spi_tb;
 		miso <= 1'b1; #40;
 		miso <= 1'b0; #40;
 		miso <= 1'b1; #40;
-		#100 $finish;
+		#250 $finish;
 	end
 
 	//CLK driving
