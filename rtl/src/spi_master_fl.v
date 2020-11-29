@@ -74,6 +74,7 @@ module spi_master_fl(
 			r_datain <= `SPI_DATA_W'b0;
 			r_address <= `SPI_ADDR_W'b0;
 			r_command <= `SPI_COM_W'b0;
+			r_commandtype <= `SPI_CTYP_W'b111;
 		end else begin
 			if (validflag) begin
 				r_datain <= data_in;
@@ -93,6 +94,8 @@ module spi_master_fl(
 			r_mosiready <= 1'b0;
 			r_mosibusy <= 1'b0;
 			r_mosicounter <= 7'd63;//Changed to accomodate WRITE
+			r_counterstop <= 7'd5656565656;
+			r_expct_answer <= 1'b0;
 			r_misostart <= 1'b0;
 			r_misobusy <= 1'b0;
 		end else begin
@@ -149,6 +152,7 @@ module spi_master_fl(
 		if (rst) begin
 			r_misocounter <= 5'd31;
 			r_misovalid <= 1'b0;
+			r_misodata <= 32'hffffffff; //Default no data on flash mem
 		end else begin
 			if (r_misobusy) begin
 				

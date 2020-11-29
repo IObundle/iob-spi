@@ -1,21 +1,18 @@
-RTL_DIR := ../../rtl/src
-INCLUDE_DIR := ../../rtl/include
-TB_DIR := ../../rtl/testbench
+SPI_DIR:=../..
+incdir:=-I
+defmacro:=-D
+include ../simulation.mk
 
-VC = iverilog
-VFLAGS = -W all -I.  -g2005-sv
-CFLAGS = -W all -I$(INCLUDE_DIR) -g2005-sv
+#icarus verilog simulator
+VLOG:=iverilog -W all -g2005-sv
 
-INCLUDE := $(shell find $(INCLUDE_DIR) -name '*.vh')
+run: a.out
+	./$<
 
-SRC := $(shell find $(RTL_DIR) -name '*.v') $(shell find $(TB_DIR) -name '*.v')
+a.out: $(VSRC) $(VHDR)
+	$(VLOG) $(INCLUDE) $(DEFINE) $(VSRC)
 
-a.out:  $(SRC) $(INCLUDE)
-	$(VC)  $(CFLAGS) $(VFLAGS) $(SRC)
-	./$@
-
-clean: 
+clean: clean_hw
 	@rm -f a.out *~ *.vcd
 
-.PHONY: clean
-
+.PHONY: all clean

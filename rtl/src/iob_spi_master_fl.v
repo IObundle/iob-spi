@@ -5,8 +5,9 @@
 
 module iob_spi_master_fl
 #(
-	parameter ADDR_W = `FL_ADDR_W;
-	parameter WDATA_W = `FL_WDATA_W;
+	parameter ADDR_W = `FL_ADDR_W,
+	parameter DATA_W = `DATA_W,
+	parameter WDATA_W = `FL_WDATA_W
 )
 (
 	
@@ -20,12 +21,12 @@ module iob_spi_master_fl
 `include "sw_reg_gen.v"
 
 	//Hard or Soft Reset
-	`SIGNAL(rst_int, 1);
-	`COMB rst_int = rst | FLC_RESET;
+	`SIGNAL(rst_int, 1)
+	`COMB rst_int = rst | FL_RESET;
 	
 	//Ready signal from flash controller
-	`SIGNAL(ready_int, 1);
-	`SIGNAL2OUT(ready, ready_int);
+	`SIGNAL(ready_int, 1)
+	`SIGNAL2OUT(ready, ready_int)
 
 	//Instantiate core
 	spi_master_fl fl_spi0
@@ -36,16 +37,16 @@ module iob_spi_master_fl
 		.command(FL_COMMAND),
 		.validflag(FL_VALIDFLG),
 		.commtype(FL_COMMANDTP),
-		.validflag_out(FL_VALIGFLGOUT),
+		.validflag_out(FL_VALIDFLGOUT),
 		.tready(ready_int),
 
 		.clk(clk),
-		.rst(rst_int),
+		.rst(rst_int)//,
 
-		.sclk(),
-		.ss(),
-		.mosi(),
-		.miso()
+		//.sclk(),
+		//.ss(),
+		//.mosi(),
+		//.miso()
 	);
 
 
