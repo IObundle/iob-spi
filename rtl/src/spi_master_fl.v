@@ -2,6 +2,7 @@
 `timescale 1ns / 1ps
 `define SPI_DATA_W 32 
 `define SPI_COM_W 8
+`define SPI_CTYP_W 3
 `define SPI_ADDR_W 24
 
 module spi_master_fl(
@@ -16,7 +17,7 @@ module spi_master_fl(
 	input [`SPI_ADDR_W-1:0]				address,
 	input [`SPI_COM_W-1:0]				command,
 	input 								validflag,
-	input [2:0]							commtype,
+	input [`SPI_CTYP_W-1:0]				commtype,
 	output reg							validflag_out,
 	output reg							tready,
 
