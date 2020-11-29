@@ -1,7 +1,8 @@
 
 `timescale 1ns / 1ps
-`define SPI_DATA_W 8
+`define SPI_DATA_W 32 
 `define SPI_COM_W 8
+`define SPI_CTYP_W 3
 `define SPI_ADDR_W 24
 
 module spi_master_fl(
@@ -16,11 +17,9 @@ module spi_master_fl(
 	input [`SPI_ADDR_W-1:0]				address,
 	input [`SPI_COM_W-1:0]				command,
 	input 								validflag,
+	input [`SPI_CTYP_W-1:0]				commtype,
 	output reg							validflag_out,
 	output reg							tready,
-
-	//MODE CONTROLLING SIGNALS
-	input 								tofrom_fl,//0 from flash, 1 to flash
 
 	//SPI INTERFACE
 	output  	sclk,
@@ -35,23 +34,26 @@ module spi_master_fl(
 	reg [`SPI_COM_W-1:0]	r_command;
 
 	//Extra reg for mode controlling
-	reg			r_tofromfl;
+	reg	[2:0]	r_commandtype;
+	reg [6:0]	r_counterstop;
 
 	//MOSI controller signals
 	reg 		r_mosiready;
 	reg 		r_mosibusy;
-	reg [5:0]	r_mosicounter;
-	wire [39:0]	str2send;//Parameterize
+	reg [6:0]	r_mosicounter;
+	wire [63:0]	str2send;//Parameterize
 
 	//MISO controller signals
 	reg						r_misostart;
 	reg 					r_misobusy;
-	reg [2:0]				r_misocounter;//8 bits counter
+	reg [4:0]				r_misocounter;
 	reg [`SPI_DATA_W-1:0]	r_misodata;
 	reg 					r_misovalid;
 	
 	//Synchronization signals
 	wire onOperation;
+	reg  startOperation; //new
+	reg	 r_expct_answer;	
 
 	//CLK generation signals
 	reg [3:0] clk_counter = 4'd0;
@@ -72,27 +74,28 @@ module spi_master_fl(
 			r_datain <= `SPI_DATA_W'b0;
 			r_address <= `SPI_ADDR_W'b0;
 			r_command <= `SPI_COM_W'b0;
-			r_tofromfl <= 1'b0; //Default READ
+			r_commandtype <= `SPI_CTYP_W'b111;
 		end else begin
 			if (validflag) begin
 				r_datain <= data_in;
 				r_address <= address;
 				r_command <= command;
 				r_mosiready <= 1'b1;
-				r_tofromfl <= tofrom_fl;
+				r_commandtype <= commtype;
 			end
 		end
 	end
 	
 	//MOSI 
-	assign str2send = {r_command, r_address, r_datain};//r_datain included for WRITE op
 	//Send a byte through mosi line
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			ss <= 1'b1;	
 			r_mosiready <= 1'b0;
 			r_mosibusy <= 1'b0;
-			r_mosicounter <= 6'd39;//Changed to accomodate WRITE
+			r_mosicounter <= 7'd63;//Changed to accomodate WRITE
+			r_counterstop <= 7'd5656565656;
+			r_expct_answer <= 1'b0;
 			r_misostart <= 1'b0;
 			r_misobusy <= 1'b0;
 		end else begin
@@ -104,14 +107,17 @@ module spi_master_fl(
 
 				if(r_mosibusy) begin//one-cycle delay
 					mosi <= str2send[r_mosicounter];
-					r_mosicounter <= r_mosicounter - 6'd1;
-					if (r_mosicounter == 6'd8) begin
+					r_mosicounter <= r_mosicounter - 7'd1;
+					if (r_mosicounter == r_counterstop) begin
 						//Simple switch implementation for READ or WRITE
 						//operations, upgrade later
-						if (~r_tofromfl) begin
+						if (r_expct_answer) begin
 							r_mosibusy <= 1'b0;
 							r_misostart <= 1'b1; //Assumes reply on miso line right after mosi busy
-							r_mosicounter <= 6'd39;
+							r_mosicounter <= 7'd63;
+						end else begin
+							r_mosibusy <= 1'b0;
+							r_mosicounter <= 7'd63;
 						end
 					//	ss <= 1'b1;
 					//	mosicounter reinitialized TODO
@@ -144,8 +150,9 @@ module spi_master_fl(
 	//TODO keep ss low
 	always @(posedge sclk, posedge rst) begin
 		if (rst) begin
-			r_misocounter <= 3'b111;
+			r_misocounter <= 5'd31;
 			r_misovalid <= 1'b0;
+			r_misodata <= 32'hffffffff; //Default no data on flash mem
 		end else begin
 			if (r_misobusy) begin
 				
@@ -153,9 +160,9 @@ module spi_master_fl(
 				r_misodata[r_misocounter] <= miso;
 				r_misocounter <= r_misocounter - 1;
 
-				if (r_misocounter == 3'b0) begin
+				if (r_misocounter == 5'b0) begin
 					r_misovalid <= 1'b1;
-					r_misocounter <= 3'b111;
+					r_misocounter <= 5'd31;
 					r_misobusy <= 1'b0;
 				end
 			end
@@ -197,5 +204,50 @@ module spi_master_fl(
 			//tready <= ss;
 			tready <= ~onOperation;
 		end
+	end
+
+	//MUX
+	assign str2send = (r_commandtype == 3'b011) ? {r_command, data_in, {24{1'b0}}}: {r_command, r_address, r_datain};//Parameterize
+	//Master State Machine
+	always @* begin
+		case(r_commandtype)
+				3'b000:	begin//Only command
+						r_mosiready <= 1'b1;
+						r_mosicounter <= 7'd63;
+						r_counterstop <= 7'd56;
+						r_expct_answer <= 1'b0;
+					end
+				3'b001: begin//command + answer
+						r_mosiready <= 1'b1;
+						r_mosicounter <= 7'd63;
+						r_counterstop <= 7'd56;
+						r_expct_answer <= 1'b1;
+					end
+				3'b010: begin//command + address + answer
+						r_mosiready <= 1'b1;
+						r_mosicounter <= 7'd63;
+						r_counterstop <= 7'd48;
+						r_expct_answer <= 1'b1;
+					end
+				3'b011:	begin//command + data_in
+						r_mosiready <= 1'b1;
+						r_mosicounter <= 7'd63;
+						r_counterstop <= 7'd24;
+						r_expct_answer <= 1'b0;
+					end
+				3'b100: begin//command + address + data_in
+						r_mosiready <= 1'b1;
+						r_mosicounter <= 7'd63;
+						r_counterstop <= 7'd0;
+						r_expct_answer <= 1'b0;
+					end
+				3'b101: begin//command+address
+						r_mosiready <= 1'b1;
+						r_mosicounter <= 7'd63;
+						r_counterstop <= 7'd32;
+						r_expct_answer <= 1'b0;
+					end
+			default:;
+		endcase
 	end
 endmodule
