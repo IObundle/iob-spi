@@ -12,6 +12,7 @@ module iob_spi_master_fl
 (
 	
 `include "cpu_nat_s_if.v"
+`include "flash_if.v"
 `include "gen_if.v"
 );
 
@@ -41,12 +42,12 @@ module iob_spi_master_fl
 		.tready(ready_int),
 
 		.clk(clk),
-		.rst(rst_int)//,
-
-		//.sclk(),
-		//.ss(),
-		//.mosi(),
-		//.miso()
+		.rst(rst_int),
+		//Not sw registers
+		.sclk(SCLK),
+		.ss(SS),
+		.mosi(MOSI),
+		.miso(MISO)
 	);
 
 

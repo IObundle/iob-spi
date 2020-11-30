@@ -94,7 +94,7 @@ module spi_master_fl(
 			r_mosiready <= 1'b0;
 			r_mosibusy <= 1'b0;
 			r_mosicounter <= 7'd63;//Changed to accomodate WRITE
-			r_counterstop <= 7'd5656565656;
+			r_counterstop <= 7'd56;
 			r_expct_answer <= 1'b0;
 			r_misostart <= 1'b0;
 			r_misobusy <= 1'b0;
