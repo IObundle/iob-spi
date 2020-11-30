@@ -76,6 +76,8 @@ void spifl_executecommand(int typecode, unsigned int datain, unsigned int addres
 	{
 		case COMM:
 				spifl_setVALIDIN(1);
+				spifl_waitvalidout();
+				spifl_setVALIDIN(0);
 				//deassert valid?
 				break;
 		case COMMANS:
@@ -94,15 +96,21 @@ void spifl_executecommand(int typecode, unsigned int datain, unsigned int addres
 		case COMM_DTIN:
 				spifl_setDATAIN(datain);
 				spifl_setVALIDIN(1);
+				spifl_waitvalidout();
+				spifl_setVALIDIN(0);
 				break;
 		case COMMADDR_DTIN:
 				spifl_setADDRESS(address);
 				spifl_setDATAIN(datain);
 				spifl_setVALIDIN(1);
+				spifl_waitvalidout();
+				spifl_setVALIDIN(0);
 				break;
 		case COMMADDR:
 				spifl_setADDRESS(address);
 				spifl_setVALIDIN(1);
+				spifl_waitvalidout();
+				spifl_setVALIDIN(0);
 				break;
 		default:;
 
