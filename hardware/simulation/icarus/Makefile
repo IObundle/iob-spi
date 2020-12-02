@@ -1,4 +1,4 @@
-SPI_DIR:=../..
+SPI_DIR:=../../..
 incdir:=-I
 defmacro:=-D
 include ../simulation.mk
