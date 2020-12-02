@@ -14,7 +14,7 @@ VHDR+=$(wildcard $(INTERCON_DIR)/hardware/include/*.vh $(INTERCON_DIR)/hardware/
 VHDR+=$(SPI_HW_INC_DIR)/sw_reg_gen.v
 
 #sources
-SPI_SRC_DIR:=$(SPI_DIR)/rtl/src
+SPI_SRC_DIR:=$(SPI_DIR)/hardware/src
 VSRC+=$(wildcard $(SPI_HW_DIR)/src/*_fl.v)#Adapted
 
 $(SPI_HW_INC_DIR)/sw_reg_gen.v: $(SPI_HW_INC_DIR)/sw_reg.v
