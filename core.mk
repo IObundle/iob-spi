@@ -28,3 +28,11 @@ SIM_USER ?=$(USER)
 #SIM_USER ?=user19
 
 SIM_DIR ?=hardware/simulation/$(SIMULATOR)
+
+#
+#DOCUMENT
+#
+DOC_TYPE:=pb
+#DOC_TYPE:=ug
+INTEL ?=1
+XILINX ?=1
