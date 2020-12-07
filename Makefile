@@ -30,6 +30,19 @@ ifeq ($(SIM_SERVER), localhost)
 #	ssh $(SIM_USER)@$(SIM_SERVER) 'cd $(USER)/$(REMOTE_ROOT_DIR); make clean SIM_SERVER=localhost FPGA_SERVER=localhost'
 endif
 
-clean: sim-clean 
+#
+# DOCUMENT
+#
 
-.PHONY: sim sim-waves clean
+doc:
+	make -C document/$(DOC_TYPE) $(DOC_TYPE).pdf
+
+doc-clean:
+	make -C document/$(DOC_TYPE) clean
+
+doc-pdfclean:
+	make -C document/$(DOC_TYPE) pdfclean
+
+clean: sim-clean doc-clean
+
+.PHONY: sim sim-waves doc-clean clean

@@ -7,7 +7,7 @@ IS_CORE:=1
 USE_NETLIST ?=0
 
 #PATHS
-SPI_HW_DIR:=$(SPI_DIR)/rtl
+SPI_HW_DIR:=$(SPI_DIR)/hardware
 SPI_HW_INC_DIR:=$(SPI_HW_DIR)/include
 SPI_DOC_DIR:=$(SPI_DIR)/document
 SPI_SUBMODULES_DIR:=$(SPI_DIR)/submodules
@@ -27,4 +27,12 @@ SIM_USER ?=$(USER)
 #SIM_SERVER ?=micro7.lx.it.pt
 #SIM_USER ?=user19
 
-SIM_DIR ?=simulation/$(SIMULATOR)#
+SIM_DIR ?=hardware/simulation/$(SIMULATOR)
+
+#
+#DOCUMENT
+#
+DOC_TYPE:=pb
+#DOC_TYPE:=ug
+INTEL ?=1
+XILINX ?=1
