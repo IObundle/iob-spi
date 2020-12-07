@@ -8,14 +8,14 @@ INCLUDE+=$(incdir) $(LIB_DIR)/hardware/include
 INCLUDE+=$(incdir) $(INTERCON_DIR)/hardware/include 
 
 #headers
-VHDR+=$(wildcard $(SPI_HW_INC_DIR)/*_fl.vh)#Adapted
+VHDR+=$(wildcard $(SPI_HW_INC_DIR)/*.vh)#Adapted
 VHDR+=$(wildcard $(LIB_DIR)/hardware/include/*.vh)
 VHDR+=$(wildcard $(INTERCON_DIR)/hardware/include/*.vh $(INTERCON_DIR)/hardware/include/*.v)
 VHDR+=$(SPI_HW_INC_DIR)/sw_reg_gen.v
 
 #sources
 SPI_SRC_DIR:=$(SPI_DIR)/hardware/src
-VSRC+=$(wildcard $(SPI_HW_DIR)/src/*_fl.v)#Adapted
+VSRC+=$(wildcard $(SPI_HW_DIR)/src/*.v)#Adapted
 
 $(SPI_HW_INC_DIR)/sw_reg_gen.v: $(SPI_HW_INC_DIR)/sw_reg.v
 	$(LIB_DIR)/software/mkregs.py $< HW
