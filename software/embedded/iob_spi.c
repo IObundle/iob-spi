@@ -1,5 +1,5 @@
 #include "iob_spi.h"
-#include "spi_sw_reg.h"
+#include "SPIsw_reg.h"
 #include "interconnect.h"
 #include "iob_spidefs.h"
 

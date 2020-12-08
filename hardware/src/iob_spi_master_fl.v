@@ -18,8 +18,8 @@ module iob_spi_master_fl
 
 
 	//Software Accessible Registers
-`include "sw_reg.v"
-`include "sw_reg_gen.v"
+`include "SPIsw_reg.v"
+`include "SPIsw_reg_gen.v"
 
 	//Hard or Soft Reset
 	`SIGNAL(rst_int, 1)
