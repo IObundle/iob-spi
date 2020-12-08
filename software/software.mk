@@ -7,8 +7,8 @@ SPI_SW_DIR:=$(SPI_DIR)/software
 INCLUDE+=-I$(SPI_SW_DIR)
 
 #headers
-HDR+=$(SPI_SW_DIR)/*.h $(SPI_SW_DIR)/$(CORE_NAME)sw_reg.h
+HDR+=$(SPI_SW_DIR)/*.h $(SPI_SW_DIR)/SPIsw_reg.h
 
-$(SPI_SW_DIR)/$(CORE_NAME)sw_reg.h: $(SPI_HW_INC_DIR)/$(CORE_NAME)sw_reg.v
+$(SPI_SW_DIR)/SPIsw_reg.h: $(SPI_HW_INC_DIR)/SPIsw_reg.v
 	$(LIB_DIR)/software/mkregs.py $< SW
-	mv $(CORE_NAME)sw_reg.h $@
+	mv SPIsw_reg.h $@
