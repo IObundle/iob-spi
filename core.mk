@@ -3,7 +3,7 @@
 #
 
 CORE_NAME=SPI
-IS_CORE:=1
+IS_CORE=1
 USE_NETLIST ?=0
 
 #PATHS
@@ -32,7 +32,7 @@ SIM_DIR ?=hardware/simulation/$(SIMULATOR)
 #
 #DOCUMENT
 #
-DOC_TYPE:=pb
-#DOC_TYPE:=ug
+#DOC_TYPE:=pb
+DOC_TYPE:=ug
 INTEL ?=1
 XILINX ?=1

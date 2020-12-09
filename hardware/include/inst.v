@@ -5,7 +5,7 @@
 iob_spi_master_fl spifl
 	(
 	 .clk(clk),
-	 .rst(rst),
+	 .rst(reset),
 	 
 	 //cpu interface
 	 .valid(slaves_req[`valid(`SPI)]),
