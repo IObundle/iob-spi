@@ -3,7 +3,8 @@
 #include "interconnect.h"
 #include "iob_spidefs.h"
 
-static int base;
+static unsigned int base;
+//create another static variable for upper addresses
 
 //SET
 void spifl_reset()
