@@ -39,7 +39,7 @@ int main()
 		uart_printf("\nMemory Read (%x) got same word as Programmed(%x)\nSuccess\n", read_mem, word);
 	}
 	else{
-		uart_printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)", read_mem, word);
+		uart_printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)\n", read_mem, word);
 	}
 
 	uart_txwait();*/

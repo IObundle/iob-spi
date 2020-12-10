@@ -56,6 +56,7 @@ module spi_master_fl(
 	reg	 r_expct_answer;	
 	//
 	reg	 r_validedge = 1'b0;
+	reg [1:0] r_validoutHold = 2'b10;
 
 	//CLK generation signals
 	reg [3:0] clk_counter = 4'd0;
@@ -196,9 +197,17 @@ module spi_master_fl(
 	end
 	//Drive validflag_out to make as pulse
 	//Synchro it to which clk?
-	always @(posedge clk) begin//allow more clks for polling?
-		if (validflag_out) begin
-			validflag_out <= 1'b0;
+	always @(posedge rst, negedge sclk) begin//allow more clks for polling? yes it's needed, but exactly how many?
+		if (rst) begin 
+			r_validoutHold <= 2'b10;
+		end else begin
+			if (validflag_out == 1'b1) begin	
+				r_validoutHold <= r_validoutHold - 1;
+				if (r_validoutHold == 2'b00) begin
+					validflag_out <= 1'b0;
+					r_validoutHold <= 2'b10;
+				end
+			end
 		end
 	end
 	
