@@ -16,7 +16,7 @@ int main()
    	uart_init(UART_BASE, FREQ/BAUD);
 
 	//init spi flash controller
-	spi_init(SPI_BASE);
+	spifl_init(SPI_BASE);
 
 	uart_printf("\nTesting SPI flash controller\n");
 
@@ -31,7 +31,7 @@ int main()
 	uart_txwait();
 
 	//Read from flash memory
-	uart_printf("\nReading from flash\n");
+	/*uart_printf("\nReading from flash\n");
 	read_mem = spifl_readmem(address);
 	uart_txwait();
 
@@ -42,5 +42,6 @@ int main()
 		uart_printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)", read_mem, word);
 	}
 
-	uart_txwait();
+	uart_txwait();*/
+	return 0;
 }

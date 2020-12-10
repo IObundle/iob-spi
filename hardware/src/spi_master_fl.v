@@ -54,6 +54,8 @@ module spi_master_fl(
 	wire onOperation;
 	reg  startOperation; //new
 	reg	 r_expct_answer;	
+	//
+	reg	 r_validedge = 1'b0;
 
 	//CLK generation signals
 	reg [3:0] clk_counter = 4'd0;
@@ -76,13 +78,22 @@ module spi_master_fl(
 			r_command <= `SPI_COM_W'b0;
 			r_commandtype <= `SPI_CTYP_W'b111;
 		end else begin
-			if (validflag) begin
+			if (r_validedge) begin
 				r_datain <= data_in;
 				r_address <= address;
 				r_command <= command;
 				r_mosiready <= 1'b1;
 				r_commandtype <= commtype;
+				r_validedge <= 1'b0;
 			end
+		end
+	end
+
+	always @(posedge rst, posedge validflag) begin
+		if (rst) begin
+			r_validedge <= 1'b0;
+		end else begin 
+			r_validedge <= validflag;
 		end
 	end
 	
