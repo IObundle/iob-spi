@@ -1,3 +1,4 @@
+#include <stddef.h>
 #include "iob_spi.h"
 #include "SPIsw_reg.h"
 #include "interconnect.h"
@@ -77,40 +78,40 @@ void spifl_executecommand(int typecode, unsigned int datain, unsigned int addres
 	{
 		case COMM:
 				spifl_setVALIDIN(1);
-				spifl_waitvalidout();
+				//spifl_waitvalidout();
 				spifl_setVALIDIN(0);
 				//deassert valid?
 				break;
 		case COMMANS:
 				spifl_setVALIDIN(1);
-				spifl_waitvalidout();
 				spifl_setVALIDIN(0);
+				spifl_waitvalidout();
 				*dataout = spifl_getDATAOUT();
 				break;
 		case COMMADDR_ANS:
 				spifl_setADDRESS(address);
 				spifl_setVALIDIN(1);
-				spifl_waitvalidout();
 				spifl_setVALIDIN(0);
+				spifl_waitvalidout();
 				*dataout = spifl_getDATAOUT();
 				break;
 		case COMM_DTIN:
 				spifl_setDATAIN(datain);
 				spifl_setVALIDIN(1);
-				spifl_waitvalidout();
+				//spifl_waitvalidout();
 				spifl_setVALIDIN(0);
 				break;
 		case COMMADDR_DTIN:
 				spifl_setADDRESS(address);
 				spifl_setDATAIN(datain);
 				spifl_setVALIDIN(1);
-				spifl_waitvalidout();
+				//spifl_waitvalidout();
 				spifl_setVALIDIN(0);
 				break;
 		case COMMADDR:
 				spifl_setADDRESS(address);
 				spifl_setVALIDIN(1);
-				spifl_waitvalidout();
+				//spifl_waitvalidout();
 				spifl_setVALIDIN(0);
 				break;
 		default:;
