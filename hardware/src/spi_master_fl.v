@@ -113,6 +113,7 @@ module spi_master_fl(
 	//Send a byte through mosi line
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
+			mosi <= 1'b0;	
 			ss <= 1'b1;	
 			r_mosibusy <= 1'b0;
 			r_mosicounter <= 7'd63;//Changed to accomodate WRITE
@@ -189,6 +190,7 @@ module spi_master_fl(
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			r_misovalid <= 1'b0;
+			data_out <= `SPI_DATA_W'd0;
 		end	else if (r_misovalid) begin //Data will be available on data_out after sclk_per/2
 				data_out <= r_misodata;
 				r_misovalid <= 1'b0;
