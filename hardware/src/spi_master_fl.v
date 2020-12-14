@@ -64,7 +64,7 @@ module spi_master_fl(
 	
 	//Generate sclk by clock division
 	always @(posedge clk) begin //rst block ?
-		clk_counter <= clk_counter + 4'd1;
+		clk_counter <= clk_counter + 1'b1;
 		if(clk_counter >= (DIVISOR-1)) begin
 			clk_counter <= 4'd0;
 		end
@@ -125,7 +125,7 @@ module spi_master_fl(
 
 				if(r_mosibusy) begin//one-cycle delay
 					mosi <= str2send[r_mosicounter];
-					r_mosicounter <= r_mosicounter - 7'd1;
+					r_mosicounter <= r_mosicounter - 1'b1;
 					if (r_mosicounter == r_counterstop) begin
 						//Simple switch implementation for READ or WRITE
 						//operations, upgrade later
@@ -177,7 +177,7 @@ module spi_master_fl(
 				
 				//Get miso line data
 				r_misodata[r_misocounter] <= miso;
-				r_misocounter <= r_misocounter - 5'd1;
+				r_misocounter <= r_misocounter - 1'b1;
 
 				if (r_misocounter == 5'b0) begin
 					r_misocounter <= 5'd31;
@@ -217,7 +217,7 @@ module spi_master_fl(
 			r_validoutHold <= 2'b10;
 		end else begin
 			if (validflag_out == 1'b1) begin	
-				r_validoutHold <= r_validoutHold - 2'd1;
+				r_validoutHold <= r_validoutHold - 1'b1;
 				if (r_validoutHold == 2'b00) begin
 					r_validoutHold <= 2'b10;
 				end

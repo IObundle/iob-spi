@@ -14,7 +14,7 @@ SPI_SUBMODULES_DIR:=$(SPI_DIR)/submodules
 INTERCON_DIR:=$(SPI_DIR)/submodules/INTERCON
 LIB_DIR:=$(SPI_DIR)/submodules/LIB
 TEX_DIR:=$(SPI_DIR)/submodules/TEX
-REMOTE_ROOT_DIR ?= sandbox/iob-soc/submodules/SPI#should be SPI for submodule name
+REMOTE_ROOT_DIR ?= sandbox/iob-soc/submodules/SPI
 
 #
 #SIMULATION

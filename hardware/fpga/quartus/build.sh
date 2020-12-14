@@ -5,7 +5,7 @@ nios=/home/iobundle/Intel/Altera_full/18.0/nios2eds/nios2_command_shell.sh
 
 TOP_MODULE="iob_spi_master_fl"
 
-$nios quartus_sh -t ../timer.tcl "$1" "$2" "$3"
+$nios quartus_sh -t ../spi.tcl "$1" "$2" "$3"
 $nios quartus_map --read_settings_files=on --write_settings_files=off $TOP_MODULE -c $TOP_MODULE
 $nios quartus_fit --read_settings_files=off --write_settings_files=off $TOP_MODULE -c $TOP_MODULE
 $nios quartus_cdb --read_settings_files=off --write_settings_files=off $TOP_MODULE -c $TOP_MODULE --merge=on
