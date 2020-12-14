@@ -2,7 +2,7 @@
 # Synthesis and implementation script
 #
 
-set TOP iob_timer
+set TOP iob_spi_master_fl 
 set QUARTUS_VERSION "18.0.0 Standard Edition"
 set FAMILY "Cyclone V"
 set DEVICE 5CGTFD9E5F35C7
@@ -51,11 +51,11 @@ set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_RO
 set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 
 
-set_global_assignment -name PARTITION_NETLIST_TYPE POST_SYNTH -section_id "iob_timer:iob_timer_0"
+set_global_assignment -name PARTITION_NETLIST_TYPE POST_SYNTH -section_id "iob_spi_master_fl:iob_spi_master_fl_0"
 
-set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "iob_timer:iob_timer_0"
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id "iob_spi_master_fl:iob_spi_master_fl_0"
 
-set_global_assignment -name PARTITION_COLOR 39423 -section_id "iob_timer:iob_timer_0"
+set_global_assignment -name PARTITION_COLOR 39423 -section_id "iob_spi_master_fl:iob_spi_master_fl_0"
 
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
 
