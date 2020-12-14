@@ -1,3 +1,5 @@
 *~
 .*.swp
 *.vcd
+hardware/fpga/vivado/XCKU
+hardware/fpga/quartus/CYCLONEV-GT
