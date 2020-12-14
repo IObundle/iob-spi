@@ -83,18 +83,29 @@ module spi_master_fl(
 				r_datain <= data_in;
 				r_address <= address;
 				r_command <= command;
-				r_mosiready <= 1'b1;
 				r_commandtype <= commtype;
-				r_validedge <= 1'b0;
 			end
 		end
 	end
 
-	always @(posedge rst, posedge validflag) begin
+	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_validedge <= 1'b0;
-		end else begin 
-			r_validedge <= validflag;
+		end else if(r_validedge) begin
+			r_validedge <= 1'b0;
+		end else if (validflag) begin 
+			r_validedge <= 1'b1;
+		end
+	end
+
+	//r_mosiready
+	always @(posedge rst, posedge clk) begin
+		if (rst) begin
+			r_mosiready <= 1'b0;
+		end else if (r_validedge) begin
+			r_mosiready <= 1'b1;
+		end else if (r_mosibusy) begin
+			r_mosiready <= 1'b0;
 		end
 	end
 	
@@ -103,19 +114,13 @@ module spi_master_fl(
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			ss <= 1'b1;	
-			r_mosiready <= 1'b0;
 			r_mosibusy <= 1'b0;
 			r_mosicounter <= 7'd63;//Changed to accomodate WRITE
-			r_counterstop <= 7'd56;
-			r_expct_answer <= 1'b0;
-			r_misostart <= 1'b0;
-			r_misobusy <= 1'b0;
 		end else begin
 			if (r_mosiready | r_mosibusy) begin
 				//Drive ss low to start transaction
 				ss <= 1'b0;
 				r_mosibusy <= 1'b1;
-				r_mosiready <= 1'b0;
 
 				if(r_mosibusy) begin//one-cycle delay
 					mosi <= str2send[r_mosicounter];
@@ -125,7 +130,6 @@ module spi_master_fl(
 						//operations, upgrade later
 						if (r_expct_answer) begin
 							r_mosibusy <= 1'b0;
-							r_misostart <= 1'b1; //Assumes reply on miso line right after mosi busy
 							r_mosicounter <= 7'd63;
 						end else begin
 							r_mosibusy <= 1'b0;
@@ -150,12 +154,15 @@ module spi_master_fl(
 	//MISO synchronization
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
+			r_misostart <= 1'b0;
 			r_misobusy <= 1'b0;
-		end else begin
-			if (r_misostart) begin
-				r_misobusy <= 1'b1;
-				r_misostart <= 1'b0;
-			end
+		end else if (r_misostart) begin
+			r_misobusy <= 1'b1;
+			r_misostart <= 1'b0;
+		end else if (r_mosibusy && (r_mosicounter==r_counterstop) &&r_expct_answer) begin
+			r_misostart <= 1'b1; //Assumes reply on miso line right after mosi busy
+		end else if (r_misocounter == 5'b0) begin
+			r_misobusy <= 1'b0;
 		end
 	end
 	//MISO
@@ -163,19 +170,16 @@ module spi_master_fl(
 	always @(posedge sclk, posedge rst) begin
 		if (rst) begin
 			r_misocounter <= 5'd31;
-			r_misovalid <= 1'b0;
 			r_misodata <= 32'hffffffff; //Default no data on flash mem
 		end else begin
 			if (r_misobusy) begin
 				
 				//Get miso line data
 				r_misodata[r_misocounter] <= miso;
-				r_misocounter <= r_misocounter - 1;
+				r_misocounter <= r_misocounter - 5'd1;
 
 				if (r_misocounter == 5'b0) begin
-					r_misovalid <= 1'b1;
 					r_misocounter <= 5'd31;
-					r_misobusy <= 1'b0;
 				end
 			end
 		end
@@ -185,16 +189,25 @@ module spi_master_fl(
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			r_misovalid <= 1'b0;
-			validflag_out <= 1'b0;
-		end	else begin 
-			if (r_misovalid) begin //Data will be available on data_out after sclk_per/2
+		end	else if (r_misovalid) begin //Data will be available on data_out after sclk_per/2
 				data_out <= r_misodata;
 				r_misovalid <= 1'b0;
-				//TODO Drive valid data_out signal
-				validflag_out <= 1'b1;
-			end
+		end else if (r_misobusy && r_misocounter == 5'b0) begin
+				r_misovalid <= 1'b1;
 		end
 	end
+	
+	//Drive validflag_out to make as pulse
+	always @(posedge rst, negedge sclk) begin
+		if(rst) begin
+			validflag_out <= 1'b0;
+		end else if (r_misovalid) begin
+			validflag_out <= 1'b1;
+		end else if (r_validoutHold == 2'b00) begin
+			validflag_out <= 1'b0;
+		end	
+	end
+	
 	//Drive validflag_out to make as pulse
 	//Synchro it to which clk?
 	always @(posedge rst, negedge sclk) begin//allow more clks for polling? yes it's needed, but exactly how many?
@@ -202,9 +215,8 @@ module spi_master_fl(
 			r_validoutHold <= 2'b10;
 		end else begin
 			if (validflag_out == 1'b1) begin	
-				r_validoutHold <= r_validoutHold - 1;
+				r_validoutHold <= r_validoutHold - 2'd1;
 				if (r_validoutHold == 2'b00) begin
-					validflag_out <= 1'b0;
 					r_validoutHold <= 2'b10;
 				end
 			end
@@ -229,45 +241,41 @@ module spi_master_fl(
 	//MUX
 	assign str2send = (r_commandtype == 3'b011) ? {r_command, data_in, {24{1'b0}}}: {r_command, r_address, r_datain};//Parameterize
 	//Master State Machine
-	always @* begin
-		case(r_commandtype)
+	always @(posedge rst, posedge clk) begin
+		if (rst) begin
+			r_expct_answer <= 1'b0;
+			r_counterstop <= 7'd56;
+		end else begin
+			case(r_commandtype)
 				3'b000:	begin//Only command
-						r_mosiready <= 1'b1;
-						r_mosicounter <= 7'd63;
 						r_counterstop <= 7'd56;
 						r_expct_answer <= 1'b0;
 					end
 				3'b001: begin//command + answer
-						r_mosiready <= 1'b1;
-						r_mosicounter <= 7'd63;
 						r_counterstop <= 7'd56;
 						r_expct_answer <= 1'b1;
 					end
 				3'b010: begin//command + address + answer
-						r_mosiready <= 1'b1;
-						r_mosicounter <= 7'd63;
 						r_counterstop <= 7'd48;
 						r_expct_answer <= 1'b1;
 					end
 				3'b011:	begin//command + data_in
-						r_mosiready <= 1'b1;
-						r_mosicounter <= 7'd63;
 						r_counterstop <= 7'd24;
 						r_expct_answer <= 1'b0;
 					end
 				3'b100: begin//command + address + data_in
-						r_mosiready <= 1'b1;
-						r_mosicounter <= 7'd63;
 						r_counterstop <= 7'd0;
 						r_expct_answer <= 1'b0;
 					end
 				3'b101: begin//command+address
-						r_mosiready <= 1'b1;
-						r_mosicounter <= 7'd63;
 						r_counterstop <= 7'd32;
 						r_expct_answer <= 1'b0;
 					end
-			default:;
-		endcase
+			default:	begin
+						r_counterstop <= 7'd32;
+						r_expct_answer <= 1'b0;
+					end
+			endcase
+		end
 	end
 endmodule
