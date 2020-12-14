@@ -21,12 +21,15 @@ int main()
 	uart_printf("\nTesting SPI flash controller\n");
 
 	uart_txwait();
+	
+	uart_printf("\nResetting flash memory\n");
 
-	//Testing SPI
+	uart_txwait();
+
 	spifl_resetmem();
 	
 	//Write(Program) to flash memory
-	uart_printf("\nWriting to flash\n");
+	uart_printf("\nWriting word: (%x) to flash\n", word);
 	spifl_writemem(word, address);
 	uart_txwait();
 
