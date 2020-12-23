@@ -3,5 +3,5 @@
 include $(SPI_DIR)/software/software.mk
  
 #embeded sources
-#SRC+=$(SPI_SW_DIR)/embedded/
+SRC+=$(SPI_SW_DIR)/embedded/*.c
 

@@ -6,6 +6,12 @@ iob_spi_master_fl spifl
 	(
 	 .clk(clk),
 	 .rst(reset),
+
+	 //spi flash interface
+	 .SCLK(spi_sclk),
+	 .SS(spi_ss),
+	 .MOSI(spi_mosi),
+	 .MISO(spi_miso),
 	 
 	 //cpu interface
 	 .valid(slaves_req[`valid(`SPI)]),
