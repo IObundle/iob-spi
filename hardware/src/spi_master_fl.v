@@ -52,8 +52,9 @@ module spi_master_fl(
 	
 	//Synchronization signals
 	wire onOperation;
-	reg  startOperation; //new
-	reg	 r_expct_answer;	
+	reg  startOperation = 1'b0; //new
+	reg	 r_expct_answer = 1'b0;	
+	reg  r_inputread = 1'b0;
 	//
 	reg	 r_validedge = 1'b0;
 	reg [1:0] r_validoutHold = 2'b10;
@@ -78,12 +79,17 @@ module spi_master_fl(
 			r_address <= `SPI_ADDR_W'b0;
 			r_command <= `SPI_COM_W'b0;
 			r_commandtype <= `SPI_CTYP_W'b111;
+			r_inputread <= 1'b0;
 		end else begin
 			if (r_validedge) begin
 				r_datain <= data_in;
 				r_address <= address;
 				r_command <= command;
 				r_commandtype <= commtype;
+				r_inputread <= 1'b1;
+			end
+			else if (~validflag) begin
+				r_inputread <= 1'b0;
 			end
 		end
 	end
@@ -91,10 +97,13 @@ module spi_master_fl(
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_validedge <= 1'b0;
-		end else if(r_validedge) begin
-			r_validedge <= 1'b0;
-		end else if (validflag) begin 
-			r_validedge <= 1'b1;
+		end
+		else begin
+			if (validflag && (~r_inputread) && (~r_validedge)) begin
+				r_validedge <= 1'b1;
+			end else begin
+				r_validedge <= 1'b0;
+			end
 		end
 	end
 
@@ -117,13 +126,15 @@ module spi_master_fl(
 			ss <= 1'b1;	
 			r_mosibusy <= 1'b0;
 			r_mosicounter <= 7'd63;//Changed to accomodate WRITE
-		end else begin
+		end 
+		else begin
 			if (r_mosiready | r_mosibusy) begin
-				//Drive ss low to start transaction
-				ss <= 1'b0;
 				r_mosibusy <= 1'b1;
 
 				if(r_mosibusy) begin//one-cycle delay
+					//Drive ss low to start transaction
+					ss <= 1'b0;
+
 					mosi <= str2send[r_mosicounter];
 					r_mosicounter <= r_mosicounter - 1'b1;
 					if (r_mosicounter == r_counterstop) begin
@@ -138,14 +149,17 @@ module spi_master_fl(
 						end
 					//	ss <= 1'b1;
 					//	mosicounter reinitialized TODO
-					end else if(r_mosicounter == 6'd0) begin
+					end 
+					else if(r_mosicounter == 6'd0) begin
 						r_mosibusy <= 1'b0;	
 					end
 				end
-			end else begin
+			end 
+			else begin
 				if (r_misostart | r_misobusy) begin
 					ss <= 1'b0; //Keep low to receive on miso		
-				end else begin
+				end 
+				else begin
 					ss <= 1'b1;
 				end
 			end

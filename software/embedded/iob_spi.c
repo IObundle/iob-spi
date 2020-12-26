@@ -37,7 +37,7 @@ void spifl_setCOMMTYPE(unsigned int commtype)
 
 void spifl_setVALIDIN(unsigned int validin)
 {
-	IO_SET(base, FL_VALIFLG, validin);
+	IO_SET(base, FL_VALIDFLG, validin);
 }
 
 //GET
@@ -85,14 +85,14 @@ void spifl_executecommand(int typecode, unsigned int datain, unsigned int addres
 		case COMMANS:
 				spifl_setVALIDIN(1);
 				spifl_setVALIDIN(0);
-				spifl_waitvalidout();
+				//spifl_waitvalidout();
 				*dataout = spifl_getDATAOUT();
 				break;
 		case COMMADDR_ANS:
 				spifl_setADDRESS(address);
 				spifl_setVALIDIN(1);
 				spifl_setVALIDIN(0);
-				spifl_waitvalidout();
+				//spifl_waitvalidout();
 				*dataout = spifl_getDATAOUT();
 				break;
 		case COMM_DTIN:
