@@ -129,11 +129,11 @@ module spi_master_fl(
 		end 
 		else begin
 			if (r_mosiready | r_mosibusy) begin
+				//Drive ss low to start transaction
+				ss <= 1'b0;
 				r_mosibusy <= 1'b1;
 
 				if(r_mosibusy) begin//one-cycle delay
-					//Drive ss low to start transaction
-					ss <= 1'b0;
 
 					mosi <= str2send[r_mosicounter];
 					r_mosicounter <= r_mosicounter - 1'b1;
