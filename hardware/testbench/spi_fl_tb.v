@@ -17,6 +17,7 @@ module spi_tb;
 	reg [23:0] address;
 	reg [7:0] command;
 	reg [2:0] commtype;
+	reg [6:0] nmiso_bits;
 	reg validflag; //check later
 	wire validflag_out; //check
 	wire tready;
@@ -44,6 +45,7 @@ module spi_tb;
 			.address	(address),
 			.command	(command),
 			.commtype	(commtype),
+			.nmiso_bits	(nmiso_bits),
 			.validflag	(validflag),
 			.validflag_out	(validflag_out),
 			.tready		(tready)
@@ -68,19 +70,21 @@ module spi_tb;
 	initial begin
 		#100
 		data_in=8'h5A;
-		command=8'h66;
+		command=8'h05;
 		address=24'h555555;
-		commtype = 3'b000;
+		commtype = 3'b001;
+		nmiso_bits = 7'd16;
 		mem	= 32'hA0A0A0A3;
 
 		#50
 		validflag=1'b1;
 		#20
 		validflag=1'b0;
-		//#370 Drive miso
-		/*for(i=31;i>=0;i=i-1) begin
-			miso <= mem[i]; #40;
-		end*/
+		#370// Drive miso
+		for(i=15;i>=0;i=i-1) begin
+			#40;
+			//miso <= mem[i];
+		end
 		#600 $finish;
 	end
 

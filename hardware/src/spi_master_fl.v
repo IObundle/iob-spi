@@ -4,6 +4,7 @@
 `define SPI_COM_W 8
 `define SPI_CTYP_W 3
 `define SPI_ADDR_W 24
+`define SPI_DATA_MINW 8
 
 module spi_master_fl(
 	
@@ -18,6 +19,7 @@ module spi_master_fl(
 	input [`SPI_COM_W-1:0]				command,
 	input 								validflag,
 	input [`SPI_CTYP_W-1:0]				commtype,
+	input [6:0]							nmiso_bits,	
 	output reg							validflag_out,
 	output reg							tready,
 
@@ -36,6 +38,7 @@ module spi_master_fl(
 	//Extra reg for mode controlling
 	reg	[2:0]	r_commandtype;
 	reg [6:0]	r_counterstop;
+	reg [6:0]	r_misoctrstop;
 
 	//MOSI controller signals
 	reg 		r_mosiready;
@@ -46,9 +49,11 @@ module spi_master_fl(
 	//MISO controller signals
 	reg						r_misostart;
 	reg 					r_misobusy;
-	reg [4:0]				r_misocounter;
+	reg [6:0]				r_misocounter;
 	reg [`SPI_DATA_W-1:0]	r_misodata;
 	reg 					r_misovalid;
+	reg	[6:0]				r_nmisobits;
+	reg						r_misofinish;
 	
 	//Synchronization signals
 	wire onOperation;
@@ -86,6 +91,7 @@ module spi_master_fl(
 				r_address <= address;
 				r_command <= command;
 				r_commandtype <= commtype;
+				r_nmisobits <= nmiso_bits;
 				r_inputread <= 1'b1;
 			end
 			else if (~validflag) begin
@@ -176,7 +182,7 @@ module spi_master_fl(
 			r_misostart <= 1'b0;
 		end else if (r_mosibusy && (r_mosicounter==r_counterstop) &&r_expct_answer) begin
 			r_misostart <= 1'b1; //Assumes reply on miso line right after mosi busy
-		end else if (r_misocounter == 5'b0) begin
+		end else if (r_misofinish) begin
 			r_misobusy <= 1'b0;
 		end
 	end
@@ -184,18 +190,24 @@ module spi_master_fl(
 	//TODO keep ss low
 	always @(posedge sclk, posedge rst) begin
 		if (rst) begin
-			r_misocounter <= 5'd31;
-			r_misodata <= 32'hffffffff; //Default no data on flash mem
+			r_misocounter <= 7'd31;
+			r_misodata <= 32'h0; //Default no data on flash mem
+			r_misofinish <= 1'b0;
 		end else begin
 			if (r_misobusy) begin
 				
 				//Get miso line data
 				r_misodata[r_misocounter] <= miso;
 				r_misocounter <= r_misocounter - 1'b1;
+				r_misofinish <= 1'b0;
 
-				if (r_misocounter == 5'b0) begin
-					r_misocounter <= 5'd31;
+				if (r_misocounter == r_misoctrstop) begin
+					r_misocounter <= 7'd31;
+					r_misofinish <= 1'b1;
 				end
+			end
+			else if (r_misovalid) begin
+				r_misofinish <= 1'b0;
 			end
 		end
 	end
@@ -208,7 +220,7 @@ module spi_master_fl(
 		end	else if (r_misovalid) begin //Data will be available on data_out after sclk_per/2
 				data_out <= r_misodata;
 				r_misovalid <= 1'b0;
-		end else if (r_misobusy && r_misocounter == 5'b0) begin
+		end else if (r_misobusy && r_misofinish) begin
 				r_misovalid <= 1'b1;
 		end
 	end
@@ -261,6 +273,7 @@ module spi_master_fl(
 		if (rst) begin
 			r_expct_answer <= 1'b0;
 			r_counterstop <= 7'd56;
+			r_misoctrstop <= 7'd24;
 		end else begin
 			case(r_commandtype)
 				3'b000:	begin//Only command
@@ -270,10 +283,12 @@ module spi_master_fl(
 				3'b001: begin//command + answer
 						r_counterstop <= 7'd56;
 						r_expct_answer <= 1'b1;
+						r_misoctrstop <= 7'd32 - r_nmisobits;
 					end
 				3'b010: begin//command + address + answer
 						r_counterstop <= 7'd48;
 						r_expct_answer <= 1'b1;
+						r_misoctrstop <= 7'd32 - r_nmisobits;
 					end
 				3'b011:	begin//command + data_in
 						r_counterstop <= 7'd24;
