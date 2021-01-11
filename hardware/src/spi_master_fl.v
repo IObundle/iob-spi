@@ -1,5 +1,5 @@
-
 `timescale 1ns / 1ps
+`include "iob_lib.vh"
 `define SPI_DATA_W 32 
 `define SPI_COM_W 8
 `define SPI_CTYP_W 3
@@ -60,6 +60,9 @@ module spi_master_fl(
 	reg  startOperation = 1'b0; //new
 	reg	 r_expct_answer = 1'b0;	
 	reg  r_inputread = 1'b0;
+
+	reg [`SPI_DATA_W-1:0] dout_sync [1:0];
+
 	//
 	reg	 r_validedge = 1'b0;
 	reg [1:0] r_validoutHold = 2'b10;
@@ -124,28 +127,32 @@ module spi_master_fl(
 		end
 	end
 	
-	//MOSI 
+	//Drive ss
+	always @(negedge sclk, posedge rst) begin
+		if (rst)
+			ss <= 1'b1;
+		else if (r_mosiready | r_mosibusy | r_misostart | r_misobusy)
+			ss <= 1'b0;
+		else
+			ss <= 1'b1;
+	end
+
+	//MOSI CONTROLS 
 	//Send a byte through mosi line
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			mosi <= 1'b0;	
-			ss <= 1'b1;	
 			r_mosibusy <= 1'b0;
 			r_mosicounter <= 7'd63;//Changed to accomodate WRITE
 		end 
 		else begin
 			if (r_mosiready | r_mosibusy) begin
-				//Drive ss low to start transaction
-				ss <= 1'b0;
 				r_mosibusy <= 1'b1;
 
 				if(r_mosibusy) begin//one-cycle delay
-
 					mosi <= str2send[r_mosicounter];
 					r_mosicounter <= r_mosicounter - 1'b1;
 					if (r_mosicounter == r_counterstop) begin
-						//Simple switch implementation for READ or WRITE
-						//operations, upgrade later
 						if (r_expct_answer) begin
 							r_mosibusy <= 1'b0;
 							r_mosicounter <= 7'd63;
@@ -153,22 +160,12 @@ module spi_master_fl(
 							r_mosibusy <= 1'b0;
 							r_mosicounter <= 7'd63;
 						end
-					//	ss <= 1'b1;
-					//	mosicounter reinitialized TODO
 					end 
 					else if(r_mosicounter == 6'd0) begin
 						r_mosibusy <= 1'b0;	
 					end
 				end
 			end 
-			else begin
-				if (r_misostart | r_misobusy) begin
-					ss <= 1'b0; //Keep low to receive on miso		
-				end 
-				else begin
-					ss <= 1'b1;
-				end
-			end
 		end
 	end
 	
@@ -211,14 +208,34 @@ module spi_master_fl(
 			end
 		end
 	end
+
+	//Data_out synchronizer
+	always @(posedge clk, posedge rst) begin
+		if (rst) begin
+			data_out <= `SPI_DATA_W'd0;
+			dout_sync[0] <= `SPI_DATA_W'd0;
+			dout_sync[1] <= `SPI_DATA_W'd0;
+		end
+		else begin
+			if (r_misofinish) begin
+				dout_sync[0] <= r_misodata;
+				dout_sync[1] <= dout_sync[0];
+			end
+		end
+	end 
+
+	always @(dout_sync[1]) begin
+		data_out <= dout_sync[1];
+	end
+
 	
 	//Drive module output data_out
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			r_misovalid <= 1'b0;
-			data_out <= `SPI_DATA_W'd0;
+			//data_out <= `SPI_DATA_W'd0;
 		end	else if (r_misovalid) begin //Data will be available on data_out after sclk_per/2
-				data_out <= r_misodata;
+				//data_out <= r_misodata;
 				r_misovalid <= 1'b0;
 		end else if (r_misobusy && r_misofinish) begin
 				r_misovalid <= 1'b1;
