@@ -245,7 +245,7 @@ module spi_master_fl(
 			else if (r_misovalid) begin
 				r_misofinish <= 1'b0;
 			end
-			else if (r_validedgesync) begin
+			else if (r_validedgesync[4]) begin
 				r_misodata <= 0;
 			end
 		end
