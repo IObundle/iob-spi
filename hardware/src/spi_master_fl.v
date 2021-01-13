@@ -70,8 +70,8 @@ module spi_master_fl(
 	reg [1:0] r_validoutHold = 2'b10;
 
 	//CLK generation signals
-	reg [3:0] clk_counter = 4'd0;
-	parameter DIVISOR = 4'd2;
+	//reg [3:0] clk_counter = 4'd0;
+	//parameter DIVISOR = 4'd2;
 	
 	//Generate sclk by clock division
 	/*always @(posedge clk) begin //rst block ?
@@ -152,7 +152,7 @@ module spi_master_fl(
 	//r_mosiready
 	wire 	mosistart;
 	assign mosistart = (|r_validedgesync) & synchrocomplete;
-	always @(posedge rst, posedge sclk, posedge synchrocomplete) begin
+	always @(posedge rst, posedge sclk) begin
 		if (rst) begin
 			r_mosiready <= 1'b0;
 		end else if (mosistart) begin//check
@@ -163,11 +163,13 @@ module spi_master_fl(
 	end
 	
 	//Drive ss
-	//wire		synchro_ss;
-	assign synchro_ss = (r_validedgesync[4] & r_validedgesync[3] & (~r_validedgesync[2]) & (~r_validedgesync[1]) & (~r_validedgesync[0])) ;
+	wire		synchro_ss;
+	assign synchro_ss = (r_validedgesync[4] & r_validedgesync[3] & (~r_validedgesync[2]) & (~r_validedgesync[1]) & (~r_validedgesync[0])) | (r_validedgesync[4] & (~r_validedgesync[3]) & (~r_validedgesync[2]) & (~r_validedgesync[1]) & (~r_validedgesync[0])) 	 ;
 	always @(negedge sclk, posedge rst) begin
 		if (rst)
 			ss <= 1'b1;
+		else if (synchro_ss)
+			ss <= 1'b0;
 		else if (r_mosiready | r_mosibusy | r_misostart | r_misobusy)
 			ss <= 1'b0;
 		else
@@ -252,7 +254,7 @@ module spi_master_fl(
 	//Data_out synchronizer
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
-			data_out <= `SPI_DATA_W'd0;
+			//data_out <= `SPI_DATA_W'd0;
 			dout_sync[0] <= `SPI_DATA_W'd0;
 			dout_sync[1] <= `SPI_DATA_W'd0;
 		end

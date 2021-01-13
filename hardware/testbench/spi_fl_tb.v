@@ -15,7 +15,7 @@ module spi_tb;
 	
 	reg [31:0] data_in;
 	wire [31:0] data_out;
-	reg [23:0] address;
+	reg [31:0] address;
 	reg [7:0] command;
 	reg [2:0] commtype;
 	reg [6:0] nmiso_bits;
