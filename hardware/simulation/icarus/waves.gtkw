@@ -1,0 +1,82 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Tue Jan 12 23:24:50 2021
+[*]
+[dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
+[dumpfile_mtime] "Tue Jan 12 23:21:43 2021"
+[dumpfile_size] 33894
+[savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
+[timestart] 0
+[size] 1362 599
+[pos] -1 -1
+*-16.564953 225800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] spi_tb.
+[treeopen] spi_tb.spi_m.
+[sst_width] 214
+[signals_width] 350
+[sst_expanded] 1
+[sst_vpaned_height] 153
+@28
+spi_tb.spi_m.clk
+@22
+spi_tb.spi_m.clk_counter[3:0]
+spi_tb.spi_m.command[7:0]
+@28
+spi_tb.spi_m.commtype[2:0]
+@22
+spi_tb.spi_m.data_in[31:0]
+spi_tb.spi_m.data_out[31:0]
+@28
+spi_tb.spi_m.miso
+spi_tb.spi_m.mosi
+@22
+spi_tb.spi_m.r_str2sendbuild[71:0]
+spi_tb.spi_m.nmiso_bits[6:0]
+@28
+spi_tb.spi_m.onOperation
+@22
+spi_tb.spi_m.r_command[7:0]
+spi_tb.spi_m.r_mosicounter[7:0]
+spi_tb.spi_m.\r_spistr2send[1][71:0]
+@28
+spi_tb.spi_m.r_commandtype[2:0]
+@22
+spi_tb.spi_m.r_datain[31:0]
+spi_tb.spi_m.r_counterstop[7:0]
+@28
+spi_tb.spi_m.r_expct_answer
+spi_tb.spi_m.sclk
+spi_tb.spi_m.ss
+@22
+spi_tb.spi_m.r_validedgesync[4:0]
+@29
+spi_tb.spi_m.synchro_ss
+@28
+spi_tb.spi_m.r_inputread
+spi_tb.spi_m.r_misobusy
+@22
+spi_tb.spi_m.r_misocounter[6:0]
+spi_tb.spi_m.r_misoctrstop[6:0]
+spi_tb.spi_m.r_misodata[31:0]
+@28
+spi_tb.spi_m.r_misofinish
+spi_tb.spi_m.r_misostart
+spi_tb.spi_m.r_misovalid
+spi_tb.spi_m.r_mosibusy
+spi_tb.spi_m.r_mosiready
+@22
+spi_tb.spi_m.r_nmisobits[6:0]
+@28
+spi_tb.spi_m.r_validedge
+spi_tb.spi_m.r_validoutHold[1:0]
+spi_tb.spi_m.rst
+spi_tb.spi_m.synchrocomplete
+@22
+spi_tb.spi_m.\r_spistr2send[0][71:0]
+@28
+spi_tb.spi_m.startOperation
+spi_tb.spi_m.tready
+spi_tb.spi_m.validflag
+spi_tb.spi_m.validflag_out
+[pattern_trace] 1
+[pattern_trace] 0

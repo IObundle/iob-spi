@@ -136,6 +136,13 @@ void spifl_writemem(unsigned int word, unsigned int address)
 	spifl_executecommand(COMMADDR_DTIN, word, address, PAGE_PROGRAM, NULL);
 }
 
+unsigned int spifl_readStatusReg(unsigned *regstatus)
+{
+     unsigned int bytes = 1;
+     spifl_executecommand(COMMANS, 0, 0,((bytes*8)<<8)| READ_STATUSREG, regstatus);
+     return 1;//Correct later
+}
+
 unsigned int spifl_readmem(unsigned int address)
 {
 	unsigned int data;	

@@ -2,7 +2,7 @@
 
 
 	//SPI
-	output				spi_sclk,
+	output				spi_sclkflash,//create wire for input sclk
 	output 				spi_ss,
 	output				spi_mosi,
-	output				spi_miso,
+	input				spi_miso,

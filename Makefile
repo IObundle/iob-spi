@@ -19,8 +19,8 @@ ifeq ($(SIM_SERVER), localhost)
 #	ssh $(SIM_USER)@$(SIM_SERVER) 'cd $(USER)/$(REMOTE_ROOT_DIR); make -C $(SIM_DIR) run SIMULATOR=$(SIMULATOR) SIM_SERVER=localhost'
 endif
 
-sim-waves:
-	gtkwave $(SIM_DIR)/spi_fl_tb.vcd &
+sim-waves: $(SIM_DIR)/spi_fl_tb.vcd $(SIM_DIR)/waves.gtkw
+	gtkwave $^ &
 
 sim-clean:
 ifeq ($(SIM_SERVER), localhost)
