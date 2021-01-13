@@ -3,7 +3,7 @@
 `define SPI_DATA_W 32 
 `define SPI_COM_W 8
 `define SPI_CTYP_W 3
-`define SPI_ADDR_W 24
+`define SPI_ADDR_W 32
 `define SPI_DATA_MINW 8
 
 module spi_master_fl(
@@ -24,7 +24,7 @@ module spi_master_fl(
 	output reg							tready,
 
 	//SPI INTERFACE
-	output  	sclk,
+	input	  	sclk,
 	output reg	ss,
 	output reg	mosi,
 	input		miso
@@ -37,14 +37,16 @@ module spi_master_fl(
 
 	//Extra reg for mode controlling
 	reg	[2:0]	r_commandtype;
-	reg [6:0]	r_counterstop;
+	reg			r_4byteaddr_on = 1'b0;
+	reg [7:0]	r_counterstop;
 	reg [6:0]	r_misoctrstop;
 
 	//MOSI controller signals
 	reg 		r_mosiready;
 	reg 		r_mosibusy;
-	reg [6:0]	r_mosicounter;
-	wire [63:0]	str2send;//Parameterize
+	reg [7:0]	r_mosicounter;
+	//wire [63:0]	str2send;//Parameterize
+	reg [71:0]	r_str2sendbuild;
 
 	//MISO controller signals
 	reg						r_misostart;
@@ -72,13 +74,13 @@ module spi_master_fl(
 	parameter DIVISOR = 4'd2;
 	
 	//Generate sclk by clock division
-	always @(posedge clk) begin //rst block ?
+	/*always @(posedge clk) begin //rst block ?
 		clk_counter <= clk_counter + 1'b1;
 		if(clk_counter >= (DIVISOR-1)) begin
 			clk_counter <= 4'd0;
 		end
 	end
-	assign sclk = (clk_counter<DIVISOR/2)?1'b0:1'b1;
+	assign sclk = (clk_counter<DIVISOR/2)?1'b0:1'b1;*/
 	
 	//Receive data to transfer from upperlevel controller
 	always @(posedge clk, posedge rst) begin
@@ -116,11 +118,44 @@ module spi_master_fl(
 		end
 	end
 
-	//r_mosiready
+	//Build r_str2sendbuild
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
+			r_str2sendbuild <= 72'h0;
+		end else begin
+			if (~r_4byteaddr_on) begin
+				r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address[23:0], r_datain, {8{1'b0}}};
+			end else begin
+				r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address, r_datain};
+			end
+		end
+	end
+
+	//r_str2send synchronization
+	reg [71:0]			r_spistr2send [1:0];
+	wire 				synchrocomplete;
+	always @(posedge sclk) begin
+		r_spistr2send[0] <= r_str2sendbuild;
+		r_spistr2send[1] <= r_spistr2send[0];
+	end
+	assign synchrocomplete = |(r_spistr2send[1]);
+
+	//mosiready synchronization
+	reg	[4:0]				r_validedgesync=5'd0;
+	always @(posedge sclk, posedge r_validedge) begin
+		if (r_validedge) begin
+			r_validedgesync <= 5'h1f;
+		end else begin
+			r_validedgesync <= {r_validedgesync[3], r_validedgesync[2], r_validedgesync[1], r_validedgesync[0],1'b0};
+		end
+	end
+	//r_mosiready
+	wire 	mosistart;
+	assign mosistart = (|r_validedgesync) & synchrocomplete;
+	always @(posedge rst, posedge sclk, posedge synchrocomplete) begin
+		if (rst) begin
 			r_mosiready <= 1'b0;
-		end else if (r_validedge) begin
+		end else if (mosistart) begin//check
 			r_mosiready <= 1'b1;
 		end else if (r_mosibusy) begin
 			r_mosiready <= 1'b0;
@@ -128,6 +163,8 @@ module spi_master_fl(
 	end
 	
 	//Drive ss
+	//wire		synchro_ss;
+	assign synchro_ss = (r_validedgesync[4] & r_validedgesync[3] & (~r_validedgesync[2]) & (~r_validedgesync[1]) & (~r_validedgesync[0])) ;
 	always @(negedge sclk, posedge rst) begin
 		if (rst)
 			ss <= 1'b1;
@@ -143,25 +180,25 @@ module spi_master_fl(
 		if (rst) begin
 			mosi <= 1'b0;	
 			r_mosibusy <= 1'b0;
-			r_mosicounter <= 7'd63;//Changed to accomodate WRITE
+			r_mosicounter <= 8'd71;//Changed to accomodate WRITE
 		end 
 		else begin
 			if (r_mosiready | r_mosibusy) begin
 				r_mosibusy <= 1'b1;
 
 				if(r_mosibusy) begin//one-cycle delay
-					mosi <= str2send[r_mosicounter];
+					mosi <= r_spistr2send[1][r_mosicounter];
 					r_mosicounter <= r_mosicounter - 1'b1;
 					if (r_mosicounter == r_counterstop) begin
 						if (r_expct_answer) begin
 							r_mosibusy <= 1'b0;
-							r_mosicounter <= 7'd63;
+							r_mosicounter <= 8'd71;
 						end else begin
 							r_mosibusy <= 1'b0;
-							r_mosicounter <= 7'd63;
+							r_mosicounter <= 8'd71;
 						end
 					end 
-					else if(r_mosicounter == 6'd0) begin
+					else if(r_mosicounter == 8'd0) begin
 						r_mosibusy <= 1'b0;	
 					end
 				end
@@ -187,7 +224,7 @@ module spi_master_fl(
 	//TODO keep ss low
 	always @(posedge sclk, posedge rst) begin
 		if (rst) begin
-			r_misocounter <= 7'd31;
+			r_misocounter <= 7'd0;
 			r_misodata <= 32'h0; //Default no data on flash mem
 			r_misofinish <= 1'b0;
 		end else begin
@@ -195,16 +232,19 @@ module spi_master_fl(
 				
 				//Get miso line data
 				r_misodata[r_misocounter] <= miso;
-				r_misocounter <= r_misocounter - 1'b1;
+				r_misocounter <= r_misocounter + 1'b1;
 				r_misofinish <= 1'b0;
 
 				if (r_misocounter == r_misoctrstop) begin
-					r_misocounter <= 7'd31;
+					r_misocounter <= 7'd0;
 					r_misofinish <= 1'b1;
 				end
 			end
 			else if (r_misovalid) begin
 				r_misofinish <= 1'b0;
+			end
+			else if (r_validedgesync) begin
+				r_misodata <= 0;
 			end
 		end
 	end
@@ -217,10 +257,8 @@ module spi_master_fl(
 			dout_sync[1] <= `SPI_DATA_W'd0;
 		end
 		else begin
-			if (r_misofinish) begin
-				dout_sync[0] <= r_misodata;
-				dout_sync[1] <= dout_sync[0];
-			end
+			dout_sync[0] <= r_misodata;
+			dout_sync[1] <= dout_sync[0];
 		end
 	end 
 
@@ -284,43 +322,42 @@ module spi_master_fl(
 	end
 
 	//MUX
-	assign str2send = (r_commandtype == 3'b011) ? {r_command, data_in, {24{1'b0}}}: {r_command, r_address, r_datain};//Parameterize
 	//Master State Machine
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_expct_answer <= 1'b0;
-			r_counterstop <= 7'd56;
-			r_misoctrstop <= 7'd24;
+			r_counterstop <= 8'd64;
+			r_misoctrstop <= 7'd7;
 		end else begin
 			case(r_commandtype)
 				3'b000:	begin//Only command
-						r_counterstop <= 7'd56;
+						r_counterstop <= 8'd64;
 						r_expct_answer <= 1'b0;
 					end
 				3'b001: begin//command + answer
-						r_counterstop <= 7'd56;
+						r_counterstop <= 8'd64;
 						r_expct_answer <= 1'b1;
-						r_misoctrstop <= 7'd32 - r_nmisobits;
+						r_misoctrstop <= r_nmisobits - 1;
 					end
 				3'b010: begin//command + address + answer
-						r_counterstop <= 7'd48;
+						r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
 						r_expct_answer <= 1'b1;
-						r_misoctrstop <= 7'd32 - r_nmisobits;
+						r_misoctrstop <= r_nmisobits - 1;
 					end
 				3'b011:	begin//command + data_in
-						r_counterstop <= 7'd24;
+						r_counterstop <= 8'd32;
 						r_expct_answer <= 1'b0;
 					end
 				3'b100: begin//command + address + data_in
-						r_counterstop <= 7'd0;
+						r_counterstop <= (~r_4byteaddr_on) ? 8'd8: 8'd0;
 						r_expct_answer <= 1'b0;
 					end
 				3'b101: begin//command+address
-						r_counterstop <= 7'd32;
+						r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
 						r_expct_answer <= 1'b0;
 					end
 			default:	begin
-						r_counterstop <= 7'd32;
+						r_counterstop <= 8'd32;
 						r_expct_answer <= 1'b0;
 					end
 			endcase

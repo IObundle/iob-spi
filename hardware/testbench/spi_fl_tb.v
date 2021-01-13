@@ -3,6 +3,7 @@
 module spi_tb;
 	
 	parameter clk_per = 20;
+	parameter sclk_per = 40;
 
 	reg rst;
 	reg clk;
@@ -10,7 +11,7 @@ module spi_tb;
 	reg miso;
 	wire mosi;
 	wire ss;
-	wire sclk;
+	reg sclk;
 	
 	reg [31:0] data_in;
 	wire [31:0] data_out;
@@ -56,10 +57,13 @@ module spi_tb;
 	initial begin
 		$dumpfile("spi_fl_tb.vcd");
 		$dumpvars();
+		$dumpvars(0,spi_tb.spi_m.r_spistr2send[0]);
+		$dumpvars(0,spi_tb.spi_m.r_spistr2send[1]);
 		
 		//Clks and reset
 		rst = 1;
 		clk = 1;
+		sclk = 1;
 
 		//Deassert rst
 		#(4*clk_per+1) rst = 0;
@@ -91,4 +95,7 @@ module spi_tb;
 	//CLK driving
 	always
 		#(clk_per/2) clk=~clk;
+	
+	always
+		#(clk_per/4) sclk=~sclk;
 endmodule
