@@ -63,7 +63,7 @@ module spi_tb;
 		//Clks and reset
 		rst = 1;
 		clk = 1;
-		sclk = 1;
+		//sclk = 1;
 
 		//Deassert rst
 		#(4*clk_per+1) rst = 0;
@@ -96,6 +96,6 @@ module spi_tb;
 	always
 		#(clk_per/2) clk=~clk;
 	
-	always
-		#(clk_per/4) sclk=~sclk;
+	//always
+		//#(clk_per/4) sclk=~sclk;
 endmodule

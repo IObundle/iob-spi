@@ -1,10 +1,10 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Tue Jan 12 23:24:50 2021
+[*] Tue Jan 19 00:47:29 2021
 [*]
 [dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
-[dumpfile_mtime] "Tue Jan 12 23:21:43 2021"
-[dumpfile_size] 33894
+[dumpfile_mtime] "Tue Jan 19 00:46:51 2021"
+[dumpfile_size] 7943
 [savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
 [timestart] 0
 [size] 1362 599
@@ -18,8 +18,11 @@
 [sst_vpaned_height] 153
 @28
 spi_tb.spi_m.clk
+spi_tb.spi_m.sclk
+spi_tb.spi_m.sclk_int
+@29
+spi_tb.spi_m.sclk_out_en
 @22
-spi_tb.spi_m.clk_counter[3:0]
 spi_tb.spi_m.command[7:0]
 @28
 spi_tb.spi_m.commtype[2:0]
@@ -49,9 +52,8 @@ spi_tb.spi_m.sclk
 spi_tb.spi_m.ss
 @22
 spi_tb.spi_m.r_validedgesync[4:0]
-@29
-spi_tb.spi_m.synchro_ss
 @28
+spi_tb.spi_m.synchro_ss
 spi_tb.spi_m.r_inputread
 spi_tb.spi_m.r_misobusy
 @22

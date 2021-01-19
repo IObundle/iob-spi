@@ -24,8 +24,9 @@ module spi_master_fl(
 	output reg							tready,
 
 	//SPI INTERFACE
-	input	  	sclk,
-	output reg	ss,
+	output	  	sclk,
+	//output reg	ss,
+	output		ss,
 	output reg	mosi,
 	input		miso
 );
@@ -55,7 +56,7 @@ module spi_master_fl(
 	reg [`SPI_DATA_W-1:0]	r_misodata;
 	reg 					r_misovalid;
 	reg	[6:0]				r_nmisobits;
-	reg						r_misofinish;
+	//reg						r_misofinish;
 	
 	//Synchronization signals
 	wire onOperation;
@@ -69,18 +70,76 @@ module spi_master_fl(
 	reg	 r_validedge = 1'b0;
 	reg [1:0] r_validoutHold = 2'b10;
 
-	//CLK generation signals
-	//reg [3:0] clk_counter = 4'd0;
-	//parameter DIVISOR = 4'd2;
+	//SCLK generation signals
+	//reg [5:0] sclk_period = 6'd0;
+	//wire [5:0] sclk_halfperiod;
+	reg			r_setup_start;
+	reg			r_counters_done;
+	reg			r_build_done;
+	reg			r_transfers_done;
+	reg			r_mosifinish;
+	reg			r_misofinish;
+	reg			r_idle_rst;
+	
+	reg [8:0]	r_sclk_edges_counter;
+
+	parameter	CLK_DIV=2;
+
+	reg 		sclk_ne;
+	reg			sclk_pe;
+	reg			r_sclk_out_en;
+	reg									sclk_int;
+	reg [$clog2(CLK_DIV*2)-1:0]			clk_counter;
+
+	reg [8:0]							r_sclk_edges;
+	reg			r_transfer_start;
 	
 	//Generate sclk by clock division
-	/*always @(posedge clk) begin //rst block ?
-		clk_counter <= clk_counter + 1'b1;
-		if(clk_counter >= (DIVISOR-1)) begin
-			clk_counter <= 4'd0;
+	
+	//assign sclk_halfperiod = {1'b0, sclk_period[5:1]};
+
+	always @(posedge clk, posedge rst) begin
+		if (rst) begin
+			sclk_ne <= 1'b0;
+			sclk_pe <= 1'b0;
+			sclk_int <= 1'b0;
+			clk_counter <= 0; 
+			r_sclk_edges_counter <= 9'h0;
+			r_transfers_done <= 1'b0;
+		end else begin
+			if (r_transfer_start && r_sclk_edges_counter > 0) begin
+				if (clk_counter == CLK_DIV-1) begin
+					sclk_ne <= 1'b1;
+					sclk_pe <= 1'b0;
+					r_sclk_edges_counter <= r_sclk_edges_counter - 1'b1;
+					if (r_sclk_out_en) sclk_int <= 1'b0;
+					clk_counter <= clk_counter + 1'b1;
+				end else if (clk_counter == CLK_DIV*2-1) begin
+					sclk_ne <= 1'b0;
+					sclk_pe <= 1'b1;
+					r_sclk_edges_counter <= r_sclk_edges_counter - 1'b1;
+					if (r_sclk_out_en) sclk_int <= 1'b1;
+					clk_counter <= clk_counter + 1'b1;
+				end else begin
+					sclk_ne <= 1'b0;
+					sclk_pe <= 1'b0;
+					clk_counter <= clk_counter + 1'b1;
+				end
+			end else begin
+				sclk_ne <= 1'b0;
+				sclk_pe <= 1'b0;
+				clk_counter <= 0; 
+				r_transfers_done <= 1'b0;
+				r_sclk_edges_counter <= r_sclk_edges;
+				if (r_sclk_edges_counter == 0) begin
+					r_transfers_done = 1'b1;
+				end
+			end
 		end
 	end
-	assign sclk = (clk_counter<DIVISOR/2)?1'b0:1'b1;*/
+	// Assign output
+	assign sclk = sclk_int;
+
 	
 	//Receive data to transfer from upperlevel controller
 	always @(posedge clk, posedge rst) begin
@@ -105,6 +164,7 @@ module spi_master_fl(
 		end
 	end
 
+	// Register inputs
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_validedge <= 1'b0;
@@ -122,11 +182,60 @@ module spi_master_fl(
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_str2sendbuild <= 72'h0;
+			r_build_done <= 1'b0;
 		end else begin
-			if (~r_4byteaddr_on) begin
-				r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address[23:0], r_datain, {8{1'b0}}};
-			end else begin
-				r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address, r_datain};
+			r_build_done <= 1'b0;
+			if (r_setup_start) begin
+					r_build_done <= 1'b1;
+					if (~r_4byteaddr_on) begin
+						r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address[23:0], r_datain, {8{1'b0}}};
+					end else begin
+						r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address, r_datain};
+					end
+			end
+		end
+	end
+
+		
+	//Drive mosi
+	always @(posedge clk, posedge rst) begin
+		if (rst) begin
+			mosi <= 1'b0;
+			r_mosicounter <= 8'd71;
+			r_mosifinish <= 1'b0;
+		end else begin
+			//if(r_transfer_start) begin end
+			if (sclk_ne && r_sclk_out_en) begin
+				mosi <= r_str2sendbuild[r_mosicounter];
+				r_mosicounter <= r_mosicounter - 1'b1;
+				if(r_mosicounter == r_counterstop) begin
+					r_mosicounter <= 8'd71;
+					r_mosifinish <= 1'b1;
+				end
+			end
+			if (r_idle_rst) begin
+				r_mosifinish <= 1'b0;
+			end
+		end
+	end
+	
+	//Drive miso
+	always @(posedge clk, posedge rst) begin
+		if (rst) begin
+			r_misodata <= 32'd0;
+			r_misocounter <= 7'd0;
+			r_misofinish <= 1'b0;
+		end else begin
+			if(sclk_pe && r_sclk_out_en && (~r_mosifinish)) begin
+				r_misodata[r_misocounter] <= miso;
+				r_misocounter <= r_misocounter + 1'b1;
+				if (r_misocounter == r_misoctrstop) begin
+					r_misocounter <= 7'd0; 
+					r_misofinish <= 1'b1;
+				end
+			end
+			if (r_idle_rst) begin
+				r_misofinish <= 1'b0;
 			end
 		end
 	end
@@ -163,7 +272,7 @@ module spi_master_fl(
 	end
 	
 	//Drive ss
-	wire		synchro_ss;
+	/*wire		synchro_ss;
 	assign synchro_ss = (r_validedgesync[4] & r_validedgesync[3] & (~r_validedgesync[2]) & (~r_validedgesync[1]) & (~r_validedgesync[0])) | (r_validedgesync[4] & (~r_validedgesync[3]) & (~r_validedgesync[2]) & (~r_validedgesync[1]) & (~r_validedgesync[0])) 	 ;
 	always @(negedge sclk, posedge rst) begin
 		if (rst)
@@ -174,7 +283,7 @@ module spi_master_fl(
 			ss <= 1'b0;
 		else
 			ss <= 1'b1;
-	end
+	end*/
 
 	//MOSI CONTROLS 
 	//Send a byte through mosi line
@@ -264,9 +373,9 @@ module spi_master_fl(
 		end
 	end 
 
-	always @(dout_sync[1]) begin
+	/*always @(dout_sync[1]) begin
 		data_out <= dout_sync[1];
-	end
+	end*/
 
 	
 	//Drive module output data_out
@@ -313,7 +422,7 @@ module spi_master_fl(
 	//Eg.: drive tready after mosi sent
 	//Same behavior as ss for now
 	//Synchronizing on sclk may cause excessive delay for next command from controller
-	assign onOperation = r_mosiready | r_mosibusy | r_misostart | r_misobusy;//Reuse
+	/*assign onOperation = r_mosiready | r_mosibusy | r_misostart | r_misobusy;//Reuse
 	always @(negedge sclk, posedge rst) begin
 		if (rst) begin
 			tready <= 1'b1;
@@ -321,7 +430,7 @@ module spi_master_fl(
 			//tready <= ss;
 			tready <= ~onOperation;
 		end
-	end
+	end*/
 
 	//MUX
 	//Master State Machine
@@ -330,38 +439,129 @@ module spi_master_fl(
 			r_expct_answer <= 1'b0;
 			r_counterstop <= 8'd64;
 			r_misoctrstop <= 7'd7;
+			r_sclk_edges <= 0;
+			r_counters_done <= 1'b0;
 		end else begin
-			case(r_commandtype)
-				3'b000:	begin//Only command
-						r_counterstop <= 8'd64;
-						r_expct_answer <= 1'b0;
+			r_counters_done <= 1'b0;
+			if (r_setup_start) begin
+					r_counters_done <= 1'b1;
+					case(r_commandtype)
+						3'b000:	begin//Only command
+								r_counterstop <= 8'd64;
+								r_expct_answer <= 1'b0;
+								r_sclk_edges <= {8'd8, 1'b0};
+							end
+						3'b001: begin//command + answer
+								r_counterstop <= 8'd64;
+								r_expct_answer <= 1'b1;
+								r_misoctrstop <= r_nmisobits - 1;
+								r_sclk_edges <= {8'd8 + r_nmisobits, 1'b0};
+							end
+						3'b010: begin//command + address + answer
+								r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
+								r_expct_answer <= 1'b1;
+								r_misoctrstop <= r_nmisobits - 1;
+								r_sclk_edges <= (~r_4byteaddr_on)?{8'd8+r_nmisobits+8'd24, 1'b0}:{8'd8+r_nmisobits+8'd32};
+							end
+						3'b011:	begin//command + data_in
+								r_counterstop <= 8'd32;
+								r_expct_answer <= 1'b0;
+								r_sclk_edges <= {8'd40,1'b0};
+							end
+						3'b100: begin//command + address + data_in
+								r_counterstop <= (~r_4byteaddr_on) ? 8'd8: 8'd0;
+								r_expct_answer <= 1'b0;
+								r_sclk_edges <= (~r_4byteaddr_on)?{8'd64,1'b0}:{8'd72,1'b0};
+							end
+						3'b101: begin//command+address
+								r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
+								r_expct_answer <= 1'b0;
+								r_sclk_edges <= (~r_4byteaddr_on)?{8'd32,1'b0}:{8'd40,1'b0};
+							end
+					default:	begin
+								r_counterstop <= 8'd32;
+								r_expct_answer <= 1'b0;
+								r_sclk_edges <= {8'd8, 1'b0};
+							end
+					endcase
+			end
+		end
+	end
+	
+	//Assert ss
+	assign ss = r_ss_n;
+	
+	//Master State Machine
+	reg [2:0]		r_currstate;
+	localparam IDLE = 3'h0;
+	localparam SETUP = 3'h1;
+	localparam TRANSFER = 3'h2;
+	reg	r_ss_n;
+	always @(posedge rst, posedge clk) begin
+		if (rst) begin
+			r_currstate <= IDLE;
+			r_sclk_out_en <= 1'b0;
+			r_ss_n <= 1'b1;
+			r_transfer_start <= 1'b0;
+			r_setup_start <= 1'b0;
+			r_idle_rst <= 1'b0;
+			tready <= 1'b1;
+			data_out <= 0;
+		end else begin
+			
+			case(r_currstate)
+
+				IDLE:
+				begin
+					//default
+					tready <= 1'b1;
+					r_idle_rst <= 1'b1;
+					r_sclk_out_en <= 1'b0;
+					r_ss_n <= 1'b1;
+					r_transfer_start <= 1'b0;
+					if(r_validedge) begin
+						r_idle_rst <= 1'b0;
+						r_setup_start <= 1'b1;
+						data_out <= 0;
+						tready <= 1'b0;
+						r_currstate <= SETUP;
 					end
-				3'b001: begin//command + answer
-						r_counterstop <= 8'd64;
-						r_expct_answer <= 1'b1;
-						r_misoctrstop <= r_nmisobits - 1;
+				end
+
+				SETUP:
+				begin
+					r_transfer_start <= 1'b0;
+					r_setup_start <= 1'b0;
+					tready <= 1'b0;
+					if(r_build_done && r_counters_done) begin
+						r_transfer_start <= 1'b1;
+						r_ss_n <= 1'b0;
+						//r_sclk_out_en <= 1'b1;
+						r_currstate <= TRANSFER;
 					end
-				3'b010: begin//command + address + answer
-						r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
-						r_expct_answer <= 1'b1;
-						r_misoctrstop <= r_nmisobits - 1;
+				end
+
+				TRANSFER:
+				begin
+					r_ss_n <= 1'b0;
+					r_sclk_out_en <= 1'b1;
+					tready <= 1'b0;
+					if(r_transfers_done) begin
+						r_ss_n <= 1'b1;
+						r_sclk_out_en <= 1'b0;
+						data_out <= r_misodata;
+						r_currstate <= IDLE;
 					end
-				3'b011:	begin//command + data_in
-						r_counterstop <= 8'd32;
-						r_expct_answer <= 1'b0;
-					end
-				3'b100: begin//command + address + data_in
-						r_counterstop <= (~r_4byteaddr_on) ? 8'd8: 8'd0;
-						r_expct_answer <= 1'b0;
-					end
-				3'b101: begin//command+address
-						r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
-						r_expct_answer <= 1'b0;
-					end
-			default:	begin
-						r_counterstop <= 8'd32;
-						r_expct_answer <= 1'b0;
-					end
+				end
+
+				default:
+				begin
+					r_sclk_out_en <= 1'b0;
+					r_ss_n <= 1'b1;
+					tready <= 1'b1;
+					data_out <= 0;
+					r_currstate <= IDLE;
+				end
 			endcase
 		end
 	end
