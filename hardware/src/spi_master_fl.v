@@ -24,7 +24,8 @@ module spi_master_fl(
 	output reg							tready,
 
 	//SPI INTERFACE
-	output	  	sclk,
+	//output	  	sclk,
+	output reg		sclk,
 	//output reg	ss,
 	output		ss,
 	output reg	mosi,
@@ -69,6 +70,7 @@ module spi_master_fl(
 	reg			r_mosifinish;
 	reg			r_misofinish;
 	reg			r_setup_rst;
+	reg			r_sending_done; 
 	
 	reg [8:0]	r_sclk_edges_counter;
 
@@ -115,8 +117,11 @@ module spi_master_fl(
 						end
 					end else begin
 						r_transfers_done <= 1'b1;
+						sclk_pe <= 1'b0;
+						sclk_ne <= 1'b0;
 					end
 			end else begin
+				sclk_int <= 1'b1; //Initial sclk polarity
 				sclk_ne <= 1'b0;
 				sclk_pe <= 1'b0;
 				clk_counter <= 0; 
@@ -126,7 +131,11 @@ module spi_master_fl(
 		end
 	end
 	// Assign output
-	assign sclk = sclk_int;
+	//assign sclk = sclk_int;
+	always @(posedge rst, posedge clk) begin
+		if (rst) sclk <= 1'b1; //default
+		else sclk <= sclk_int;
+	end
 
 	
 	//Receive data to transfer from upperlevel controller
@@ -191,6 +200,7 @@ module spi_master_fl(
 			mosi <= 1'b0;
 			r_mosicounter <= 8'd71;
 			r_mosifinish <= 1'b0;
+			r_sending_done <= 1'b0;
 		end else begin
 			//if(r_transfer_start) begin end
 			if (sclk_ne && r_sclk_out_en && (~r_mosifinish)) begin
@@ -198,11 +208,15 @@ module spi_master_fl(
 				r_mosicounter <= r_mosicounter - 1'b1;
 				if(r_mosicounter == r_counterstop) begin
 					r_mosicounter <= 8'd71;
-					r_mosifinish <= 1'b1;
+					r_sending_done <= 1'b1;
 				end
+			end
+			if (r_sending_done && sclk_pe) begin
+				r_mosifinish <= 1'b1;
 			end
 			if (r_setup_rst) begin
 				r_mosifinish <= 1'b0;
+				r_sending_done <= 1'b0;
 			end
 		end
 	end
