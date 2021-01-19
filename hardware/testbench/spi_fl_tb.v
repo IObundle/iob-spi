@@ -57,8 +57,8 @@ module spi_tb;
 	initial begin
 		$dumpfile("spi_fl_tb.vcd");
 		$dumpvars();
-		$dumpvars(0,spi_tb.spi_m.r_spistr2send[0]);
-		$dumpvars(0,spi_tb.spi_m.r_spistr2send[1]);
+		//$dumpvars(0,spi_tb.spi_m.r_spistr2send[0]);
+		//$dumpvars(0,spi_tb.spi_m.r_spistr2send[1]);
 		
 		//Clks and reset
 		rst = 1;
@@ -77,7 +77,7 @@ module spi_tb;
 		command=8'h05;
 		address=24'h555555;
 		commtype = 3'b001;
-		nmiso_bits = 7'd16;
+		nmiso_bits = 7'd8;
 		mem	= 32'hA0A0A0A3;
 
 		#50
@@ -89,7 +89,7 @@ module spi_tb;
 			#40;
 			//miso <= mem[i];
 		end
-		#600 $finish;
+		#1000 $finish;
 	end
 
 	//CLK driving
