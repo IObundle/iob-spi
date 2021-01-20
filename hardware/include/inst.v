@@ -8,7 +8,7 @@ iob_spi_master_fl spifl
 	 .rst(reset),
 
 	 //spi flash interface
-	 .SCLK(spi_outclk),
+	 .SCLK(spi_outsclk),
 	 .SS(spi_ss),
 	 .MOSI(spi_mosi),
 	 .WP_N(spi_wpn),

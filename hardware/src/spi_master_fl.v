@@ -165,6 +165,7 @@ module spi_master_fl
 			r_command <= `SPI_COM_W'b0;
 			r_commandtype <= `SPI_CTYP_W'b111;
 			r_inputread <= 1'b0;
+			r_nmisobits <= 7'd32;
 		end else begin
 			if (r_validedge) begin
 				r_datain <= data_in;
@@ -176,7 +177,7 @@ module spi_master_fl
 			end
 			else if (~validflag) begin
 				r_inputread <= 1'b0;
-			end
+			end//TODO reset r_nmisobits for idle states (default)
 		end
 	end
 
@@ -244,14 +245,14 @@ module spi_master_fl
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			r_misodata <= 32'd0;
-			r_misocounter <= 7'd0;
+			r_misocounter <= 7'd31;
 			r_misofinish <= 1'b0;
 		end else begin
 			if(sclk_pe && r_sclk_out_en && (r_mosifinish)) begin
 				r_misodata[r_misocounter] <= miso;
-				r_misocounter <= r_misocounter + 1'b1;
+				r_misocounter <= r_misocounter - 1'b1;
 				if (r_misocounter == r_misoctrstop) begin
-					r_misocounter <= 7'd0; 
+					r_misocounter <= 7'd31; 
 					r_misofinish <= 1'b1;
 				end
 			end
@@ -294,7 +295,7 @@ module spi_master_fl
 		if (rst) begin
 			r_expct_answer <= 1'b0;
 			r_counterstop <= 8'd64;
-			r_misoctrstop <= 7'd7;
+			r_misoctrstop <= 7'd0;
 			r_sclk_edges <= 0;
 			r_counters_done <= 1'b0;
 		end else begin
@@ -310,13 +311,13 @@ module spi_master_fl
 						3'b001: begin//command + answer
 								r_counterstop <= 8'd64;
 								r_expct_answer <= 1'b1;
-								r_misoctrstop <= r_nmisobits - 1;
+								r_misoctrstop <= 7'd32 - r_nmisobits;
 								r_sclk_edges <= {8'd8 + r_nmisobits, 1'b0};
 							end
 						3'b010: begin//command + address + answer
 								r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
 								r_expct_answer <= 1'b1;
-								r_misoctrstop <= r_nmisobits - 1;
+								r_misoctrstop <= 7'd32 - r_nmisobits;
 								r_sclk_edges <= (~r_4byteaddr_on)?{8'd8+r_nmisobits+8'd24, 1'b0}:{8'd8+r_nmisobits+8'd32};
 							end
 						3'b011:	begin//command + data_in
@@ -336,7 +337,7 @@ module spi_master_fl
 							end
 					default:	begin
 								r_counterstop <= 8'd32;
-								r_expct_answer <= 1'b0;
+								r_expct_answer <= 1'b0;//TODO other control signals default
 								r_sclk_edges <= {8'd8, 1'b0};
 							end
 					endcase

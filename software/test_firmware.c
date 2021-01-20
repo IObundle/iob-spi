@@ -3,13 +3,15 @@
 #include "iob-uart.h"
 #include "iob_timer.h"
 #include "iob_spi.h"
+#include "SPIsw_reg.h"
+#include "interconnect.h"
 
 
 int main()
 {
 	
   	unsigned int word = 0xFAFAB0CA;
-	unsigned int address = 0x000000;
+	unsigned int address = 0x000100;
 	unsigned int read_mem = 0xF0F0F0F0;
  	//init timer and uart
 	timer_init(TIMER_BASE);
@@ -26,12 +28,19 @@ int main()
 
 	uart_txwait();
 
-	spifl_resetmem();
-	
+	//spifl_resetmem();
+	uart_sleep(10);
+
 	//Write(Program) to flash memory
 	uart_printf("\nWriting word: (%x) to flash\n", word);
 	spifl_writemem(word, address);
 	uart_txwait();
+	
+	unsigned reg=0, reg1 = 0;
+    spifl_readStatusReg(&reg);
+
+    reg1 = IO_GET(SPI_BASE, FL_DATAOUT);
+
 
 	//Read from flash memory
 	/*uart_printf("\nReading from flash\n");
