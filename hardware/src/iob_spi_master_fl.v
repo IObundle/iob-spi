@@ -32,7 +32,7 @@ module iob_spi_master_fl
 	//Instantiate core
 	spi_master_fl 
 	#(
-		.CLKS_PER_HALF_SCLK(8)
+		.CLKS_PER_HALF_SCLK(2)
 	)
 	fl_spi0
 	(
