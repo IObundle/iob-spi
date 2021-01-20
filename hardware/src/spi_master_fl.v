@@ -6,7 +6,11 @@
 `define SPI_ADDR_W 32
 `define SPI_DATA_MINW 8
 
-module spi_master_fl(
+module spi_master_fl
+#(
+	parameter	CLKS_PER_HALF_SCLK=2
+	)
+(
 	
 	//CONTROLLER INTERFACE
 	input		clk,
@@ -29,7 +33,9 @@ module spi_master_fl(
 	//output reg	ss,
 	output		ss,
 	output reg	mosi,
-	input		miso
+	input		miso,
+	output		wp_n,
+	output		hold_n
 );
 
 	//Register TX data, address, command
@@ -71,16 +77,17 @@ module spi_master_fl(
 	reg			r_misofinish;
 	reg			r_setup_rst;
 	reg			r_sending_done; 
+
+	reg			wp_n_int;
+	reg			hold_n_int;
 	
 	reg [8:0]	r_sclk_edges_counter;
-
-	parameter	CLK_DIV=2;
 
 	reg 		sclk_ne;
 	reg			sclk_pe;
 	reg			r_sclk_out_en;
 	reg									sclk_int;
-	reg [$clog2(CLK_DIV*2)-1:0]			clk_counter;
+	reg [$clog2(CLKS_PER_HALF_SCLK*2)-1:0]			clk_counter;
 
 	reg [8:0]							r_sclk_edges;
 	reg			r_transfer_start;
@@ -98,13 +105,13 @@ module spi_master_fl(
 		end else begin
 			if (r_transfer_start) begin
 					if(r_sclk_edges_counter > 0) begin
-						if (clk_counter == CLK_DIV-1) begin
+						if (clk_counter == CLKS_PER_HALF_SCLK-1) begin
 							sclk_ne <= 1'b1;
 							sclk_pe <= 1'b0;
 							r_sclk_edges_counter <= r_sclk_edges_counter - 1'b1;
 							if (r_sclk_out_en) sclk_int <= 1'b0;
 							clk_counter <= clk_counter + 1'b1;
-						end else if (clk_counter == CLK_DIV*2-1) begin
+						end else if (clk_counter == CLKS_PER_HALF_SCLK*2-1) begin
 							sclk_ne <= 1'b0;
 							sclk_pe <= 1'b1;
 							r_sclk_edges_counter <= r_sclk_edges_counter - 1'b1;
@@ -137,6 +144,18 @@ module spi_master_fl(
 		else sclk <= sclk_int;
 	end
 
+	//Drive wp_n and hold_n
+	always @(posedge rst, posedge clk) begin
+		if (rst) begin
+			wp_n_int <= 1'b1;
+			hold_n_int <= 1'b1;
+		end else begin
+			wp_n_int <= 1'b1;
+			hold_n_int <= 1'b1;
+		end
+	end
+	assign wp_n = wp_n_int;
+	assign hold_n = hold_n_int;
 	
 	//Receive data to transfer from upperlevel controller
 	always @(posedge clk, posedge rst) begin

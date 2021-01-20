@@ -30,7 +30,11 @@ module iob_spi_master_fl
 	`SIGNAL2OUT(ready, ready_int)
 
 	//Instantiate core
-	spi_master_fl fl_spi0
+	spi_master_fl 
+	#(
+		.CLKS_PER_HALF_SCLK(8)
+	)
+	fl_spi0
 	(
 		.data_in(FL_DATAIN),
 		.data_out(FL_DATAOUT),
@@ -48,6 +52,8 @@ module iob_spi_master_fl
 		.sclk(SCLK),
 		.ss(SS),
 		.mosi(MOSI),
+		.wp_n(WP_N),
+		.hold_n(HOLD_N),
 		.miso(MISO)
 	);
 
