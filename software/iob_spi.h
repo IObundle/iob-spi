@@ -14,6 +14,7 @@ void spifl_setVALIDIN(unsigned int validin);
 unsigned int spifl_getDATAOUT();
 unsigned int spifl_getVALIDOUT();
 
+unsigned int spifl_readStatusReg(unsigned *reg);
 void spifl_resetmem();
 void spifl_writemem(unsigned int word, unsigned int address);
 unsigned int spifl_readmem(unsigned int address);//extend for more than 4 bytes
