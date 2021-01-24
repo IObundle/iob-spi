@@ -1,4 +1,4 @@
-FPGA_OBJ?=$(FPGA_FAMILY)/iob_spi_master_fl_0.qxp
+FPGA_OBJ?=$(FPGA_FAMILY)/iob_spi_master_fl.qxp
 CONSTRAINTS:=$(wildcard *.sdc)
 
 include ../fpga.mk

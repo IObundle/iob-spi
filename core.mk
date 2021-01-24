@@ -58,7 +58,7 @@ endif
 #
 #DOC_TYPE:=pb
 DOC_TYPE:=ug
-INTEL ?=1
+INTEL ?=0
 XILINX ?=1
 
 VLINE:="V$(VERSION)"

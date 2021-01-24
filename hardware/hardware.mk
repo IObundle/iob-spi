@@ -14,8 +14,16 @@ VHDR+=$(wildcard $(INTERCON_DIR)/hardware/include/*.vh $(INTERCON_DIR)/hardware/
 VHDR+=$(SPI_HW_INC_DIR)/SPIsw_reg_gen.v
 
 #sources
+ifeq ($(FPGA_FAMILY),CYCLONEV_GT)
+	NETLSRC+=$(SPI_HW_DIR)/fpga/$(FPGA_COMP)/$(FPGA_FAMILY)/iob_spi_master_fl_0.qxp
+else
+	NETLSRC+=$(SPI_HW_DIR)/fpga/$(FPGA_COMP)/$(FPGA_FAMILY)/iob_spi_master_fl.edif
+endif
+
 SPI_SRC_DIR:=$(SPI_DIR)/hardware/src
-VSRC+=$(wildcard $(SPI_HW_DIR)/src/*.v)#Adapted
+ifeq ($(USE_NETLIST),0)
+	VSRC+=$(wildcard $(SPI_HW_DIR)/src/*.v)#Adapted
+endif
 
 $(SPI_HW_INC_DIR)/SPIsw_reg_gen.v: $(SPI_HW_INC_DIR)/SPIsw_reg.v
 	$(LIB_DIR)/software/mkregs.py $< HW
