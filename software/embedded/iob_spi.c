@@ -148,7 +148,7 @@ unsigned int spifl_readmem(unsigned int address)
 	unsigned int data;	
 	//execute READ
 	unsigned bytes = 4;
-	spifl_executecommand(COMMADDR_ANS, 0, address, ((bytes*8)<<8)READ, &data);
+	spifl_executecommand(COMMADDR_ANS, 0, address, ((bytes*8)<<8)|READ, &data);
 	return data;
 }
 

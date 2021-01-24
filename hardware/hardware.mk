@@ -15,9 +15,9 @@ VHDR+=$(SPI_HW_INC_DIR)/SPIsw_reg_gen.v
 
 #sources
 ifeq ($(FPGA_FAMILY),CYCLONEV_GT)
-	NETLSRC+=$(I2S_HW_DIR)/fpga/$(FPGA_COMP)/$(FPGA_FAMILY)/iob_spi_master_fl_0.qxp
+	NETLSRC+=$(SPI_HW_DIR)/fpga/$(FPGA_COMP)/$(FPGA_FAMILY)/iob_spi_master_fl_0.qxp
 else
-	NETLSRC+=$(I2S_HW_DIR)/fpga/$(FPGA_COMP)/$(FPGA_FAMILY)/iob_spi_master_fl.edif
+	NETLSRC+=$(SPI_HW_DIR)/fpga/$(FPGA_COMP)/$(FPGA_FAMILY)/iob_spi_master_fl.edif
 endif
 
 SPI_SRC_DIR:=$(SPI_DIR)/hardware/src
