@@ -56,8 +56,8 @@ endif
 #
 #DOCUMENT
 #
-#DOC_TYPE:=pb
-DOC_TYPE:=ug
+DOC_TYPE:=pb
+#DOC_TYPE:=ug
 INTEL ?=0
 XILINX ?=1
 
