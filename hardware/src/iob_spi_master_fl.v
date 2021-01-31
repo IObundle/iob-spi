@@ -41,6 +41,7 @@ module iob_spi_master_fl
 		.address(FL_ADDRESS),
 		.command(FL_COMMAND[7:0]),
 		.nmiso_bits(FL_COMMAND[14:8]),
+		.dummy_cycles(FL_COMMAND[19:16]),
 		.validflag(FL_VALIDFLG),
 		.commtype(FL_COMMANDTP),
 		.validflag_out(FL_VALIDFLGOUT),
