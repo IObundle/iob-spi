@@ -265,7 +265,7 @@ module spi_master_fl
 			else if (r_mosifinish && sclk_ne && (~r_dummy_done)) begin
 				r_dummy_counter <= r_dummy_counter - 1'b1;
 			end
-			else if (r_dummy_counter == 0) begin
+			else if (r_dummy_counter == 0 && sclk_pe) begin
 				//must hold at 0 implicit r_q<=r_q
 				//or implement dummy_done as wire for less delay?
 				r_dummy_done = 1'b1;
