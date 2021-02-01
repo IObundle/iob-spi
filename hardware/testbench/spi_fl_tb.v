@@ -31,7 +31,9 @@ module spi_tb;
 	//Controller signals
 	
 	// UUT Instantiation
-	spi_master_fl spi_m (
+	spi_master_fl 
+	#(.CPOL(1), .CPHA(1))
+	spi_m (
 			.clk		(clk),
 			.rst		(rst),
 
