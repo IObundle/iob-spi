@@ -23,6 +23,12 @@ int main()
 
 	uart_txwait();
 	
+	uart_printf("\nReading flash parameters: command 0x5a\n");
+	unsigned int addressparam = 0x30, wordparam=0;
+	wordparam = spifl_readFlashParam(addressparam);
+
+	uart_printf("\nParameter Values (address (%x)):(%x)\n",addressparam,wordparam);
+
 	//uart_printf("\nResetting flash memory\n");
 
 	//uart_txwait();

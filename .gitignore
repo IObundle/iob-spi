@@ -7,4 +7,6 @@ hardware/include/SPIsw_reg_gen.v
 hardware/include/SPIsw_reg_w.vh
 hardware/simulation/icarus/a.out
 hardware/src/tags
-
+document/pb/xil_results.tex
+document/ug/xil_results.tex
+document/figures/Logo.png

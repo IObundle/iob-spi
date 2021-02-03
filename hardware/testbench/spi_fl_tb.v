@@ -19,6 +19,7 @@ module spi_tb;
 	reg [7:0] command;
 	reg [2:0] commtype;
 	reg [6:0] nmiso_bits;
+	reg [3:0] dummy_cycles;
 	reg validflag; //check later
 	wire validflag_out; //check
 	wire tready;
@@ -30,7 +31,9 @@ module spi_tb;
 	//Controller signals
 	
 	// UUT Instantiation
-	spi_master_fl spi_m (
+	spi_master_fl 
+	#(.CPOL(1), .CPHA(1))
+	spi_m (
 			.clk		(clk),
 			.rst		(rst),
 
@@ -47,6 +50,7 @@ module spi_tb;
 			.command	(command),
 			.commtype	(commtype),
 			.nmiso_bits	(nmiso_bits),
+			.dummy_cycles (dummy_cycles),
 			.validflag	(validflag),
 			.validflag_out	(validflag_out),
 			.tready		(tready)
@@ -74,10 +78,11 @@ module spi_tb;
 	initial begin
 		#100
 		data_in=8'h5A;
-		command=8'h05;
+		command=8'h5A;
 		address=24'h555555;
-		commtype = 3'b001;
-		nmiso_bits = 7'd8;
+		commtype = 3'b010;
+		nmiso_bits = 7'd32;
+		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 
 		#50
@@ -89,7 +94,8 @@ module spi_tb;
 			#40;
 			//miso <= mem[i];
 		end
-		#1000 $finish;
+
+		#6500 $finish;
 	end
 
 	//CLK driving

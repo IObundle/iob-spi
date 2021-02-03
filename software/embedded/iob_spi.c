@@ -152,6 +152,14 @@ unsigned int spifl_readmem(unsigned int address)
 	return data;
 }
 
+unsigned int spifl_readFlashParam(unsigned address)
+{
+	unsigned int data;
+	unsigned bytes = 4;
+	unsigned dummy_cycles = 8;
+	spifl_executecommand(COMMADDR_ANS, 0, address, (dummy_cycles<<16)|((bytes*8)<<8)|READ_FLPARAMS, &data);
+	return data;
+}
 void spifl_erasemem(unsigned int subsector_address)
 {
 	//execute ERASE
