@@ -39,9 +39,9 @@ module spi_tb;
 
 			//SPI
 			.ss			(ss),
-			.mosi		(mosi),
+			.mosi_dq0		(mosi),
 			.sclk		(sclk),
-			.miso		(miso),
+			.miso_dq1		(miso),
 			
 			//Controller
 			.data_in	(data_in),

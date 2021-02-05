@@ -23,26 +23,30 @@ module spi_master_fl
 	input 		rst,
 
 	//CONTROLLER FROM CPU
-	input [`SPI_DATA_W-1:0]				data_in,
+	input [`SPI_DATA_W-1:0]			data_in,
 	output reg [`SPI_DATA_W-1:0]		data_out,
-	input [`SPI_ADDR_W-1:0]				address,
-	input [`SPI_COM_W-1:0]				command,
-	input 								validflag,
-	input [`SPI_CTYP_W-1:0]				commtype,
-	input [6:0]							nmiso_bits,	
-	input [3:0]							dummy_cycles,
-	output reg							validflag_out,
-	output reg							tready,
+	input [`SPI_ADDR_W-1:0]			address,
+	input [`SPI_COM_W-1:0]			command,
+	input 					validflag,
+	input [`SPI_CTYP_W-1:0]		        commtype,
+	input [6:0]				nmiso_bits,	
+	input [3:0]				dummy_cycles,
+	output reg				validflag_out,
+	output reg				tready,
 
 	//SPI INTERFACE
 	//output	  	sclk,
 	output reg		sclk,
 	//output reg	ss,
 	output		ss,
-	output reg	mosi,
+	/*output reg	mosi,
 	input		miso,
 	output		wp_n,
-	output		hold_n
+	output		hold_n*/
+	inout	    mosi_dq0,
+	inout		miso_dq1,
+	inout		wp_n_dq2,
+	inout		hold_n_dq3
 );
 
 	//Register TX data, address, command
@@ -51,8 +55,8 @@ module spi_master_fl
 	reg [`SPI_COM_W-1:0]	r_command;
 
 	//Extra reg for mode controlling
-	reg	[2:0]	r_commandtype;
-	reg			r_4byteaddr_on = 1'b0;
+	reg [2:0]	r_commandtype;
+	reg		r_4byteaddr_on = 1'b0;
 	reg [7:0]	r_counterstop;
 	reg [6:0]	r_misoctrstop;
 
@@ -62,43 +66,43 @@ module spi_master_fl
 	reg [71:0]	r_str2sendbuild;
 
 	//MISO controller signals
-	reg [6:0]				r_misocounter;
+	reg [6:0]		r_misocounter;
 	reg [`SPI_DATA_W-1:0]	r_misodata;
-	reg	[6:0]				r_nmisobits;
+	reg [6:0]		r_nmisobits;
 	
 	//Synchronization signals
-	reg	 r_expct_answer = 1'b0;	
-	reg  r_inputread = 1'b0;
+	reg     r_expct_answer = 1'b0;	
+	reg     r_inputread = 1'b0;
 
-	reg	 r_validedge = 1'b0;
-	reg [1:0] r_validoutHold = 2'b10;
+	reg         r_validedge = 1'b0;
+	reg [1:0]   r_validoutHold = 2'b10;
 
 	//SCLK generation signals
 	//reg [5:0] sclk_period = 6'd0;
 	//wire [5:0] sclk_halfperiod;
-	reg			r_setup_start;
-	reg			r_counters_done;
-	reg			r_build_done;
-	reg			r_transfers_done;
-	reg			r_mosifinish;
-	reg			r_misofinish;
-	reg			r_setup_rst;
-	reg			r_sending_done; 
+	reg		r_setup_start;
+	reg		r_counters_done;
+	reg		r_build_done;
+	reg		r_transfers_done;
+	reg		r_mosifinish;
+	reg		r_misofinish;
+	reg		r_setup_rst;
+	reg		r_sending_done; 
 	reg [3:0]	r_dummy_cycles;
 
-	reg			wp_n_int;
-	reg			hold_n_int;
+	reg		wp_n_int;
+	reg		hold_n_int;
 	
 	reg [8:0]	r_sclk_edges_counter;
 
-	reg 		sclk_leade;
-	reg			sclk_traile;
-	reg			r_sclk_out_en;
-	reg			sclk_int;
-	reg [$clog2(CLKS_PER_HALF_SCLK*2)-1:0]			clk_counter;
+	reg 	sclk_leade;
+	reg		sclk_traile;
+	reg		r_sclk_out_en;
+	reg		sclk_int;
+	reg [$clog2(CLKS_PER_HALF_SCLK*2)-1:0]	clk_counter;
 
 	reg [8:0]	r_sclk_edges;
-	reg			r_transfer_start;
+	reg		r_transfer_start;
 	
 	//assign sclk_halfperiod = {1'b0, sclk_period[5:1]};
 	
@@ -168,9 +172,29 @@ module spi_master_fl
 			hold_n_int <= 1'b1;
 		end
 	end
-	assign wp_n = wp_n_int;
-	assign hold_n = hold_n_int;
+	//assign wp_n = wp_n_int;
+	//assign hold_n = hold_n_int;
+    assign data_tx[0] = r_mosi; 
+    assign data_tx[1] = wp_n_int;
+    assign data_tx[2] = wp_n_int;
+	assign data_tx[3] = hold_n_int;
 	
+    //Configure inout tristate i/o
+    wire [3:0] data_tx;
+    wire [3:0] data_rx;
+    reg oe = 1'b1;
+    assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'bz;
+    assign data_rx = {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0};
+
+    //Drive oe
+    always @(posedge clk, posedge rst) begin
+        if (rst) oe <= 1'b1;
+        else begin
+            if (r_mosifinish) oe <= 1'b0;
+            else if (r_setup_start) oe <= 1'b1;
+        end
+    end
+
 	//Receive data to transfer from upperlevel controller
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
@@ -235,16 +259,19 @@ module spi_master_fl
 
 		
 	//Drive mosi
+    reg r_mosi;
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
-			mosi <= 1'b0;
+			//mosi <= 1'b0;
+            r_mosi <= 1'b0;
 			r_mosicounter <= 8'd71;
 			r_mosifinish <= 1'b0;
 			r_sending_done <= 1'b0;
 		end else begin
 			//if(r_transfer_start) begin end
 			if (`LATCHOUT_EDGE && r_sclk_out_en && (~r_mosifinish)) begin
-				mosi <= r_str2sendbuild[r_mosicounter];
+				//mosi <= r_str2sendbuild[r_mosicounter];
+				r_mosi <= r_str2sendbuild[r_mosicounter];
 				r_mosicounter <= r_mosicounter - 1'b1;
 				if(r_mosicounter == r_counterstop) begin
 					r_mosicounter <= 8'd71;
@@ -263,7 +290,7 @@ module spi_master_fl
 
 	//Go through the dummy cycles
 	reg [3:0]		r_dummy_counter;
-	reg				r_dummy_done;
+	reg			r_dummy_done;
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			r_dummy_counter <= 4'h0;
@@ -293,7 +320,8 @@ module spi_master_fl
 			r_misofinish <= 1'b0;
 		end else begin
 			if(`LATCHIN_EDGE && r_sclk_out_en && (r_mosifinish) && (r_dummy_done)) begin
-				r_misodata[r_misocounter] <= miso;
+				//r_misodata[r_misocounter] <= miso;
+				r_misodata[r_misocounter] <= data_rx[1];
 				r_misocounter <= r_misocounter - 1'b1;
 				if (r_misocounter == r_misoctrstop) begin
 					r_misocounter <= 7'd31; 
