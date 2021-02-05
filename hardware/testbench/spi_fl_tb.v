@@ -20,6 +20,7 @@ module spi_tb;
 	reg [2:0] commtype;
 	reg [6:0] nmiso_bits;
 	reg [3:0] dummy_cycles;
+    reg [7:0] frame_struct;
 	reg validflag; //check later
 	wire validflag_out; //check
 	wire tready;
@@ -50,6 +51,7 @@ module spi_tb;
 			.command	(command),
 			.commtype	(commtype),
 			.nmiso_bits	(nmiso_bits),
+            .frame_struct (frame_struct),
 			.dummy_cycles (dummy_cycles),
 			.validflag	(validflag),
 			.validflag_out	(validflag_out),
@@ -82,6 +84,7 @@ module spi_tb;
 		address=24'h555555;
 		commtype = 3'b010;
 		nmiso_bits = 7'd8;
+        frame_struct = 8'h00;
 		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 
@@ -100,6 +103,7 @@ module spi_tb;
 		command=8'hA3;
 		address=24'h555555;
 		commtype = 3'b001;
+        frame_struct = 8'h02;
 		nmiso_bits = 7'd8;
 		dummy_cycles = 4'd0;
 		mem	= 32'hA0A0A0A3;

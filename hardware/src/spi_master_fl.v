@@ -31,6 +31,7 @@ module spi_master_fl
 	input [`SPI_CTYP_W-1:0]		        commtype,
 	input [6:0]				nmiso_bits,	
 	input [3:0]				dummy_cycles,
+    input [7:0]             frame_struct,
 	output reg				validflag_out,
 	output reg				tready,
 
@@ -76,6 +77,9 @@ module spi_master_fl
 
 	reg         r_validedge = 1'b0;
 	reg [1:0]   r_validoutHold = 2'b10;
+
+    //Frame structure
+    reg [7:0]   r_frame_struct = 0;
 
 	//SCLK generation signals
 	//reg [5:0] sclk_period = 6'd0;
@@ -205,6 +209,7 @@ module spi_master_fl
 			r_inputread <= 1'b0;
 			r_nmisobits <= 7'd32;
 			r_dummy_cycles <= 4'd0;
+            r_frame_struct <= 8'h0;
 		end else begin
 			if (r_validedge) begin
 				r_datain <= data_in;
@@ -213,6 +218,7 @@ module spi_master_fl
 				r_commandtype <= commtype;
 				r_nmisobits <= nmiso_bits;
 				r_dummy_cycles <= dummy_cycles;
+                r_frame_struct <= frame_struct;
 				r_inputread <= 1'b1;
 			end
 			else if (~validflag) begin
@@ -239,6 +245,12 @@ module spi_master_fl
 		end
 	end
 
+    //Frame structure decoding TODO
+    //Now only for rx
+    wire quadrx;
+    wire dualrx;
+    assign dualrx = (r_frame_struct == 8'h01);
+    assign quadrx = (r_frame_struct == 8'h02);
 	//Build r_str2sendbuild
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
@@ -316,15 +328,24 @@ module spi_master_fl
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			r_misodata <= 32'd0;
-			r_misocounter <= 7'd31;
+			r_misocounter <= 7'd0;
 			r_misofinish <= 1'b0;
 		end else begin
 			if(`LATCHIN_EDGE && r_sclk_out_en && (r_mosifinish) && (r_dummy_done)) begin
 				//r_misodata[r_misocounter] <= miso;
-				r_misodata[r_misocounter] <= data_rx[1];
-				r_misocounter <= r_misocounter - 1'b1;
-				if (r_misocounter == r_misoctrstop) begin
-					r_misocounter <= 7'd31; 
+                if (quadrx) begin
+                    r_misodata <= {r_misodata[27:0], {data_rx[3], data_rx[2], data_rx[1], data_rx[0]}};
+				    r_misocounter <= r_misocounter + 3'h4;
+                end else if (dualrx) begin
+                    r_misodata <= {r_misodata[29:0], {data_rx[1], data_rx[0]}};
+				    r_misocounter <= r_misocounter + 3'h2;
+                end else begin
+                    r_misodata <= {r_misodata[30:0], {data_rx[1]}};
+				    r_misocounter <= r_misocounter + 3'h1;
+                end
+				
+                if (r_misocounter == r_misoctrstop) begin
+					r_misocounter <= 7'd0; 
 					r_misofinish <= 1'b1;
 				end
 			end
@@ -363,7 +384,12 @@ module spi_master_fl
 	end
 	
 	//MUX
-	//Master State Machine
+	//Frame structure decoding/controls
+    wire [6:0] w_misocycles;
+    assign w_misocycles = dualrx ? {{1'b0, r_nmisobits[6:1]} + (|r_nmisobits[0])}: 
+                            quadrx ? {{2'b00, r_nmisobits[6:2]} + (|r_nmisobits[1:0])}: 
+                                r_nmisobits;
+
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_expct_answer <= 1'b0;
@@ -384,14 +410,14 @@ module spi_master_fl
 						3'b001: begin//command + answer
 								r_counterstop <= 8'd64;
 								r_expct_answer <= 1'b1;
-								r_misoctrstop <= 7'd32 - r_nmisobits;
-								r_sclk_edges <= {8'd8 + r_nmisobits, 1'b0};
+								r_misoctrstop <= r_nmisobits;
+								r_sclk_edges <= {8'd8 + w_misocycles, 1'b0};
 							end
 						3'b010: begin//command + address + answer (+dummy cycles)
 								r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
 								r_expct_answer <= 1'b1;
-								r_misoctrstop <= 7'd32 - r_nmisobits;
-								r_sclk_edges <= (~r_4byteaddr_on)?{8'd8+r_nmisobits+r_dummy_cycles+8'd24, 1'b0}:{8'd8+r_nmisobits+r_dummy_cycles+8'd32,1'b0};
+								r_misoctrstop <= r_nmisobits;
+								r_sclk_edges <= (~r_4byteaddr_on)?{8'd8+w_misocycles+r_dummy_cycles+8'd24, 1'b0}:{8'd8+w_misocycles+r_dummy_cycles+8'd32,1'b0};
 							end
 						3'b011:	begin//command + data_in
 								r_counterstop <= 8'd32;

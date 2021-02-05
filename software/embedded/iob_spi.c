@@ -143,6 +143,16 @@ unsigned int spifl_readStatusReg(unsigned *regstatus)
      return 1;//Correct later
 }
 
+unsigned int spifl_readfastDualOutput(unsigned address)
+{
+    unsigned misobytes = 4;
+    unsigned frame_struct = 0x00000001;//uint8 later
+	unsigned dummy_cycles = 8;
+    unsigned command = (frame<<20)|(dummy_cycles<<16)|((bytes*8)<<8)|READFAST_DUALOUT;
+	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
+	return data;
+}
+
 unsigned int spifl_readmem(unsigned int address)
 {
 	unsigned int data;	

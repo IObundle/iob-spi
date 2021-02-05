@@ -18,3 +18,4 @@
 #define READ_STATUSREG      0x05
 #define READ_ID				0x9f
 #define READ_FLPARAMS       0x5A
+#define READFAST_DUALOUT    0x3B   

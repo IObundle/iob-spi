@@ -42,6 +42,7 @@ module iob_spi_master_fl
 		.command(FL_COMMAND[7:0]),
 		.nmiso_bits(FL_COMMAND[14:8]),
 		.dummy_cycles(FL_COMMAND[19:16]),
+        .frame_struct(FL_COMMAND[27:20]),
 		.validflag(FL_VALIDFLG),
 		.commtype(FL_COMMANDTP),
 		.validflag_out(FL_VALIDFLGOUT),
