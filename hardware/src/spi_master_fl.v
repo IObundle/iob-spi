@@ -175,7 +175,7 @@ module spi_master_fl
 	//assign wp_n = wp_n_int;
 	//assign hold_n = hold_n_int;
     assign data_tx[0] = r_mosi; 
-    assign data_tx[1] = wp_n_int;
+    assign data_tx[1] = 1'bz;
     assign data_tx[2] = wp_n_int;
 	assign data_tx[3] = hold_n_int;
 	
@@ -183,15 +183,15 @@ module spi_master_fl
     wire [3:0] data_tx;
     wire [3:0] data_rx;
     reg oe = 1'b1;
-    assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'bz;
+    assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'hz;
     assign data_rx = {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0};
 
     //Drive oe
     always @(posedge clk, posedge rst) begin
         if (rst) oe <= 1'b1;
         else begin
+            oe <= 1'b1;
             if (r_mosifinish) oe <= 1'b0;
-            else if (r_setup_start) oe <= 1'b1;
         end
     end
 
@@ -330,6 +330,7 @@ module spi_master_fl
 			end
 			if (r_setup_rst) begin
 				r_misofinish <= 1'b0;
+                r_misodata <= 0;
 			end
 		end
 	end
