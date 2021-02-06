@@ -413,9 +413,22 @@ module spi_master_fl
 	//MUX
 	//Frame structure decoding/controls
     wire [6:0] w_misocycles;
+    wire [3:0] w_commdcycles;
+    wire [6:0] w_addrcycles;
+    wire [3:0] w_altcycles;//TODO
     assign w_misocycles = dualrx ? {{1'b0, r_nmisobits[6:1]} + (|r_nmisobits[0])}: 
                             quadrx ? {{2'b00, r_nmisobits[6:2]} + (|r_nmisobits[1:0])}: 
                                 r_nmisobits;
+    
+    assign w_commdcycles = dualcommd ? 4'd4: //Parameterize with reg later, param, now fixed at max 8bits
+                            quadcommd ? {4'd2}:
+                                4'd8;
+    
+    assign w_addrcycles = dualrx ? (r_4byteaddr_on? 7'd16: 7'd12):
+                            quadrx ? (r_4byteaddr_on? 7'd8: 7'd6):
+                                (r_4byteaddr_on? 7'd32: 7'd24);
+
+    assign w_altcycles = 4'd0;
 
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
@@ -430,41 +443,41 @@ module spi_master_fl
 					r_counters_done <= 1'b1;
 					case(r_commandtype)
 						3'b000:	begin//Only command
-								r_counterstop <= 8'd8 - 1'b1;
+								r_counterstop <= w_commdcycles - 1'b1;
 								r_expct_answer <= 1'b0;
-								r_sclk_edges <= {8'd8, 1'b0};
+								r_sclk_edges <= {w_commdcycles, 1'b0};
 							end
 						3'b001: begin//command + answer
-								r_counterstop <= 8'd8 -1'b1;
-								r_expct_answer <= 1'b1;
-								r_misoctrstop <= w_misocycles -1'b1;
-								r_sclk_edges <= {8'd8 + w_misocycles, 1'b0};
-							end
-						3'b010: begin//command + address + answer (+dummy cycles)
-								r_counterstop <= (~r_4byteaddr_on) ? 8'd32 -1'b1: 8'd40-1'b1;
+								r_counterstop <= w_commdcycles - 1'b1;
 								r_expct_answer <= 1'b1;
 								r_misoctrstop <= w_misocycles - 1'b1;
-								r_sclk_edges <= (~r_4byteaddr_on)?{8'd8+w_misocycles+r_dummy_cycles+8'd24, 1'b0}:{8'd8+w_misocycles+r_dummy_cycles+8'd32,1'b0};
+								r_sclk_edges <= {w_commdcycles + w_misocycles, 1'b0};
+							end
+						3'b010: begin//command + address + answer (+dummy cycles)
+								r_counterstop <= w_commdcycles + w_addrcycles-1'b1;
+								r_expct_answer <= 1'b1;
+								r_misoctrstop <= w_misocycles - 1'b1;
+								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
 							end
 						3'b011:	begin//command + data_in
-								r_counterstop <= 8'd40-1'b1;
+								r_counterstop <= w_commdcycles + 8'd32 - 1'b1;
 								r_expct_answer <= 1'b0;
-								r_sclk_edges <= {8'd40,1'b0};
+								r_sclk_edges <= {w_commdcycles + 8'd32,1'b0};
 							end
 						3'b100: begin//command + address + data_in (+dummy cycles)
-								r_counterstop <= (~r_4byteaddr_on) ? 8'd64-1'b1: 8'd72-1'b1;
+								r_counterstop <= w_commdcycles + w_addrcycles + 8'd32-1'b1;
 								r_expct_answer <= 1'b0;
-								r_sclk_edges <= (~r_4byteaddr_on)?{8'd64+r_dummy_cycles,1'b0}:{8'd72+r_dummy_cycles,1'b0};
+								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + 8'd32,1'b0};
 							end
 						3'b101: begin//command+address
-								r_counterstop <= (~r_4byteaddr_on) ? 8'd32-1'b1: 8'd40-1'b1;
+								r_counterstop <= w_commdcycles + w_addrcycles -1'b1;
 								r_expct_answer <= 1'b0;
-								r_sclk_edges <= (~r_4byteaddr_on)?{8'd32,1'b0}:{8'd40,1'b0};
+								r_sclk_edges <= {w_commdcycles + w_addrcycles,1'b0};
 							end
 					default:	begin//Add code for XIP mode
-								r_counterstop <= 8'd8 -1'b1;
+								r_counterstop <= w_commdcycles -1'b1;
 								r_expct_answer <= 1'b0;//TODO other control signals default
-								r_sclk_edges <= {8'd8, 1'b0};
+								r_sclk_edges <= {w_commdcycles, 1'b0};
 							end
 					endcase
 			end

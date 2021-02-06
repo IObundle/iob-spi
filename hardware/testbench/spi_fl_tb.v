@@ -82,7 +82,7 @@ module spi_tb;
 		data_in=8'h5A;
 		command=8'h5A;
 		address=24'h555555;
-		commtype = 3'b010;
+		commtype = 3'b101;
 		nmiso_bits = 7'd8;
         frame_struct = 8'h00;
 		dummy_cycles = 4'd8;
@@ -97,12 +97,15 @@ module spi_tb;
 			#40;
 			//miso <= mem[i];
 		end
-	    #3000	
+	    //#3000	
+        
+        wait(tready);
+
         //New command
         data_in=8'h5A;
 		command=8'hA3;
 		address=24'h555555;
-		commtype = 3'b001;
+		commtype = 3'b011;
         frame_struct = 8'h01;
 		nmiso_bits = 7'd8;
 		dummy_cycles = 4'd0;
@@ -113,7 +116,9 @@ module spi_tb;
 		validflag=1'b0;
 		//#370// Drive miso
 
-		#3000 $finish;
+		#3000 
+        wait(tready);
+        #100 $finish;
 	end
 
 	//CLK driving
