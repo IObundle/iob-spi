@@ -289,6 +289,7 @@ module spi_master_fl
 		
 	//Drive mosi
     reg [3:0] r_mosi;
+    reg [7:0] r_txindexer;
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			//mosi <= 1'b0;
@@ -296,24 +297,26 @@ module spi_master_fl
 			r_mosicounter <= 8'd0;
 			r_mosifinish <= 1'b0;
 			r_sending_done <= 1'b0;
+            r_txindexer <= 8'd71;
 		end else begin
 			//if(r_transfer_start) begin end
 			if (`LATCHOUT_EDGE && r_sclk_out_en && (~r_mosifinish)) begin
                 if (quadcommd || quadaddr || quadalt) begin
-                    r_mosi[3:0] <= r_str2sendbuild[71:68];//Check index constants
-                    r_str2sendbuild <= r_str2sendbuild << 4;
+                    r_mosi[3:0] <= r_str2sendbuild[r_txindexer -: 4];//Check index constants
+                    r_txindexer <= r_txindexer - 3'h4;
                     r_mosicounter <= r_mosicounter + 3'h4;
                 end else if(dualcommd || dualaddr || dualalt) begin
-                    r_mosi[1:0] <= r_str2sendbuild[71:70];
-                    r_str2sendbuild <= r_str2sendbuild << 2;
+                    r_mosi[1:0] <= r_str2sendbuild[r_txindexer -: 2];
+                    r_txindexer <= r_txindexer - 3'h2;
                     r_mosicounter <= r_mosicounter + 3'h2;
                 end else begin
-                    r_mosi[0] <= r_str2sendbuild[71];
-                    r_str2sendbuild <= r_str2sendbuild << 1;
+                    r_mosi[0] <= r_str2sendbuild[r_txindexer -: 1];
+                    r_txindexer <= r_txindexer - 3'h1;
                     r_mosicounter <= r_mosicounter + 3'h1;
                 end
                 if(r_mosicounter == r_counterstop) begin
                     r_mosicounter <= 8'd0;
+                    r_txindexer <= 8'd71;
                     r_sending_done <= 1'b1;
 			    end
 			end
