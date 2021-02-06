@@ -103,7 +103,7 @@ module spi_tb;
 		command=8'hA3;
 		address=24'h555555;
 		commtype = 3'b001;
-        frame_struct = 8'h02;
+        frame_struct = 8'h01;
 		nmiso_bits = 7'd8;
 		dummy_cycles = 4'd0;
 		mem	= 32'hA0A0A0A3;

@@ -178,14 +178,18 @@ module spi_master_fl
 	end
 	//assign wp_n = wp_n_int;
 	//assign hold_n = hold_n_int;
-    assign data_tx[0] = r_mosi; 
+    /*assign data_tx[0] = r_mosi; 
     assign data_tx[1] = 1'bz;
     assign data_tx[2] = wp_n_int;
-	assign data_tx[3] = hold_n_int;
+	assign data_tx[3] = hold_n_int;*/
 	
-    //Configure inout tristate i/o
     wire [3:0] data_tx;
     wire [3:0] data_rx;
+    assign data_tx = (dualcommd || dualaddr || dualalt) ? {{hold_n_int, wp_n_int},r_mosi[1:0]}:
+                        (quadcommd || quadaddr || quadalt) ? r_mosi[3:0]:
+                            {hold_n_int, wp_n_int, 1'bz,r_mosi[0]};
+
+    //Configure inout tristate i/o
     reg oe = 1'b1;
     assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'hz;
     assign data_rx = {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0};
@@ -246,21 +250,34 @@ module spi_master_fl
 	end
 
     //Frame structure decoding TODO
-    //Now only for rx
+    wire dualcommd;
+    wire quadcommd;
+    wire dualaddr;
+    wire quadaddr;
+    wire dualalt;
+    wire quadalt;
     wire quadrx;
     wire dualrx;
-    assign dualrx = (r_frame_struct == 8'h01);
-    assign quadrx = (r_frame_struct == 8'h02);
-	//Build r_str2sendbuild
+
+    assign dualcommd = (r_frame_struct[7:6] == 2'b01) ? 1'b1:1'b0;
+    assign quadcommd = (r_frame_struct[7:6] == 2'b10) ? 1'b1:1'b0;
+    assign dualaddr = (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
+    assign quadaddr = (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
+    assign dualalt = (r_frame_struct[3:2] == 2'b01) ? 1'b1:1'b0;
+    assign quadalt = (r_frame_struct[3:2] == 2'b10) ? 1'b1:1'b0;
+    assign dualrx = (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
+    assign quadrx = (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
+	
+    //Build r_str2sendbuild
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
-			r_str2sendbuild <= 72'h0;
+			r_str2sendbuild <= 72'h0;//not accounting for alt mode
 			r_build_done <= 1'b0;
 		end else begin
 			r_build_done <= 1'b0;
 			if (r_setup_start) begin
 					r_build_done <= 1'b1;
-					if (~r_4byteaddr_on) begin
+					if (~r_4byteaddr_on) begin//add alt support
 						r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address[23:0], r_datain, {8{1'b0}}};
 					end else begin
 						r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address, r_datain};
@@ -271,24 +288,34 @@ module spi_master_fl
 
 		
 	//Drive mosi
-    reg r_mosi;
+    reg [3:0] r_mosi;
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			//mosi <= 1'b0;
             r_mosi <= 1'b0;
-			r_mosicounter <= 8'd71;
+			r_mosicounter <= 8'd0;
 			r_mosifinish <= 1'b0;
 			r_sending_done <= 1'b0;
 		end else begin
 			//if(r_transfer_start) begin end
 			if (`LATCHOUT_EDGE && r_sclk_out_en && (~r_mosifinish)) begin
-				//mosi <= r_str2sendbuild[r_mosicounter];
-				r_mosi <= r_str2sendbuild[r_mosicounter];
-				r_mosicounter <= r_mosicounter - 1'b1;
-				if(r_mosicounter == r_counterstop) begin
-					r_mosicounter <= 8'd71;
-					r_sending_done <= 1'b1;
-				end
+                if (quadcommd || quadaddr || quadalt) begin
+                    r_mosi[3:0] <= r_str2sendbuild[71:68];//Check index constants
+                    r_str2sendbuild <= r_str2sendbuild << 4;
+                    r_mosicounter <= r_mosicounter + 3'h4;
+                end else if(dualcommd || dualaddr || dualalt) begin
+                    r_mosi[1:0] <= r_str2sendbuild[71:70];
+                    r_str2sendbuild <= r_str2sendbuild << 2;
+                    r_mosicounter <= r_mosicounter + 3'h2;
+                end else begin
+                    r_mosi[0] <= r_str2sendbuild[71];
+                    r_str2sendbuild <= r_str2sendbuild << 1;
+                    r_mosicounter <= r_mosicounter + 3'h1;
+                end
+                if(r_mosicounter == r_counterstop) begin
+                    r_mosicounter <= 8'd0;
+                    r_sending_done <= 1'b1;
+			    end
 			end
 			if (r_sending_done && `LATCHIN_EDGE) begin
 				r_mosifinish <= 1'b1;
@@ -393,8 +420,8 @@ module spi_master_fl
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_expct_answer <= 1'b0;
-			r_counterstop <= 8'd64;
-			r_misoctrstop <= 7'd0;
+			r_counterstop <= 8'd0;
+			r_misoctrstop <= 7'd8;
 			r_sclk_edges <= 0;
 			r_counters_done <= 1'b0;
 		end else begin
@@ -403,39 +430,39 @@ module spi_master_fl
 					r_counters_done <= 1'b1;
 					case(r_commandtype)
 						3'b000:	begin//Only command
-								r_counterstop <= 8'd64;
+								r_counterstop <= 8'd8 - 1'b1;
 								r_expct_answer <= 1'b0;
 								r_sclk_edges <= {8'd8, 1'b0};
 							end
 						3'b001: begin//command + answer
-								r_counterstop <= 8'd64;
+								r_counterstop <= 8'd8 -1'b1;
 								r_expct_answer <= 1'b1;
-								r_misoctrstop <= r_nmisobits;
+								r_misoctrstop <= w_misocycles -1'b1;
 								r_sclk_edges <= {8'd8 + w_misocycles, 1'b0};
 							end
 						3'b010: begin//command + address + answer (+dummy cycles)
-								r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
+								r_counterstop <= (~r_4byteaddr_on) ? 8'd32 -1'b1: 8'd40-1'b1;
 								r_expct_answer <= 1'b1;
-								r_misoctrstop <= r_nmisobits;
+								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= (~r_4byteaddr_on)?{8'd8+w_misocycles+r_dummy_cycles+8'd24, 1'b0}:{8'd8+w_misocycles+r_dummy_cycles+8'd32,1'b0};
 							end
 						3'b011:	begin//command + data_in
-								r_counterstop <= 8'd32;
+								r_counterstop <= 8'd40-1'b1;
 								r_expct_answer <= 1'b0;
 								r_sclk_edges <= {8'd40,1'b0};
 							end
 						3'b100: begin//command + address + data_in (+dummy cycles)
-								r_counterstop <= (~r_4byteaddr_on) ? 8'd8: 8'd0;
+								r_counterstop <= (~r_4byteaddr_on) ? 8'd64-1'b1: 8'd72-1'b1;
 								r_expct_answer <= 1'b0;
 								r_sclk_edges <= (~r_4byteaddr_on)?{8'd64+r_dummy_cycles,1'b0}:{8'd72+r_dummy_cycles,1'b0};
 							end
 						3'b101: begin//command+address
-								r_counterstop <= (~r_4byteaddr_on) ? 8'd40: 8'd32;
+								r_counterstop <= (~r_4byteaddr_on) ? 8'd32-1'b1: 8'd40-1'b1;
 								r_expct_answer <= 1'b0;
 								r_sclk_edges <= (~r_4byteaddr_on)?{8'd32,1'b0}:{8'd40,1'b0};
 							end
 					default:	begin//Add code for XIP mode
-								r_counterstop <= 8'd32;
+								r_counterstop <= 8'd8 -1'b1;
 								r_expct_answer <= 1'b0;//TODO other control signals default
 								r_sclk_edges <= {8'd8, 1'b0};
 							end
