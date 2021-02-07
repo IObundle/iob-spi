@@ -52,10 +52,10 @@ module iob_spi_master_fl
 		//Not sw registers
 		.sclk(SCLK),
 		.ss(SS),
-		.mosi(MOSI),
-		.wp_n(WP_N),
-		.hold_n(HOLD_N),
-		.miso(MISO)
+		.mosi_dq0(MOSI),
+		.wp_n_dq2(WP_N),
+		.hold_n_dq3(HOLD_N),
+		.miso_dq1(MISO)
 	);
 
 

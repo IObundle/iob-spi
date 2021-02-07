@@ -4,7 +4,7 @@
 	//SPI
 	output				spi_outsclk,
 	output 				spi_ss,
-	output				spi_mosi,
-	output				spi_wpn,
-	output				spi_holdn,
-	input				spi_miso,
+	inout				spi_mosi,
+	inout				spi_wpn,
+	inout				spi_holdn,
+	inout				spi_miso,
