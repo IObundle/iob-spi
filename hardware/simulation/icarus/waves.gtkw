@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Thu Feb 11 02:51:43 2021
+[*] Thu Feb 11 05:01:11 2021
 [*]
 [dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
-[dumpfile_mtime] "Thu Feb 11 02:50:37 2021"
-[dumpfile_size] 30621
+[dumpfile_mtime] "Thu Feb 11 04:58:14 2021"
+[dumpfile_size] 19306
 [savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
-[timestart] 4606900
+[timestart] 1215800
 [size] 1362 599
 [pos] -1 -1
-*-16.564953 4720000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.564953 400000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] spi_tb.
 [treeopen] spi_tb.spi_m.
 [sst_width] 214
@@ -37,9 +37,7 @@ spi_tb.spi_m.command[7:0]
 spi_tb.spi_m.commtype[2:0]
 @22
 spi_tb.spi_m.data_in[31:0]
-@23
 spi_tb.spi_m.data_out[31:0]
-@22
 spi_tb.spi_m.r_str2sendbuild[71:0]
 @28
 spi_tb.spi_m.r_sending_done
@@ -52,8 +50,22 @@ spi_tb.spi_m.r_mosicounter[7:0]
 spi_tb.spi_m.r_sclk_edges_counter[8:0]
 @28
 spi_tb.spi_m.r_mosifinish
+@22
+spi_tb.spi_m.r_counterstop[7:0]
+@28
 spi_tb.spi_m.r_misofinish
+spi_tb.spi_m.dualcommd
+spi_tb.spi_m.dualaddr
+spi_tb.spi_m.dualalt
 spi_tb.spi_m.dualrx
+spi_tb.spi_m.quadcommd
+spi_tb.spi_m.quadaddr
+spi_tb.spi_m.quadalt
+spi_tb.spi_m.quadrx
+@22
+spi_tb.spi_m.w_commdcycles[3:0]
+@23
+spi_tb.spi_m.w_addrcycles[6:0]
 @22
 spi_tb.spi_m.w_misocycles[6:0]
 @28
@@ -81,7 +93,6 @@ spi_tb.spi_m.r_sclk_edges[8:0]
 spi_tb.spi_m.r_commandtype[2:0]
 @22
 spi_tb.spi_m.r_datain[31:0]
-spi_tb.spi_m.r_counterstop[7:0]
 @28
 spi_tb.spi_m.r_expct_answer
 spi_tb.spi_m.r_inputread

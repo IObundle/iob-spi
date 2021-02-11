@@ -314,12 +314,12 @@ module spi_master_fl
                     r_txindexer <= r_txindexer - 3'h1;
                     r_mosicounter <= r_mosicounter + 3'h1;
                 end
-                if(r_mosicounter == r_counterstop) begin
-                    r_mosicounter <= 8'd0;
-                    r_txindexer <= 8'd71;
-                    r_sending_done <= 1'b1;
-			    end
 			end
+            if(r_mosicounter == r_counterstop) begin
+                r_mosicounter <= 8'd0;
+                r_txindexer <= 8'd71;
+                r_sending_done <= 1'b1;
+            end
 			if (r_sending_done && `LATCHIN_EDGE) begin
 				r_mosifinish <= 1'b1;
 			end
@@ -446,39 +446,39 @@ module spi_master_fl
 					r_counters_done <= 1'b1;
 					case(r_commandtype)
 						3'b000:	begin//Only command
-								r_counterstop <= w_commdcycles - 1'b1;
+								r_counterstop <= 8'd8;//Parameterize with regs
 								r_expct_answer <= 1'b0;
 								r_sclk_edges <= {w_commdcycles, 1'b0};
 							end
 						3'b001: begin//command + answer
-								r_counterstop <= w_commdcycles - 1'b1;
+								r_counterstop <= 8'd8;//Parameterize
 								r_expct_answer <= 1'b1;
 								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= {w_commdcycles + w_misocycles, 1'b0};
 							end
 						3'b010: begin//command + address + answer (+dummy cycles)
-								r_counterstop <= w_commdcycles + w_addrcycles-1'b1;
+								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
 								r_expct_answer <= 1'b1;
 								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
 							end
 						3'b011:	begin//command + data_in
-								r_counterstop <= w_commdcycles + 8'd32 - 1'b1;
+								r_counterstop <= 8'd8 + 8'd32;
 								r_expct_answer <= 1'b0;
 								r_sclk_edges <= {w_commdcycles + 8'd32,1'b0};
 							end
 						3'b100: begin//command + address + data_in (+dummy cycles)
-								r_counterstop <= w_commdcycles + w_addrcycles + 8'd32-1'b1;
+								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24) + 8'd32;
 								r_expct_answer <= 1'b0;
 								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + 8'd32,1'b0};
 							end
 						3'b101: begin//command+address
-								r_counterstop <= w_commdcycles + w_addrcycles -1'b1;
+								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
 								r_expct_answer <= 1'b0;
 								r_sclk_edges <= {w_commdcycles + w_addrcycles,1'b0};
 							end
 					default:	begin//Add code for XIP mode
-								r_counterstop <= w_commdcycles -1'b1;
+								r_counterstop <= 8'd8;
 								r_expct_answer <= 1'b0;//TODO other control signals default
 								r_sclk_edges <= {w_commdcycles, 1'b0};
 							end
