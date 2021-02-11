@@ -29,21 +29,15 @@ module spi_master_fl
 	input [`SPI_COM_W-1:0]			command,
 	input 					validflag,
 	input [`SPI_CTYP_W-1:0]		        commtype,
-	input [6:0]				nmiso_bits,	
+	input [6:0]				ndata_bits,	
 	input [3:0]				dummy_cycles,
-    input [7:0]             frame_struct,
+    input [9:0]             frame_struct,
 	output reg				validflag_out,
 	output reg				tready,
 
 	//SPI INTERFACE
-	//output	  	sclk,
 	output reg		sclk,
-	//output reg	ss,
 	output		ss,
-	/*output reg	mosi,
-	input		miso,
-	output		wp_n,
-	output		hold_n*/
 	inout	    mosi_dq0,
 	inout		miso_dq1,
 	inout		wp_n_dq2,
@@ -63,8 +57,8 @@ module spi_master_fl
 
 	//MOSI controller signals
 	reg [7:0]	r_mosicounter;
-	//wire [63:0]	str2send;//Parameterize
-	reg [71:0]	r_str2sendbuild;
+	reg [71:0]	r_str2sendbuild;//Parameterize with max
+    reg [6:0]   r_ndatatxbits;
 
 	//MISO controller signals
 	reg [6:0]		r_misocounter;
@@ -79,7 +73,7 @@ module spi_master_fl
 	reg [1:0]   r_validoutHold = 2'b10;
 
     //Frame structure
-    reg [7:0]   r_frame_struct = 0;
+    reg [9:0]   r_frame_struct = 0;
 
 	//SCLK generation signals
 	//reg [5:0] sclk_period = 6'd0;
@@ -212,15 +206,17 @@ module spi_master_fl
 			r_commandtype <= `SPI_CTYP_W'b111;
 			r_inputread <= 1'b0;
 			r_nmisobits <= 7'd32;
+            r_ndatatxbits <= 7'd32;
 			r_dummy_cycles <= 4'd0;
-            r_frame_struct <= 8'h0;
+            r_frame_struct <= 10'h0;
 		end else begin
 			if (r_validedge) begin
 				r_datain <= data_in;
 				r_address <= address;
 				r_command <= command;
 				r_commandtype <= commtype;
-				r_nmisobits <= nmiso_bits;
+				r_nmisobits <= ndata_bits;
+				r_ndatatxbits <= ndata_bits;
 				r_dummy_cycles <= dummy_cycles;
                 r_frame_struct <= frame_struct;
 				r_inputread <= 1'b1;
@@ -258,16 +254,20 @@ module spi_master_fl
     wire quadalt;
     wire quadrx;
     wire dualrx;
+    wire dualdatatx;
+    wire quaddatatx;
 
-    assign dualcommd = (r_frame_struct[7:6] == 2'b01) ? 1'b1:1'b0;
-    assign quadcommd = (r_frame_struct[7:6] == 2'b10) ? 1'b1:1'b0;
-    assign dualaddr = (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
-    assign quadaddr = (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
-    assign dualalt = (r_frame_struct[3:2] == 2'b01) ? 1'b1:1'b0;
-    assign quadalt = (r_frame_struct[3:2] == 2'b10) ? 1'b1:1'b0;
-    assign dualrx = (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
-    assign quadrx = (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
-	
+    assign dualcommd = (r_frame_struct[9:8] == 2'b01) ? 1'b1:1'b0;
+    assign quadcommd = (r_frame_struct[9:8] == 2'b10) ? 1'b1:1'b0;
+    assign dualaddr = (r_frame_struct[7:6] == 2'b01) ? 1'b1:1'b0;
+    assign quadaddr = (r_frame_struct[7:6] == 2'b10) ? 1'b1:1'b0;
+    assign dualalt = (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
+    assign quadalt = (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
+    assign dualrx = (r_frame_struct[3:2] == 2'b01) ? 1'b1:1'b0;
+    assign quadrx = (r_frame_struct[3:2] == 2'b10) ? 1'b1:1'b0;
+    assign dualdatatx = (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
+    assign quaddatatx = (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
+
     //Build r_str2sendbuild
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
@@ -419,6 +419,7 @@ module spi_master_fl
     wire [3:0] w_commdcycles;
     wire [6:0] w_addrcycles;
     wire [3:0] w_altcycles;//TODO
+    wire [6:0] w_datatxcycles;
     assign w_misocycles = dualrx ? {{1'b0, r_nmisobits[6:1]} + (|r_nmisobits[0])}: 
                             quadrx ? {{2'b00, r_nmisobits[6:2]} + (|r_nmisobits[1:0])}: 
                                 r_nmisobits;
@@ -432,6 +433,10 @@ module spi_master_fl
                                 (r_4byteaddr_on? 7'd32: 7'd24);
 
     assign w_altcycles = 4'd0;
+
+    assign w_datatxcycles = dualdatatx ? {{1'b0, r_ndatatxbits[6:1]} + (|r_ndatatxbits[0])}:
+                                quaddatatx ? {{2'b00, r_ndatatxbits[6:2]} + (|r_ndatatxbits[1:0])}:
+                                    r_ndatatxbits;
 
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
@@ -463,14 +468,14 @@ module spi_master_fl
 								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
 							end
 						3'b011:	begin//command + data_in
-								r_counterstop <= 8'd8 + 8'd32;
+								r_counterstop <= 8'd8 + r_ndatatxbits;
 								r_expct_answer <= 1'b0;
-								r_sclk_edges <= {w_commdcycles + 8'd32,1'b0};
+								r_sclk_edges <= {w_commdcycles + w_datatxcycles,1'b0};
 							end
 						3'b100: begin//command + address + data_in (+dummy cycles)
-								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24) + 8'd32;
+								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24) + r_ndatatxbits;
 								r_expct_answer <= 1'b0;
-								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + 8'd32,1'b0};
+								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_datatxcycles,1'b0};
 							end
 						3'b101: begin//command+address
 								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
