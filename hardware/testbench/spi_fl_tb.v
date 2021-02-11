@@ -82,9 +82,9 @@ module spi_tb;
 		data_in=8'h5A;
 		command=8'h5A;
 		address=24'h555555;
-		commtype = 3'b101;
-		nmiso_bits = 7'd8;
-        frame_struct = 8'h00;
+		commtype = 3'b010;
+		nmiso_bits = 7'd32;
+        frame_struct = 8'h01;
 		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 
@@ -100,7 +100,8 @@ module spi_tb;
 	    //#3000	
         
         wait(tready);
-
+        #120
+        $finish;
         //New command
         data_in=8'h5A;
 		command=8'hA3;

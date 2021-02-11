@@ -427,8 +427,8 @@ module spi_master_fl
                             quadcommd ? {4'd2}:
                                 4'd8;
     
-    assign w_addrcycles = dualrx ? (r_4byteaddr_on? 7'd16: 7'd12):
-                            quadrx ? (r_4byteaddr_on? 7'd8: 7'd6):
+    assign w_addrcycles = dualaddr ? (r_4byteaddr_on? 7'd16: 7'd12):
+                            quadaddr ? (r_4byteaddr_on? 7'd8: 7'd6):
                                 (r_4byteaddr_on? 7'd32: 7'd24);
 
     assign w_altcycles = 4'd0;

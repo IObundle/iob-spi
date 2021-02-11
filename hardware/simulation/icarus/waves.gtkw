@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Sat Feb  6 19:47:28 2021
+[*] Thu Feb 11 02:51:43 2021
 [*]
 [dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
-[dumpfile_mtime] "Sat Feb  6 19:45:23 2021"
-[dumpfile_size] 30235
+[dumpfile_mtime] "Thu Feb 11 02:50:37 2021"
+[dumpfile_size] 30621
 [savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
-[timestart] 6886400
+[timestart] 4606900
 [size] 1362 599
 [pos] -1 -1
-*-16.564953 6040000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.564953 4720000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] spi_tb.
 [treeopen] spi_tb.spi_m.
 [sst_width] 214
@@ -37,7 +37,9 @@ spi_tb.spi_m.command[7:0]
 spi_tb.spi_m.commtype[2:0]
 @22
 spi_tb.spi_m.data_in[31:0]
+@23
 spi_tb.spi_m.data_out[31:0]
+@22
 spi_tb.spi_m.r_str2sendbuild[71:0]
 @28
 spi_tb.spi_m.r_sending_done
@@ -68,9 +70,8 @@ spi_tb.spi_m.r_transfers_done
 spi_tb.spi_m.r_setup_start
 spi_tb.spi_m.r_build_done
 spi_tb.spi_m.r_counters_done
-@23
-spi_tb.spi_m.r_misocounter[6:0]
 @22
+spi_tb.spi_m.r_misocounter[6:0]
 spi_tb.spi_m.r_misoctrstop[6:0]
 @28
 spi_tb.spi_m.r_misofinish
