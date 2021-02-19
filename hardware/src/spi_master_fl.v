@@ -287,6 +287,140 @@ module spi_master_fl
 	end
 
 		
+    /**
+    *   Mosi Frame Driving control
+    *   From frame_struct
+    *   Data transmit control fsm
+        *
+        * **/
+    wire command_en;
+    wire address_en;
+    wire alt_en;
+    wire datatx_en;
+    assign command_en = (r_frame_struct[9:8] != 2'b11);
+    assign address_en = (r_frame_struct[7:6] != 2'b11);
+    assign alt_en = (r_frame_struct[5:4] != 2'b11);
+    assign datatx_en = (r_frame_struct[1:0] != 2'b11);
+    
+    reg [2:0] curr;
+    always @* begin
+        curr = 0;
+        case (curr)
+            0://not transfering
+            begin
+                if (r_transfer_start) begin
+                    if (command_en) curr = 1;
+                    else if ((!command_en) && address_en) curr = 2;//(!)
+                end
+            end
+            1://command phase
+            begin
+                if (r_sending_done) curr = 0;
+                else begin
+                    if (command_done && address_en) curr = 2;
+                    if (command_done && !address_en && datatx_en) curr = 3;
+                end
+            end
+            2://address phase
+            begin
+                if (r_sending_done) curr = 0;
+                else begin
+                   if (address_done && datatx_en) curr = 3;
+                   else if (address_done && !datatx_en && alt_en) curr = 4;
+                end
+            end
+            3://datatx phase
+            begin
+                if (r_sending_done) curr = 0;
+                else begin
+                   if (datatx_done) curr = 0; 
+                end
+            end
+            4://alt phase
+            begin
+                if (r_sending_done) curr = 0;
+                else begin
+                    if (alt_done) curr = 0;
+                end
+            end
+            5://dummy
+            begin
+                if (r_sending_done) curr = 0;
+            end
+            default:;
+        endcase
+    end
+    
+    /*
+    *   Phase done signals
+        * */
+    reg [5:0] r_command_size = 6'd8;
+    reg [5:0] r_address_size = 6'd24;
+
+    reg command_done;
+    reg address_done;
+    reg datatx_done;
+    reg alt_done;
+
+    wire [5:0] comm_addr_sum;
+    wire [6:0] comm_addr_data_sum;
+    assign comm_addr_sum = r_command_size + r_address_size;
+    assign comm_addr_data_sum = r_command_size + r_address_size + r_ndatatxbits;
+    always @* begin
+        command_done = 1'b0;
+        address_done = 1'b0;
+        datatx_done = 1'b0;
+        alt_done = 1'b0;
+        case ({command_en, address_en, datatx_en, alt_done})
+            4'b1000:
+                if ((r_mosicounter >= r_command_size))
+                    command_done = 1;
+            4'b0100:
+                if ((r_mosicounter >= r_address_size))
+                    address_done = 1;
+            4'b1100:   
+            begin
+                if ((r_mosicounter >= r_command_size))
+                    command_done = 1;
+                if (r_mosicounter >= (comm_addr_sum)) begin
+                    command_done = 1;
+                    address_done = 1;
+                end
+            end
+            4'b1110:
+            begin
+                if ((r_mosicounter >= r_command_size))
+                    command_done = 1;
+                if (r_mosicounter >= (comm_addr_sum)) begin
+                    command_done = 1;
+                    address_done = 1;
+                end
+                if (r_mosicounter >= (comm_addr_data_sum)) begin
+                    command_done = 1;
+                    address_done = 1;
+                    datatx_done = 1;
+                end
+            end
+            4'b1111:
+            begin
+                if ((r_mosicounter >= r_command_size))
+                    command_done = 1;
+                if (r_mosicounter >= (comm_addr_sum)) begin
+                    command_done = 1;
+                    address_done = 1;
+                end
+                if (r_mosicounter >= (comm_addr_data_sum)) begin//alt
+                    command_done = 1;
+                    address_done = 1;
+                    datatx_done = 1;
+                    alt_done = 1;//for now
+                end
+            end
+            default:;
+                //alt 
+                //dummy
+        endcase
+    end
 	//Drive mosi
     reg [3:0] r_mosi;
     reg [7:0] r_txindexer;
