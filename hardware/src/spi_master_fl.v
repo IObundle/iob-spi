@@ -184,8 +184,8 @@ module spi_master_fl
 	
     wire [3:0] data_tx;
     wire [3:0] data_rx;
-    assign data_tx = (dualcommd || dualaddr || dualalt) ? {{hold_n_int, wp_n_int},r_mosi[1:0]}:
-                        (quadcommd || quadaddr || quadalt) ? r_mosi[3:0]:
+    assign data_tx = (dualtx_en) ? {{hold_n_int, wp_n_int},r_mosi[1:0]}:
+                        (quadtx_en) ? r_mosi[3:0]:
                             {hold_n_int, wp_n_int, 1'bz,r_mosi[0]};
 
     //Configure inout tristate i/o
@@ -309,27 +309,34 @@ module spi_master_fl
 
     wire dualtx_en;
     wire quadtx_en;
-    assign dualtx_en = (dualcommd && (curr==`COMM_PHASE) ) || 
-                        (dualaddr && (curr==`ADDR_PHASE) )|| 
-                        (dualdatatx && (curr==`DATATX_PHASE)) || 
-                        (dualalt && (curr==`ALT_PHASE));
-    assign quadtx_en = (quadcommd && (curr==`COMM_PHASE) ) || 
-                        (quadaddr && (curr==`ADDR_PHASE) )|| 
-                        (quaddatatx && (curr==`DATATX_PHASE)) || 
-                        (quadalt && (curr==`ALT_PHASE));
+    assign dualtx_en = (dualcommd && (curr_delayed==`COMM_PHASE) ) || 
+                        (dualaddr && (curr_delayed==`ADDR_PHASE) )|| 
+                        (dualdatatx && (curr_delayed==`DATATX_PHASE)) || 
+                        (dualalt && (curr_delayed==`ALT_PHASE));
+    assign quadtx_en = (quadcommd && (curr_delayed==`COMM_PHASE) ) || 
+                        (quadaddr && (curr_delayed==`ADDR_PHASE) )|| 
+                        (quaddatatx && (curr_delayed==`DATATX_PHASE)) || 
+                        (quadalt && (curr_delayed==`ALT_PHASE));
 
     /*
     *   Frame transmission phase
         * */
 
     reg [2:0] curr;
-
+    reg [2:0] curr_delayed;
+    
+    always @(posedge clk, posedge rst) begin//Adding delay, or later on latchout
+        if (rst) curr_delayed <= 0;
+        else curr_delayed <= curr;
+    end
 
     always @(posedge clk, posedge rst) begin
         if (rst) curr <= 0;
         else begin
-            if (r_sending_done) curr <= `IDLE_PHASE;
-            else begin
+            if (r_sending_done ) begin
+                if (`LATCHIN_EDGE) curr <= `IDLE_PHASE;
+
+            end else if (`LATCHIN_EDGE) begin
                 case (curr)
                     `IDLE_PHASE://not transfering
                     begin
