@@ -153,6 +153,16 @@ unsigned int spifl_readfastDualOutput(unsigned address)
 	return data;
 }
 
+unsigned int spifl_readfastDualInOutput(unsigned address)
+{
+    unsigned misobytes = 4, data=0;
+    unsigned frame_struct = 0x00000041;//uint8 later
+	unsigned dummy_cycles = 8;
+    unsigned command = (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_DUALINOUT;
+	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
+	return data;
+}
+
 unsigned int spifl_readmem(unsigned int address)
 {
 	unsigned int data;	

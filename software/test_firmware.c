@@ -73,6 +73,10 @@ int main()
     read_mem = spifl_readfastDualOutput(address + 1);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
 
-	uart_txwait();
+    uart_printf("\nTesting dual input and output fast read\n");
+    read_mem = spifl_readfastDualInOutput(address + 1);
+    uart_printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
+	
+    uart_txwait();
 	return 0;
 }
