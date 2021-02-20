@@ -307,7 +307,23 @@ module spi_master_fl
     assign alt_en = (r_frame_struct[5:4] != 2'b11);
     assign datatx_en = (r_frame_struct[1:0] != 2'b11);
 
+    wire dualtx_en;
+    wire quadtx_en;
+    assign dualtx_en = (dualcommd && (curr==`COMM_PHASE) ) || 
+                        (dualaddr && (curr==`ADDR_PHASE) )|| 
+                        (dualdatatx && (curr==`DATATX_PHASE)) || 
+                        (dualalt && (curr==`ALT_PHASE));
+    assign quadtx_en = (quadcommd && (curr==`COMM_PHASE) ) || 
+                        (quadaddr && (curr==`ADDR_PHASE) )|| 
+                        (quaddatatx && (curr==`DATATX_PHASE)) || 
+                        (quadalt && (curr==`ALT_PHASE));
+
+    /*
+    *   Frame transmission phase
+        * */
+
     reg [2:0] curr;
+
 
     always @(posedge clk, posedge rst) begin
         if (rst) curr <= 0;
