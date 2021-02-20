@@ -266,12 +266,12 @@ module spi_master_fl
     assign quadcommd = (r_frame_struct[9:8] == 2'b10) ? 1'b1:1'b0;
     assign dualaddr = (r_frame_struct[7:6] == 2'b01) ? 1'b1:1'b0;
     assign quadaddr = (r_frame_struct[7:6] == 2'b10) ? 1'b1:1'b0;
-    assign dualalt = (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
-    assign quadalt = (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
+    assign dualdatatx = (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
+    assign quaddatatx = (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
     assign dualrx = (r_frame_struct[3:2] == 2'b01) ? 1'b1:1'b0;
     assign quadrx = (r_frame_struct[3:2] == 2'b10) ? 1'b1:1'b0;
-    assign dualdatatx = (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
-    assign quaddatatx = (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
+    assign dualalt = (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
+    assign quadalt = (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
 
     //Build r_str2sendbuild
 	always @(posedge rst, posedge clk) begin
@@ -304,8 +304,8 @@ module spi_master_fl
     wire datatx_en;
     assign command_en = (r_frame_struct[9:8] != 2'b11);
     assign address_en = (r_frame_struct[7:6] != 2'b11);
-    assign alt_en = (r_frame_struct[5:4] != 2'b11);
-    assign datatx_en = (r_frame_struct[1:0] != 2'b11);
+    assign datatx_en = (r_frame_struct[5:4] != 2'b11);
+    assign alt_en = (r_frame_struct[1:0] != 2'b11);
 
     wire dualtx_en;
     wire quadtx_en;
@@ -450,11 +450,11 @@ module spi_master_fl
 		end else begin
 			//if(r_transfer_start) begin end
 			if (`LATCHOUT_EDGE && r_sclk_out_en && (~r_mosifinish)) begin
-                if (quadcommd || quadaddr || quadalt) begin
+                if (quadtx_en) begin
                     r_mosi[3:0] <= r_str2sendbuild[r_txindexer -: 4];//Check index constants
                     r_txindexer <= r_txindexer - 3'h4;
                     r_mosicounter <= r_mosicounter + 3'h4;
-                end else if(dualcommd || dualaddr || dualalt) begin
+                end else if(dualtx_en) begin
                     r_mosi[1:0] <= r_str2sendbuild[r_txindexer -: 2];
                     r_txindexer <= r_txindexer - 3'h2;
                     r_mosicounter <= r_mosicounter + 3'h2;
