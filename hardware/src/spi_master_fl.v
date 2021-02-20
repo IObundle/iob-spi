@@ -8,6 +8,11 @@
 
 `define LATCHIN_EDGE (sclk_leade & ~w_CPHA | sclk_traile & w_CPHA)
 `define LATCHOUT_EDGE (sclk_leade & w_CPHA | sclk_traile & ~w_CPHA)
+`define IDLE_PHASE 3'b000
+`define COMM_PHASE 3'b001
+`define ADDR_PHASE 3'b010
+`define DATATX_PHASE 3'b011
+`define ALT_PHASE 3'b100
 
 
 module spi_master_fl
@@ -301,54 +306,48 @@ module spi_master_fl
     assign address_en = (r_frame_struct[7:6] != 2'b11);
     assign alt_en = (r_frame_struct[5:4] != 2'b11);
     assign datatx_en = (r_frame_struct[1:0] != 2'b11);
-    
+
     reg [2:0] curr;
-    always @* begin
-        curr = 0;
-        case (curr)
-            0://not transfering
-            begin
-                if (r_transfer_start) begin
-                    if (command_en) curr = 1;
-                    else if ((!command_en) && address_en) curr = 2;//(!)
-                end
+
+    always @(posedge clk, posedge rst) begin
+        if (rst) curr <= 0;
+        else begin
+            if (r_sending_done) curr <= `IDLE_PHASE;
+            else begin
+                case (curr)
+                    `IDLE_PHASE://not transfering
+                    begin
+                        if (r_transfer_start) begin
+                            if (command_en) curr <= `COMM_PHASE;
+                            else if ((!command_en) && address_en) curr <= `ADDR_PHASE;//(!)
+                        end
+                    end
+                    `COMM_PHASE://command phase
+                    begin
+                        if (command_done & address_en) curr <= `ADDR_PHASE;
+                        if (command_done & ~address_en & datatx_en) curr <= `DATATX_PHASE;
+                    end
+                    `ADDR_PHASE://address phase
+                    begin
+                       if (address_done && datatx_en) curr <= `DATATX_PHASE;
+                       else if (address_done && !datatx_en && alt_en) curr <= `ALT_PHASE;
+                    end
+                    `DATATX_PHASE://datatx phase
+                    begin
+                       if (datatx_done) curr <= `IDLE_PHASE; 
+                    end
+                    `ALT_PHASE://alt phase
+                    begin
+                        if (alt_done) curr <= `IDLE_PHASE;
+                    end
+                    /*3'b101://dummy TODO
+                    begin
+                        if (r_sending_done) curr <= 0;
+                    end*/
+                    default:;
+                endcase
             end
-            1://command phase
-            begin
-                if (r_sending_done) curr = 0;
-                else begin
-                    if (command_done && address_en) curr = 2;
-                    if (command_done && !address_en && datatx_en) curr = 3;
-                end
-            end
-            2://address phase
-            begin
-                if (r_sending_done) curr = 0;
-                else begin
-                   if (address_done && datatx_en) curr = 3;
-                   else if (address_done && !datatx_en && alt_en) curr = 4;
-                end
-            end
-            3://datatx phase
-            begin
-                if (r_sending_done) curr = 0;
-                else begin
-                   if (datatx_done) curr = 0; 
-                end
-            end
-            4://alt phase
-            begin
-                if (r_sending_done) curr = 0;
-                else begin
-                    if (alt_done) curr = 0;
-                end
-            end
-            5://dummy
-            begin
-                if (r_sending_done) curr = 0;
-            end
-            default:;
-        endcase
+        end
     end
     
     /*
@@ -413,7 +412,7 @@ module spi_master_fl
                     command_done = 1;
                     address_done = 1;
                     datatx_done = 1;
-                    alt_done = 1;//for now
+                    alt_done = 1;//for now, doesn't affect
                 end
             end
             default:;
