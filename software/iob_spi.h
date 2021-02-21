@@ -20,7 +20,9 @@ void spifl_writemem(unsigned int word, unsigned int address);
 unsigned int spifl_readmem(unsigned int address);//extend for more than 4 bytes
 void spifl_erasemem(unsigned int subsector_address);//extend for other erase type, ex bulk
 unsigned int spifl_readFlashParam(unsigned address);
-	
+unsigned int spifl_readfastDualOutput(unsigned address);
+unsigned int spifl_readfastDualInOutput(unsigned address);
+
 void spifl_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout);
 void spifl_waitvalidout();
 //wear-leveling

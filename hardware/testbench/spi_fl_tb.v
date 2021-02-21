@@ -20,6 +20,7 @@ module spi_tb;
 	reg [2:0] commtype;
 	reg [6:0] nmiso_bits;
 	reg [3:0] dummy_cycles;
+    reg [9:0] frame_struct;
 	reg validflag; //check later
 	wire validflag_out; //check
 	wire tready;
@@ -49,7 +50,8 @@ module spi_tb;
 			.address	(address),
 			.command	(command),
 			.commtype	(commtype),
-			.nmiso_bits	(nmiso_bits),
+			.ndata_bits	(nmiso_bits),
+            .frame_struct (frame_struct),
 			.dummy_cycles (dummy_cycles),
 			.validflag	(validflag),
 			.validflag_out	(validflag_out),
@@ -77,11 +79,12 @@ module spi_tb;
 	//Master Process
 	initial begin
 		#100
-		data_in=8'h5A;
+		data_in=32'h5A000000;
 		command=8'h5A;
 		address=24'h555555;
 		commtype = 3'b010;
-		nmiso_bits = 7'd8;
+		nmiso_bits = 7'd32;
+        frame_struct = 10'h077;
 		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 
@@ -94,12 +97,16 @@ module spi_tb;
 			#40;
 			//miso <= mem[i];
 		end
-	    #3000	
+	    //#3000	
+        
+        wait(tready);
+        #120
         //New command
         data_in=8'h5A;
 		command=8'hA3;
 		address=24'h555555;
-		commtype = 3'b001;
+		commtype = 3'b010;
+        frame_struct = 10'h004;
 		nmiso_bits = 7'd8;
 		dummy_cycles = 4'd0;
 		mem	= 32'hA0A0A0A3;
@@ -109,7 +116,9 @@ module spi_tb;
 		validflag=1'b0;
 		//#370// Drive miso
 
-		#3000 $finish;
+		#3000 
+        wait(tready);
+        #100 $finish;
 	end
 
 	//CLK driving
