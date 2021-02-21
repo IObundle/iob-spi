@@ -83,7 +83,7 @@ module spi_tb;
 		command=8'h5A;
 		address=24'h555555;
 		commtype = 3'b010;
-		nmiso_bits = 7'd8;
+		nmiso_bits = 7'd32;
         frame_struct = 10'h077;
 		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;

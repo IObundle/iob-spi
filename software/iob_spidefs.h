@@ -19,4 +19,4 @@
 #define READ_ID				0x9f
 #define READ_FLPARAMS       0x5A
 #define READFAST_DUALOUT    0x3B   
-#define READFAST_DUALINOUT  0XBB
+#define READFAST_DUALINOUT  0xbb
