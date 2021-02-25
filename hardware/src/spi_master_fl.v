@@ -186,7 +186,11 @@ module spi_master_fl
     wire [3:0] data_rx;
     assign data_tx = (dualtx_en) ? {{hold_n_int, wp_n_int},r_mosi[1:0]}:
                         (quadtx_en) ? r_mosi[3:0]:
-                            {hold_n_int, wp_n_int, 1'bz,r_mosi[0]};
+                            {hold_n_int, wp_n_int, r_mosi[1],r_mosi[0]};
+    //assign data_tx = (dualcommd || dualaddr || dualdatatx || dualalt) ? {{hold_n_int, wp_n_int},r_mosi[1:0]}:
+    //                    (quadcommd || quadaddr || quaddatatx || quadalt) ? r_mosi[3:0]:
+    //                        {hold_n_int, wp_n_int, r_mosi[1],r_mosi[0]};
+    
 
     //Configure inout tristate i/o
     reg oe = 1'b1;
@@ -335,8 +339,9 @@ module spi_master_fl
         else begin
             if (r_sending_done ) begin
                 if (`LATCHIN_EDGE) curr <= `IDLE_PHASE;
+                else curr <= curr;
 
-            end else if (`LATCHIN_EDGE) begin
+            end else begin
                 case (curr)
                     `IDLE_PHASE://not transfering
                     begin
@@ -347,8 +352,8 @@ module spi_master_fl
                     end
                     `COMM_PHASE://command phase
                     begin
-                        if (command_done & address_en) curr <= `ADDR_PHASE;
-                        if (command_done & ~address_en & datatx_en) curr <= `DATATX_PHASE;
+                        if (command_done && address_en) curr <= `ADDR_PHASE;
+                        if (command_done && !address_en && datatx_en) curr <= `DATATX_PHASE;
                     end
                     `ADDR_PHASE://address phase
                     begin

@@ -80,12 +80,12 @@ module spi_tb;
 	initial begin
 		#100
 		data_in=32'h5A000000;
-		command=8'h5A;
+		command=8'h66;
 		address=24'h555555;
-		commtype = 3'b010;
-		nmiso_bits = 7'd32;
-        frame_struct = 10'h077;
-		dummy_cycles = 4'd8;
+		commtype = 3'b001;
+		nmiso_bits = 7'd8;
+        frame_struct = 10'h104;
+		dummy_cycles = 4'd0;
 		mem	= 32'hA0A0A0A3;
 
 		#50
@@ -103,10 +103,10 @@ module spi_tb;
         #120
         //New command
         data_in=8'h5A;
-		command=8'hA3;
+		command=8'h99;
 		address=24'h555555;
-		commtype = 3'b010;
-        frame_struct = 10'h004;
+		commtype = 3'b000;
+        frame_struct = 10'h177;
 		nmiso_bits = 7'd8;
 		dummy_cycles = 4'd0;
 		mem	= 32'hA0A0A0A3;
