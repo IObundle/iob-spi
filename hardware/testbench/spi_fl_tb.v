@@ -80,12 +80,12 @@ module spi_tb;
 	initial begin
 		#100
 		data_in=32'h5A000000;
-		command=8'h66;
+		command=8'h0b;
 		address=24'h555555;
-		commtype = 3'b001;
+		commtype = 3'b010;
 		nmiso_bits = 7'd8;
-        frame_struct = 10'h104;
-		dummy_cycles = 4'd0;
+        frame_struct = 10'h000;
+		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 
 		#50
@@ -103,12 +103,12 @@ module spi_tb;
         #120
         //New command
         data_in=8'h5A;
-		command=8'h99;
+		command=8'h0b;
 		address=24'h555555;
-		commtype = 3'b000;
-        frame_struct = 10'h177;
+		commtype = 3'b010;
+        frame_struct = 10'b0101110111;
 		nmiso_bits = 7'd8;
-		dummy_cycles = 4'd0;
+		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 		#50
 		validflag=1'b1;
@@ -116,7 +116,23 @@ module spi_tb;
 		validflag=1'b0;
 		//#370// Drive miso
 
-		#3000 
+		#100 
+        wait(tready);
+        #120
+        //New command
+        data_in=8'h5A;
+		command=8'h0b;
+		address=24'h555555;
+		commtype = 3'b010;
+        frame_struct = 10'b1010111011;
+		nmiso_bits = 7'd8;
+		dummy_cycles = 4'd10;
+		mem	= 32'hA0A0A0A3;
+		#50
+		validflag=1'b1;
+		#20
+		validflag=1'b0;
+        #500
         wait(tready);
         #100 $finish;
 	end

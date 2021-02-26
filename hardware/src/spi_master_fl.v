@@ -510,7 +510,7 @@ module spi_master_fl
 			else if (r_dummy_counter == 0 && `LATCHIN_EDGE) begin
 				//must hold at 0 implicit r_q<=r_q
 				//or implement dummy_done as wire for less delay?
-				r_dummy_done = 1'b1;
+				r_dummy_done <= 1'b1;
 			end
 		end
 	end
