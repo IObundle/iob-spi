@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Fri Feb 26 17:57:40 2021
+[*] Thu Mar 11 02:14:04 2021
 [*]
 [dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
-[dumpfile_mtime] "Fri Feb 26 17:48:09 2021"
-[dumpfile_size] 33468
+[dumpfile_mtime] "Thu Mar 11 01:33:39 2021"
+[dumpfile_size] 24211
 [savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
-[timestart] 6096000
+[timestart] 2839700
 [size] 1362 599
 [pos] -1 -1
-*-16.564953 6300000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.564953 3046800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] spi_tb.
 [treeopen] spi_tb.spi_m.
 [sst_width] 214
@@ -45,7 +45,7 @@ spi_tb.spi_m.r_sending_done
 spi_tb.spi_m.ss
 @22
 spi_tb.spi_m.r_dummy_counter[3:0]
-@29
+@28
 spi_tb.spi_m.r_dummy_done
 @22
 spi_tb.spi_m.r_misodata[31:0]
@@ -60,8 +60,15 @@ spi_tb.spi_m.dualcommd
 spi_tb.spi_m.quadcommd
 spi_tb.spi_m.dualaddr
 spi_tb.spi_m.quadaddr
+@22
+spi_tb.spi_m.w_addrcycles[6:0]
+spi_tb.spi_m.w_commdcycles[3:0]
+spi_tb.spi_m.w_datatxcycles[6:0]
+@28
 spi_tb.spi_m.dualdatatx
+@29
 spi_tb.spi_m.quaddatatx
+@28
 spi_tb.spi_m.dualrx
 spi_tb.spi_m.quadrx
 spi_tb.spi_m.dualalt
