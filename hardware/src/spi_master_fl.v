@@ -194,7 +194,9 @@ module spi_master_fl
 
     //Configure inout tristate i/o
     reg oe = 1'b1;
-    assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'hz;
+    //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'hz;
+    assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:
+                                    (quadcommd || quadaddr || quaddatatx || quadalt)? 4'hz:{2'b11, 2'hz};
     assign data_rx = {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0};
 
     //Drive oe
@@ -202,7 +204,11 @@ module spi_master_fl
         if (rst) oe <= 1'b1;
         else begin
             oe <= 1'b1;
-            if (r_mosifinish) oe <= 1'b0;
+            //if (r_mosifinish) oe <= 1'b0;
+            if (r_mosifinish) begin
+                if (`LATCHOUT_EDGE) oe <= 1'b0;
+                else oe <= oe;
+            end
         end
     end
 
