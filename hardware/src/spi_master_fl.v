@@ -86,7 +86,6 @@ module spi_master_fl
 	reg		r_setup_start;
 	reg		r_counters_done;
 	reg		r_build_done;
-	reg		r_transfers_done;
 	reg		r_mosifinish;
 	reg		r_misofinish;
 	reg		r_setup_rst;
@@ -98,11 +97,11 @@ module spi_master_fl
 	
 	reg [8:0]	r_sclk_edges_counter;
 
-	reg 	sclk_leade;
-	reg		sclk_traile;
-	reg		r_sclk_out_en;
-	reg		sclk_int;
-	reg [$clog2(CLKS_PER_HALF_SCLK*2)-1:0]	clk_counter;
+	wire	tranfers_done;
+	wire	sclk_leade;
+	wire	sclk_traile;
+	reg     r_sclk_out_en;
+	wire	sclk_int;
 
 	reg [8:0]	r_sclk_edges;
 	reg		r_transfer_start;
@@ -115,49 +114,26 @@ module spi_master_fl
 	assign w_CPOL = (CPOL==1);
 	assign w_CPHA = (CPHA==1);
 
-	always @(posedge clk, posedge rst) begin
-		if (rst) begin
-			sclk_leade <= 1'b0;
-			sclk_traile <= 1'b0;
-			sclk_int <= w_CPOL;
-			clk_counter <= 0; 
-			r_sclk_edges_counter <= 9'h0;
-			r_transfers_done <= 1'b0;
-		end else begin
-			if (r_transfer_start) begin
-					if(r_sclk_edges_counter > 0) begin
-						if (clk_counter == CLKS_PER_HALF_SCLK-1) begin
-							sclk_leade <= 1'b1;
-							sclk_traile <= 1'b0;
-							r_sclk_edges_counter <= r_sclk_edges_counter - 1'b1;
-							if (r_sclk_out_en) sclk_int <= ~sclk_int;
-							clk_counter <= clk_counter + 1'b1;
-						end else if (clk_counter == CLKS_PER_HALF_SCLK*2-1) begin
-							sclk_leade <= 1'b0;
-							sclk_traile <= 1'b1;
-							r_sclk_edges_counter <= r_sclk_edges_counter - 1'b1;
-							if (r_sclk_out_en) sclk_int <= ~sclk_int;
-							clk_counter <= clk_counter + 1'b1;
-						end else begin
-							sclk_leade <= 1'b0;
-							sclk_traile <= 1'b0;
-							clk_counter <= clk_counter + 1'b1;
-						end
-					end else begin
-						r_transfers_done <= 1'b1;
-						sclk_traile <= 1'b0;
-						sclk_leade <= 1'b0;
-					end
-			end else begin
-				sclk_int <= w_CPOL; //Initial sclk polarity
-				sclk_leade <= 1'b0;
-				sclk_traile <= 1'b0;
-				clk_counter <= 0; 
-				r_transfers_done <= 1'b0;
-				r_sclk_edges_counter <= r_sclk_edges;
-			end
-		end
-	end
+    //sclk generator instance
+    sclk_gen
+    #(
+        .CLKS_PER_HALF_SCLK(CLKS_PER_HALF_SCLK),
+        .CPOL(CPOL),
+        .CPHA(CPHA)
+    )
+    sclk_gen0
+    (
+        .clk(clk),
+        .rst(rst),
+        .sclk_edges(r_sclk_edges),
+        .sclk_en(r_sclk_out_en),
+        .op_start(r_transfer_start),
+        .op_done(tranfers_done),
+        .sclk_leadedge(sclk_leade),
+        .sclk_trailedge(sclk_traile),
+        .sclk_int(sclk_int)
+    );
+
 	// Assign output
 	//assign sclk = sclk_int;
 	always @(posedge rst, posedge clk) begin
@@ -717,7 +693,7 @@ module spi_master_fl
 					r_ss_n <= 1'b0;
 					r_sclk_out_en <= 1'b1;
 					tready <= 1'b0;
-					if(r_transfers_done) begin
+					if(tranfers_done) begin
 						r_ss_n <= 1'b1;
 						r_sclk_out_en <= 1'b0;
 						data_out <= r_misodata;
