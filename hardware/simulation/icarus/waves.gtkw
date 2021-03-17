@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Thu Mar 11 02:14:04 2021
+[*] Wed Mar 17 01:39:25 2021
 [*]
 [dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
-[dumpfile_mtime] "Thu Mar 11 01:33:39 2021"
-[dumpfile_size] 24211
+[dumpfile_mtime] "Wed Mar 17 01:33:41 2021"
+[dumpfile_size] 27747
 [savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
-[timestart] 2839700
+[timestart] 1050500
 [size] 1362 599
 [pos] -1 -1
-*-16.564953 3046800 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.564953 3959900 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] spi_tb.
 [treeopen] spi_tb.spi_m.
 [sst_width] 214
@@ -28,9 +28,6 @@ spi_tb.spi_m.mosi_dq0
 spi_tb.spi_m.miso_dq1
 spi_tb.spi_m.wp_n_dq2
 spi_tb.spi_m.hold_n_dq3
-@22
-spi_tb.spi_m.r_mosi[3:0]
-@28
 spi_tb.spi_m.r_currstate[2:0]
 @22
 spi_tb.spi_m.command[7:0]
@@ -39,19 +36,16 @@ spi_tb.spi_m.commtype[2:0]
 @22
 spi_tb.spi_m.data_in[31:0]
 spi_tb.spi_m.data_out[31:0]
+@23
+spi_tb.spi_m.latchspi0.read_data[31:0]
+@22
 spi_tb.spi_m.r_str2sendbuild[71:0]
+spi_tb.spi_m.latchspi0.txstr[71:0]
 @28
-spi_tb.spi_m.r_sending_done
+spi_tb.spi_m.latchspi0.loadtxdata_en
 spi_tb.spi_m.ss
 @22
-spi_tb.spi_m.r_dummy_counter[3:0]
-@28
-spi_tb.spi_m.r_dummy_done
-@22
-spi_tb.spi_m.r_misodata[31:0]
-spi_tb.spi_m.r_sclk_edges_counter[8:0]
 spi_tb.spi_m.r_counterstop[7:0]
-spi_tb.spi_m.r_mosicounter[7:0]
 @28
 spi_tb.spi_m.curr[2:0]
 spi_tb.spi_m.dualtx_en
@@ -66,14 +60,11 @@ spi_tb.spi_m.w_commdcycles[3:0]
 spi_tb.spi_m.w_datatxcycles[6:0]
 @28
 spi_tb.spi_m.dualdatatx
-@29
 spi_tb.spi_m.quaddatatx
-@28
 spi_tb.spi_m.dualrx
 spi_tb.spi_m.quadrx
 spi_tb.spi_m.dualalt
 spi_tb.spi_m.quadalt
-spi_tb.spi_m.r_mosifinish
 spi_tb.spi_m.command_done
 spi_tb.spi_m.address_done
 spi_tb.spi_m.datatx_done
@@ -82,7 +73,6 @@ spi_tb.spi_m.command_en
 spi_tb.spi_m.address_en
 spi_tb.spi_m.datatx_en
 spi_tb.spi_m.alt_en
-spi_tb.spi_m.r_misofinish
 @22
 spi_tb.spi_m.w_commdcycles[3:0]
 spi_tb.spi_m.w_addrcycles[6:0]
@@ -94,25 +84,18 @@ spi_tb.spi_m.r_command[7:0]
 spi_tb.spi_m.sclk_int
 spi_tb.spi_m.r_validedge
 spi_tb.spi_m.r_transfer_start
-spi_tb.spi_m.r_transfers_done
 spi_tb.spi_m.r_setup_start
 spi_tb.spi_m.r_build_done
 spi_tb.spi_m.r_counters_done
 @22
-spi_tb.spi_m.r_misocounter[6:0]
 spi_tb.spi_m.r_misoctrstop[6:0]
-@28
-spi_tb.spi_m.r_misofinish
-@22
 spi_tb.spi_m.r_sclk_edges[8:0]
 @28
 spi_tb.spi_m.r_commandtype[2:0]
 @22
 spi_tb.spi_m.r_datain[31:0]
 @28
-spi_tb.spi_m.r_expct_answer
 spi_tb.spi_m.r_inputread
-spi_tb.spi_m.r_misofinish
 @22
 spi_tb.spi_m.r_nmisobits[6:0]
 @28
