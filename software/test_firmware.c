@@ -20,7 +20,14 @@ int main()
 	spifl_init(SPI_BASE);
 
 	uart_printf("\nTesting SPI flash controller\n");
-
+	
+    /*uart_printf("\nResetting flash memory\n");
+    unsigned frame_reset = 0x00000100;
+	//execute RESET ENABLE
+	spifl_executecommand(COMM, 0, 0, (frame_reset << 20)|RESET_ENABLE, NULL);
+	//execute RESET MEM
+	spifl_executecommand(COMM, 0, 0, (frame_reset << 20)|RESET_MEM, NULL);
+*/
 	uart_txwait();
 	
 	uart_printf("\nReading flash parameters: command 0x5a\n");
@@ -36,9 +43,9 @@ int main()
 	//spifl_resetmem();
 	
 	//Write(Program) to flash memory
-	//unsigned reg = 0xff;
-	//spifl_readStatusReg(&reg);
-	//uart_printf("\nStatus before write (%x)\n", reg);
+	unsigned reg = 0xff;
+	spifl_readStatusReg(&reg);
+	uart_printf("\nStatus reg (%x)\n", reg);
 	//uart_sleep(10);
 	//uart_printf("\nWriting word: (%x) to flash\n", word);
 	//spifl_writemem(word, address);
@@ -53,7 +60,30 @@ int main()
 	//uart_printf("\nStatus (%x)\n", reg);
 	//uart_printf("\nStatus1 (%x)\n", reg1);
 
+
+    //Testing Fast Read in single, dual, quad
 	unsigned bytes = 4, readid = 0;
+    unsigned frame = 0x00000000;
+    unsigned commFastRead = 0x0b;
+    unsigned fastReadmem0 = 0, fastReadmem1 = 0, fastReadmem2 =0;
+    unsigned dummycycles = 8;
+    /*
+    //single
+	spifl_executecommand(COMMADDR_ANS, 0, 0, (frame<<20)|(dummycycles<<16)|((bytes*8)<<8)|commFastRead, &fastReadmem0);
+	//dual
+    frame = 0x00000177;
+    dummycycles = 8;
+    spifl_executecommand(COMMADDR_ANS, 0, 0, (frame<<20)|(dummycycles<<16)|((bytes*8)<<8)|commFastRead, &fastReadmem1);
+	//quad
+    frame = 0x000002bb;
+    dummycycles = 10;
+    spifl_executecommand(COMMADDR_ANS, 0, 0, (frame<<20)|(dummycycles<<16)|((bytes*8)<<8)|commFastRead, &fastReadmem2);
+
+    uart_printf("\nFastRead:\n\tSingle:(%x)\n\tDual:(%x)\n\tQuad:(%x)\n", fastReadmem0, fastReadmem1, fastReadmem2);
+*/
+    //Read ID
+    bytes = 4;
+    readid = 0;
 	spifl_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|READ_ID, &readid);
 
 	uart_printf("\nREAD_ID: (%x)\n", readid);
@@ -69,14 +99,48 @@ int main()
 		uart_printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)\n", read_mem, word);
 	}
     
+    read_mem = 1;
     uart_printf("\nTesting dual output fast read\n");
     read_mem = spifl_readfastDualOutput(address + 1);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
 
-    uart_printf("\nTesting dual input and output fast read\n");
-    read_mem = spifl_readfastDualInOutput(address + 1);
+    read_mem = 2;
+    uart_printf("\nTesting quad output fast read\n");
+    read_mem = spifl_readfastQuadOutput(address + 1);
     uart_printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
-	
+    
+
+    uart_printf("\nRead Non volatile Register\n");
+    unsigned nonVolatileReg = 0;
+	bytes = 2;
+    unsigned command_aux = 0xb5;
+	spifl_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &nonVolatileReg);
+	uart_printf("\nNon volatile Register (16 bits):(%x)\n", nonVolatileReg);	
+    uart_txwait();
+    
+    uart_printf("\nRead enhanced volatile Register\n");
+    unsigned enhancedReg = 0;
+	bytes = 1;
+    command_aux = 0x65;
+    frame = 0x00000000;
+	spifl_executecommand(COMMANS, 0, 0, (frame<<20)|((bytes*8)<<8)|command_aux, &enhancedReg);
+	uart_printf("\nEnhanced volatile Register (8 bits):(%x)\n", enhancedReg);	
+
+    //Write enhanced reg
+    /*
+    command_aux = 0x61;
+    unsigned dtin = 0xdf000000;
+    bytes = 1;
+    frame = 0x000001df;
+    uart_printf("\nWrite enhanced reg\n");
+	spifl_executecommand(COMM_DTIN, dtin, 0, (frame<<20)|((bytes*8)<<8)|command_aux, NULL);
+    uart_printf("\nRead enhanced volatile Register\n");
+    
+    command_aux = 0x65;
+    enhancedReg = 4;
+	spifl_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &enhancedReg);
+	uart_printf("\nEnhanced volatile Register after write (8 bits):(%x)\n", enhancedReg);	
+    */
     uart_txwait();
 	return 0;
 }

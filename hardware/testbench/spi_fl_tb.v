@@ -79,13 +79,13 @@ module spi_tb;
 	//Master Process
 	initial begin
 		#100
-		data_in=32'h5A000000;
-		command=8'h5A;
+		data_in=32'hdf000000;
+		command=8'h66;
 		address=24'h555555;
-		commtype = 3'b010;
-		nmiso_bits = 7'd32;
-        frame_struct = 10'h077;
-		dummy_cycles = 4'd8;
+		commtype = 3'b001;
+		nmiso_bits = 7'd8;
+        frame_struct = 10'h17f;
+		dummy_cycles = 4'd4;
 		mem	= 32'hA0A0A0A3;
 
 		#50
@@ -103,12 +103,13 @@ module spi_tb;
         #120
         //New command
         data_in=8'h5A;
-		command=8'hA3;
+		command=8'h0b;
 		address=24'h555555;
-		commtype = 3'b010;
-        frame_struct = 10'h004;
+		commtype = 3'b011;
+        //frame_struct = 10'b0101110111;
+        frame_struct = 10'h0;
 		nmiso_bits = 7'd8;
-		dummy_cycles = 4'd0;
+		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 		#50
 		validflag=1'b1;
@@ -116,7 +117,23 @@ module spi_tb;
 		validflag=1'b0;
 		//#370// Drive miso
 
-		#3000 
+		#100 
+        wait(tready);
+        #120
+        //New command
+        data_in=8'h5A;
+		command=8'h0b;
+		address=24'h555555;
+		commtype = 3'b100;
+        frame_struct = 10'b1010101111;
+		nmiso_bits = 7'd8;
+		dummy_cycles = 4'd10;
+		mem	= 32'hA0A0A0A3;
+		#50
+		validflag=1'b1;
+		#20
+		validflag=1'b0;
+        #500
         wait(tready);
         #100 $finish;
 	end
