@@ -249,27 +249,29 @@ module spi_master_fl
 		end else begin
 			r_build_done <= 1'b0;
 			if (r_setup_start) begin
-					r_build_done <= 1'b1;
-					if (~r_4byteaddr_on) begin//add alt support
-						r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address[23:0], r_datain, {8{1'b0}}};
-					end else begin
-						r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address, r_datain};
-					end
+                r_build_done <= 1'b1;
+                case(r_commandtype)
+                    3'b011: begin
+                            r_str2sendbuild <= {r_command, data_in, {32{1'b0}}};
+                            end
+                    3'b110: begin
+                            r_str2sendbuild <= (r_4byteaddr_on) ? {r_address, {40{1'b0}}}: {r_address[23:0], {48{1'b0}}};            
+                            end
+                    default: begin
+                            r_str2sendbuild <= (r_4byteaddr_on) ? {r_command, r_address, r_datain}:{r_command, r_address[23:0], r_datain, {8{1'b0}}};
+                            end
+                endcase
 			end
 		end
 	end
 
-		
     /**
     *   Mosi Frame Driving control
     *   From frame_struct
     *   Data transmit control fsm
-        *
         * **/
-    wire command_en;
-    wire address_en;
-    wire alt_en;
-    wire datatx_en;
+    wire command_en, address_en;
+    wire alt_en, datatx_en;
     assign command_en = (r_frame_struct[9:8] != 2'b11);
     assign address_en = (r_frame_struct[7:6] != 2'b11);
     assign datatx_en = (r_frame_struct[5:4] != 2'b11);
@@ -504,7 +506,12 @@ module spi_master_fl
 								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
 								r_sclk_edges <= {w_commdcycles + w_addrcycles,1'b0};
 							end
-					default:	begin//Add code for XIP mode
+                        3'b110: begin//XIP mode, address + answer
+                                r_counterstop <= (r_4byteaddr_on? 8'd32:8'd24);
+								r_misoctrstop <= w_misocycles - 1'b1;
+								r_sclk_edges <= {w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
+                            end
+					default:	begin
 								r_counterstop <= 8'd8;
 								//TODO other control signals default
 								r_sclk_edges <= {w_commdcycles, 1'b0};
