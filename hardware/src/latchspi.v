@@ -20,6 +20,8 @@ module latchspi
     input quadrx,
     input [3:0] dummy_cycles,
     input [6:0] misostop_cnt,
+    input [1:0] xipbit_en,
+    output xipbit_phase,
     output sending_done,
     output mosifinish,
     output [7:0] mosicounter,
@@ -82,6 +84,9 @@ module latchspi
                     r_mosicounter <= r_mosicounter + 3'h1;
                 end
 			end
+            else if(xipbit_en[1] && w_xipbit_phase) begin//Drive xip confirmation bit
+                r_mosi[0] <= xipbit_en[0];
+            end
             if(r_mosicounter == mosistop_cnt) begin
                 r_mosicounter <= 8'd0;
                 r_txindexer <= 8'd71;
@@ -100,18 +105,29 @@ module latchspi
 	//Go through the dummy cycles
 	reg [3:0]		r_dummy_counter;
 	reg			r_dummy_done;
+    reg         r_xipbit_phase;
+    wire        w_xipbit_phase;
+    wire        dummy_count_en;
+    assign dummy_count_en = r_mosifinish && latchout_en && (~r_dummy_done);
+    //assign xipbit_phase = r_xipbit_phase;
+    assign xipbit_phase = w_xipbit_phase;
+	assign w_xipbit_phase = dummy_count_en & (r_dummy_counter==dummy_cycles);
+
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			r_dummy_counter <= 4'h0;
 			r_dummy_done <= 1'b0;
+            r_xipbit_phase <= 1'b0;
 		end
 		else begin
 			if (setup_rst) begin //previously setup_start, same behaviour
 				r_dummy_counter <= dummy_cycles;
 				r_dummy_done <= 1'b0;
+                r_xipbit_phase <= 1'b0;
 			end
-			else if (r_mosifinish && latchout_en && (~r_dummy_done)) begin
+			else if (dummy_count_en) begin
 				r_dummy_counter <= r_dummy_counter - 1'b1;
+                r_xipbit_phase <= (r_dummy_counter==dummy_cycles);
 			end
 			else if (r_dummy_counter == 0 && latchin_en) begin
 				//must hold at 0 implicit r_q<=r_q
@@ -120,7 +136,7 @@ module latchspi
 			end
 		end
 	end
-	
+
 	//Drive miso
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin

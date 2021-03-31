@@ -37,6 +37,7 @@ module spi_master_fl
 	input [6:0]				ndata_bits,	
 	input [3:0]				dummy_cycles,
     input [9:0]             frame_struct,
+    input [1:0]             xipbit_en,
 	output reg				validflag_out,
 	output reg				tready,
 
@@ -87,6 +88,9 @@ module spi_master_fl
 
 	reg		wp_n_int;
 	reg		hold_n_int;
+
+    reg [1:0]   r_xipbit_en;    
+    wire    xipbit_phase;
 	
 	reg [8:0]	r_sclk_edges_counter;
 
@@ -156,20 +160,26 @@ module spi_master_fl
     
 
     //Configure inout tristate i/o
-    reg oe = 1'b1;
+    reg [3:0] oe = 4'b1111;
     //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'hz;
-    assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:
-                                    (quadcommd || quadaddr || quaddatatx || quadalt)? 4'hz:{2'b11, 2'hz};
+    //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe ? data_tx:
+    //                                (quadcommd || quadaddr || quaddatatx || quadalt)? 4'hz:{2'b11, 2'hz};
+    assign hold_n_dq3 = oe[3] ? data_tx[3] :(quadcommd || quadaddr || quaddatatx || quadalt)? 1'hz:1'b1;
+    assign wp_n_dq2 = oe[2] ? data_tx[2] :(quadcommd || quadaddr || quaddatatx || quadalt)? 1'hz:1'b1;
+    assign miso_dq1 = oe[1] ? data_tx[1] :1'hz;
+    assign mosi_dq0 = oe[0] ? data_tx[0] :1'hz;
+
     assign data_rx = {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0};
 
     //Drive oe
     always @(posedge clk, posedge rst) begin
-        if (rst) oe <= 1'b1;
+        if (rst) oe <= 4'b1111;
         else begin
-            oe <= 1'b1;
+            oe <= 4'b1111;
             //if (w_mosifinish) oe <= 1'b0;
             if (w_mosifinish) begin
-                if (`LATCHOUT_EDGE) oe <= 1'b0;
+                if (r_xipbit_en[1] && xipbit_phase) oe <= 4'b0001; 
+                else if (`LATCHOUT_EDGE) oe <= 4'b0000;
                 else oe <= oe;
             end
         end
@@ -187,6 +197,7 @@ module spi_master_fl
             r_ndatatxbits <= 7'd32;
 			r_dummy_cycles <= 4'd0;
             r_frame_struct <= 10'h0;
+            r_xipbit_en <= 2'b00;
 		end else begin
 			if (r_validedge) begin
 				r_datain <= data_in;
@@ -197,6 +208,7 @@ module spi_master_fl
 				r_ndatatxbits <= ndata_bits;
 				r_dummy_cycles <= dummy_cycles;
                 r_frame_struct <= frame_struct;
+                r_xipbit_en <= xipbit_en;
 				r_inputread <= 1'b1;
 			end
 			else if (~validflag) begin
@@ -440,6 +452,8 @@ module spi_master_fl
         .quadrx(quadrx),
         .dummy_cycles(r_dummy_cycles),
         .misostop_cnt(r_misoctrstop),
+        .xipbit_en(xipbit_en),
+        .xipbit_phase(xipbit_phase),
         .sending_done(w_sending_done),
         .mosifinish(w_mosifinish),
         .mosicounter(mosicounter),
