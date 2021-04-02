@@ -7,6 +7,8 @@
 #define COMM_DTIN		3
 #define COMMADDR_DTIN	4
 #define COMMADDR		5
+#define XIP_ADDRANS     6
+#define RECOVER_SEQ     7
 
 //FLASH MEM internal command codes
 #define RESET_ENABLE		0x66

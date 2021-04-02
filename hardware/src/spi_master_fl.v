@@ -151,9 +151,10 @@ module spi_master_fl
 	
     wire [3:0] data_tx;
     wire [3:0] data_rx;
-    assign data_tx = (dualtx_en) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
-                        (quadtx_en) ? w_mosi[3:0]:
-                            {hold_n_int, wp_n_int, w_mosi[1],w_mosi[0]};
+    assign data_tx = (recoverseq) ? dqvalues:
+                        (dualtx_en) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
+                            (quadtx_en) ? w_mosi[3:0]:
+                                {hold_n_int, wp_n_int, w_mosi[1],w_mosi[0]};
     //assign data_tx = (dualcommd || dualaddr || dualdatatx || dualalt) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
     //                    (quadcommd || quadaddr || quaddatatx || quadalt) ? w_mosi[3:0]:
     //                        {hold_n_int, wp_n_int, w_mosi[1],w_mosi[0]};
@@ -460,6 +461,20 @@ module spi_master_fl
         .read_data(w_misodata)
     );
     
+    //Detect recover sequence
+    reg [3:0] dqvalues;
+    reg recoverseq;
+    always @* begin
+       dqvalues = 4'h0; 
+       recoverseq = 1'b0;
+       if (r_commandtype == 3'b111) begin
+           dqvalues[0] = (r_frame_struct[1:0]==2'b00 || r_frame_struct[1:0]==2'b01) ? r_frame_struct[0]: 1'bz;
+           dqvalues[1] = (r_frame_struct[3:2]==2'b00 || r_frame_struct[3:2]==2'b01) ? r_frame_struct[2]: 1'bz;
+           dqvalues[2] = (r_frame_struct[5:4]==2'b00 || r_frame_struct[5:4]==2'b01) ? r_frame_struct[4]: 1'bz;
+           dqvalues[3] = (r_frame_struct[7:6]==2'b00 || r_frame_struct[7:6]==2'b01) ? r_frame_struct[6]: 1'bz;
+           recoverseq = 1'b1;
+       end
+    end
 
 	//MUX
 	//Frame structure decoding/controls
@@ -524,6 +539,10 @@ module spi_master_fl
                                 r_counterstop <= (r_4byteaddr_on? 8'd32:8'd24);
 								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= {w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
+                            end
+                        3'b111: begin//reset sequences
+								r_counterstop <= r_ndatatxbits;
+								r_sclk_edges <= {w_datatxcycles,1'b0};                       
                             end
 					default:	begin
 								r_counterstop <= 8'd8;

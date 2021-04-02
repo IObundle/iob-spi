@@ -8,6 +8,29 @@
 static unsigned int base;
 //create another static variable for upper addresses
 
+typedef enum {SINGLE=0, DUAL, QUAD} spilaneMode;
+
+static struct flashConfig_ 
+{
+    spilaneMode spimode;                            
+} flashConfig;
+
+
+void spifl_setMode(spilaneMode mode)
+{
+    flashConfig.spimode = mode;
+}
+
+spilaneMode spifl_getMode()
+{
+    return flashConfig.spimode;
+}
+
+void spifl_terminateXipSequence()
+{
+        
+}
+
 //SET
 void spifl_reset()
 {
