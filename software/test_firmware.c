@@ -43,7 +43,7 @@ int main()
 	//spifl_resetmem();
 	
 	//Write(Program) to flash memory
-	unsigned reg = 0xff;
+	unsigned reg = 0x00;
 	spifl_readStatusReg(&reg);
 	uart_printf("\nStatus reg (%x)\n", reg);
 	//uart_sleep(10);
@@ -141,6 +141,22 @@ int main()
 	spifl_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &enhancedReg);
 	uart_printf("\nEnhanced volatile Register after write (8 bits):(%x)\n", enhancedReg);	
     */
+    uart_txwait();
+    
+    //Testing xip bit enabling and xip termination sequence
+    unsigned volconfigReg = 0;
+    spifl_readVolConfigReg(&volconfigReg);
+	uart_printf("\nVolatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
+    
+    spifl_XipEnable();
+    
+    spifl_readVolConfigReg(&volconfigReg);
+	uart_printf("\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
+    uart_txwait();
+    
+    int xipEnabled = 10;
+    xipEnabled = spifl_terminateXipSequence();
+    uart_printf("\nAfter xip termination sequence: %d\n", xipEnabled);
     uart_txwait();
 	return 0;
 }

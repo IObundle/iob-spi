@@ -11,7 +11,7 @@ typedef enum {SINGLE=0, DUAL, QUAD} spilaneMode;
 
 static struct flashConfig_ 
 {
-    spilaneMode spimode;                            
+    spilaneMode spimode = SINGLE;                            
 } flashConfig;
 
 
@@ -37,6 +37,7 @@ int spifl_XipEnable()
 	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
     
     spifl_executecommand(COMM_DTIN, writebyte, 0, (bits << 8) | WRITE_VOLCFGREG, NULL);
+    return 1;
 }
 
 int spifl_terminateXipSequence()
