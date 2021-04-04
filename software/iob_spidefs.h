@@ -15,6 +15,7 @@
 #define	RESET_MEM			0x99
 #define READ				0x03
 #define WRITE_ENABLE		0x06
+#define WRITE_VOLCFGREG     0x81
 #define PAGE_PROGRAM		0x02
 #define SUB_ERASE			0x20
 #define READ_STATUSREG      0x05

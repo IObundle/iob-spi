@@ -1,6 +1,8 @@
 //Higher level functions
 
 unsigned int spifl_readStatusReg(unsigned *reg);
+unsigned int spifl_readVolConfigReg(unsigned *regvalue);
+
 void spifl_resetmem();
 void spifl_writemem(unsigned int word, unsigned int address);
 unsigned int spifl_readmem(unsigned int address);//extend for more than 4 bytes

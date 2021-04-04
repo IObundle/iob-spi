@@ -25,10 +25,27 @@ spilaneMode spifl_getMode()
     return flashConfig.spimode;
 }
 
+//Xip functions
+int spifl_XipEnable()
+{
+    //write to bit 3 of volatile configuration
+    //register to enable xip
+    unsigned int writebyte = 0xf7000000;
+    unsigned int bits = 8;
+    
+    //execute WRITE ENABLE
+	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+    
+    spifl_executecommand(COMM_DTIN, writebyte, 0, (bits << 8) | WRITE_VOLCFGREG, NULL);
+}
+
 int spifl_terminateXipSequence()
 {
     unsigned bits=0;
     unsigned frame= 0x0fd;
+    unsigned int regvalue = 0;
+    unsigned int numbits = 8;
+    unsigned int bitmask = 0x08;
 
     if (flashConfig.spimode == QUAD)
         bits = 8;    
@@ -39,19 +56,16 @@ int spifl_terminateXipSequence()
 
 	spifl_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8), NULL);
     //Read volatile register to check if xip succesfully terminated
-    unsigned int regvalue = 0;
-    unsigned int numbytes = 1;
-    spifl_executecommand(COMMANS, 0, 0, (numbytes << 8) | READ_VOLCFGREG, &regvalue);
+    spifl_readVolConfigReg(&regvalue);
 
     //Check for specific xip bit [3]
-    unsigned int bitmask = 0x08;
-
     if(bitmask & regvalue)
         return 1;
     else
         return 0;
 }
 
+//Reset commands
 void spifl_resetmem()
 {
 	//execute RESET ENABLE
@@ -60,6 +74,7 @@ void spifl_resetmem()
 	spifl_executecommand(COMM, 0, 0, RESET_MEM, NULL);
 }
 
+//Program/Write Memory commands
 void spifl_writemem(unsigned int word, unsigned int address)
 {
 	//execute WRITE ENABLE
@@ -68,6 +83,7 @@ void spifl_writemem(unsigned int word, unsigned int address)
 	spifl_executecommand(COMMADDR_DTIN, word, address, PAGE_PROGRAM, NULL);
 }
 
+//Read Register Commands
 unsigned int spifl_readStatusReg(unsigned *regstatus)
 {
      unsigned int bytes = 1;
@@ -75,6 +91,15 @@ unsigned int spifl_readStatusReg(unsigned *regstatus)
      return 1;//Correct later
 }
 
+//Read Volatile Configuration Register
+unsigned int spifl_readVolConfigReg(unsigned *regvalue)
+{
+     unsigned int numbits = 8;
+     spifl_executecommand(COMMANS, 0, 0, (numbits << 8) | READ_VOLCFGREG, &regvalue);
+     return 1;//Correct later
+}
+
+//Read Memory Commands
 unsigned int spifl_readfastDualOutput(unsigned address)
 {
     unsigned misobytes = 4, data=0;
@@ -121,6 +146,8 @@ unsigned int spifl_readFlashParam(unsigned address)
 	spifl_executecommand(COMMADDR_ANS, 0, address, (dummy_cycles<<16)|((bytes*8)<<8)|READ_FLPARAMS, &data);
 	return data;
 }
+
+//Erase Memory commands
 void spifl_erasemem(unsigned int subsector_address)
 {
 	//execute ERASE
