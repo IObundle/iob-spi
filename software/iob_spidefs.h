@@ -18,6 +18,7 @@
 #define PAGE_PROGRAM		0x02
 #define SUB_ERASE			0x20
 #define READ_STATUSREG      0x05
+#define READ_VOLCFGREG      0x85
 #define READ_ID				0x9f
 #define READ_FLPARAMS       0x5A
 #define READFAST_DUALOUT    0x3B   
