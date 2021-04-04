@@ -113,7 +113,17 @@ void spifl_executecommand(int typecode, unsigned int datain, unsigned int addres
 				//spifl_waitvalidout();
 				spifl_setVALIDIN(0);
 				break;
-		default:;
+        case XIP_ADDRANS:
+				spifl_setVALIDIN(1);
+				spifl_setVALIDIN(0);
+                break;
+        case RECOVER_SEQ:
+				spifl_setVALIDIN(1);
+				spifl_setVALIDIN(0);
+                break;
+		default:
+				spifl_setVALIDIN(1);
+				spifl_setVALIDIN(0);
 
 	}
 }

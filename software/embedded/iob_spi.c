@@ -32,7 +32,7 @@ int spifl_XipEnable()
 {
     //write to bit 3 of volatile configuration
     //register to enable xip
-    unsigned int writebyte = 0xf7000000;
+    unsigned int writebyte = 0xf3000000;
     unsigned int bits = 8;
     
     //execute WRITE ENABLE
@@ -102,14 +102,44 @@ unsigned int spifl_readVolConfigReg(unsigned *regvalue)
      return 1;//Correct later
 }
 
-//Read Memory Commands
-unsigned int spifl_readfastDualOutput(unsigned address)
+//Xip Read Commands
+unsigned int spifl_readMemXip(unsigned address, unsigned activateXip)
 {
     unsigned misobytes = 4, data=0;
     unsigned frame_struct = 0x00000004;//uint8 later
 	unsigned dummy_cycles = 8;
-    unsigned command = (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_DUALOUT;
-	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
+    unsigned command = 0;
+    unsigned xipbit = 1;
+    
+    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+        xipbit = activateXip;
+    else
+        xipbit = 0;
+    
+    command = (xipbit << 30)(dummy_cycles<<16)|((misobytes*8)<<8);
+	
+    spifl_executecommand(XIP_ADDRANS, 0, address, command, &data);
+	return data;
+
+}
+
+//Read Memory Commands
+unsigned int spifl_readfastDualOutput(unsigned address, unsigned activateXip)
+{
+    unsigned misobytes = 4, data=0;
+    unsigned frame_struct = 0x00000004;//uint8 later
+	unsigned dummy_cycles = 8;
+    unsigned command = 0;
+    unsigned xipbit = 1;
+    
+    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+        xipbit = activateXip;
+    else
+        xipbit = 0;
+    
+    command = (xipbit << 30)|(frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_DUALOUT;
+	
+    spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
 	return data;
 }
 

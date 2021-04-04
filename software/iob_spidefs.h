@@ -10,6 +10,10 @@
 #define XIP_ADDRANS     6
 #define RECOVER_SEQ     7
 
+//
+#define ACTIVEXIP   2
+#define TERMINATEXIP    3
+
 //FLASH MEM internal command codes
 #define RESET_ENABLE		0x66
 #define	RESET_MEM			0x99
