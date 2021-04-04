@@ -144,12 +144,14 @@ int main()
     uart_txwait();
     
     //Testing xip bit enabling and xip termination sequence
+	uart_printf("\nTesting xip enabling through volatile bit and termination by sequence\n");	
     unsigned volconfigReg = 0;
     spifl_readVolConfigReg(&volconfigReg);
 	uart_printf("\nVolatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
     
     spifl_XipEnable();
     
+    volconfigReg = 0;
     spifl_readVolConfigReg(&volconfigReg);
 	uart_printf("\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
     uart_txwait();
@@ -157,6 +159,9 @@ int main()
     int xipEnabled = 10;
     xipEnabled = spifl_terminateXipSequence();
     uart_printf("\nAfter xip termination sequence: %d\n", xipEnabled);
+    volconfigReg = 0;
+    spifl_readVolConfigReg(&volconfigReg);
+	uart_printf("\nAfter xip termination sequence, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
     uart_txwait();
 	return 0;
 }
