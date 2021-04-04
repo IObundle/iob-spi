@@ -3,6 +3,7 @@
 #include "iob-uart.h"
 //#include "iob_timer.h"
 #include "iob_spi.h"
+#include "iob_spiplatform.h"
 #include "iob_spidefs.h"
 
 

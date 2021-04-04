@@ -2,6 +2,7 @@
 #include "iob_spiplatform.h"
 #include "SPIsw_reg.h"
 #include "interconnect.h"
+#include "iob_spidefs.h"
 #include "stdint.h"
 
 static unsigned int base;

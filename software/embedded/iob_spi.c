@@ -9,7 +9,9 @@ static unsigned int base;
 
 typedef enum {SINGLE=0, DUAL, QUAD} spilaneMode;
 
-static struct flashConfig_ 
+static spilaneMode spimode = SINGLE;                            
+
+/*static struct flashConfig_ 
 {
     spilaneMode spimode = SINGLE;                            
 } flashConfig;
@@ -23,7 +25,7 @@ void spifl_setMode(spilaneMode mode)
 spilaneMode spifl_getMode()
 {
     return flashConfig.spimode;
-}
+}*/
 
 //Xip functions
 int spifl_XipEnable()
@@ -48,9 +50,9 @@ int spifl_terminateXipSequence()
     unsigned int numbits = 8;
     unsigned int bitmask = 0x08;
 
-    if (flashConfig.spimode == QUAD)
+    if (spimode == QUAD)
         bits = 8;    
-    else if (flashConfig.spimode == DUAL)
+    else if (spimode == DUAL)
         bits = 13;
     else
         bits = 25;
@@ -96,7 +98,7 @@ unsigned int spifl_readStatusReg(unsigned *regstatus)
 unsigned int spifl_readVolConfigReg(unsigned *regvalue)
 {
      unsigned int numbits = 8;
-     spifl_executecommand(COMMANS, 0, 0, (numbits << 8) | READ_VOLCFGREG, &regvalue);
+     spifl_executecommand(COMMANS, 0, 0, (numbits << 8) | READ_VOLCFGREG, regvalue);
      return 1;//Correct later
 }
 
