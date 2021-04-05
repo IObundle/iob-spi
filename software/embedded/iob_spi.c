@@ -116,7 +116,7 @@ unsigned int spifl_readMemXip(unsigned address, unsigned activateXip)
     else
         xipbit = 0;
     
-    command = (xipbit << 30)(dummy_cycles<<16)|((misobytes*8)<<8);
+    command = (xipbit << 30)|(dummy_cycles<<16)|((misobytes*8)<<8);
 	
     spifl_executecommand(XIP_ADDRANS, 0, address, command, &data);
 	return data;

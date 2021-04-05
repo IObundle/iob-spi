@@ -6,6 +6,7 @@ unsigned int spifl_readVolConfigReg(unsigned *regvalue);
 //xip functions
 int spifl_XipEnable();
 int spifl_terminateXipSequence();
+unsigned int spifl_readMemXip(unsigned address, unsigned activateXip);
 
 void spifl_resetmem();
 void spifl_writemem(unsigned int word, unsigned int address);

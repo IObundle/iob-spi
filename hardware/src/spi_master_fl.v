@@ -165,8 +165,8 @@ module spi_master_fl
     //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'hz;
     //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe ? data_tx:
     //                                (quadcommd || quadaddr || quaddatatx || quadalt)? 4'hz:{2'b11, 2'hz};
-    assign hold_n_dq3 = oe[3] ? data_tx[3] :(quadcommd || quadaddr || quaddatatx || quadalt)? 1'hz:1'b1;
-    assign wp_n_dq2 = oe[2] ? data_tx[2] :(quadcommd || quadaddr || quaddatatx || quadalt)? 1'hz:1'b1;
+    assign hold_n_dq3 = oe[3] ? data_tx[3] :(quadcommd || quadaddr || quaddatatx || quadalt || quadrx)? 1'hz:1'b1;
+    assign wp_n_dq2 = oe[2] ? data_tx[2] :(quadcommd || quadaddr || quaddatatx || quadalt || quadrx)? 1'hz:1'b1;
     assign miso_dq1 = oe[1] ? data_tx[1] :1'hz;
     assign mosi_dq0 = oe[0] ? data_tx[0] :1'hz;
 

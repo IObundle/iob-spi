@@ -83,12 +83,12 @@ module spi_tb;
 		#100
 		data_in=32'hdf000000;
 		command=8'h66;
-		address=24'h555555;
-		commtype = 3'b111;
-		nmiso_bits = 7'd13;
-        frame_struct = 10'h07D;
-        xipbit_en = 2'b00;
-		dummy_cycles = 4'd0;
+		address=24'h5a5a11;
+		commtype = 3'b110;
+		nmiso_bits = 7'd32;
+        frame_struct = 10'h000;
+        xipbit_en = 2'b10;
+		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 
 		#50
@@ -106,13 +106,13 @@ module spi_tb;
         #120
         //New command
         data_in=32'h5A5A5A5A;
-		command=8'h0a;
+		command=8'h6b;
 		address=24'h555555;
-		commtype = 3'b100;
+		commtype = 3'b010;
         //frame_struct = 10'b0101110111;
-        frame_struct = 10'h0;
-        xipbit_en = 2'b10;
-		nmiso_bits = 7'd8;
+        frame_struct = 10'h8;
+        xipbit_en = 2'b00;
+		nmiso_bits = 7'd32;
 		dummy_cycles = 4'd8;
 		mem	= 32'hA0A0A0A3;
 		#50
