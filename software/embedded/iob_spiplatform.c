@@ -114,10 +114,13 @@ void spifl_executecommand(int typecode, unsigned int datain, unsigned int addres
 				spifl_setVALIDIN(0);
 				break;
         case XIP_ADDRANS:
+				spifl_setADDRESS(address);
 				spifl_setVALIDIN(1);
 				spifl_setVALIDIN(0);
+				*dataout = spifl_getDATAOUT();
                 break;
         case RECOVER_SEQ:
+				spifl_setDATAIN(datain);
 				spifl_setVALIDIN(1);
 				spifl_setVALIDIN(0);
                 break;
