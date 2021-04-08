@@ -37,6 +37,7 @@ module spi_master_fl
 	input [6:0]				ndata_bits,	
 	input [3:0]				dummy_cycles,
     input [9:0]             frame_struct,
+    input [1:0]             xipbit_en,
 	output reg				validflag_out,
 	output reg				tready,
 
@@ -87,6 +88,9 @@ module spi_master_fl
 
 	reg		wp_n_int;
 	reg		hold_n_int;
+
+    reg [1:0]   r_xipbit_en;    
+    wire    xipbit_phase;
 	
 	reg [8:0]	r_sclk_edges_counter;
 
@@ -147,29 +151,36 @@ module spi_master_fl
 	
     wire [3:0] data_tx;
     wire [3:0] data_rx;
-    assign data_tx = (dualtx_en) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
-                        (quadtx_en) ? w_mosi[3:0]:
-                            {hold_n_int, wp_n_int, w_mosi[1],w_mosi[0]};
+    assign data_tx = (recoverseq) ? dqvalues:
+                        (dualtx_en) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
+                            (quadtx_en) ? w_mosi[3:0]:
+                                {hold_n_int, wp_n_int, w_mosi[1],w_mosi[0]};
     //assign data_tx = (dualcommd || dualaddr || dualdatatx || dualalt) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
     //                    (quadcommd || quadaddr || quaddatatx || quadalt) ? w_mosi[3:0]:
     //                        {hold_n_int, wp_n_int, w_mosi[1],w_mosi[0]};
     
 
     //Configure inout tristate i/o
-    reg oe = 1'b1;
+    reg [3:0] oe = 4'b1111;
     //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'hz;
-    assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:
-                                    (quadcommd || quadaddr || quaddatatx || quadalt)? 4'hz:{2'b11, 2'hz};
+    //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe ? data_tx:
+    //                                (quadcommd || quadaddr || quaddatatx || quadalt)? 4'hz:{2'b11, 2'hz};
+    assign hold_n_dq3 = oe[3] ? data_tx[3] :(quadcommd || quadaddr || quaddatatx || quadalt || quadrx)? 1'hz:1'b1;
+    assign wp_n_dq2 = oe[2] ? data_tx[2] :(quadcommd || quadaddr || quaddatatx || quadalt || quadrx)? 1'hz:1'b1;
+    assign miso_dq1 = oe[1] ? data_tx[1] :1'hz;
+    assign mosi_dq0 = oe[0] ? data_tx[0] :1'hz;
+
     assign data_rx = {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0};
 
     //Drive oe
     always @(posedge clk, posedge rst) begin
-        if (rst) oe <= 1'b1;
+        if (rst) oe <= 4'b1111;
         else begin
-            oe <= 1'b1;
+            oe <= 4'b1111;
             //if (w_mosifinish) oe <= 1'b0;
             if (w_mosifinish) begin
-                if (`LATCHOUT_EDGE) oe <= 1'b0;
+                if (r_xipbit_en[1] && xipbit_phase) oe <= 4'b0001; 
+                else if (`LATCHOUT_EDGE) oe <= 4'b0000;
                 else oe <= oe;
             end
         end
@@ -187,6 +198,7 @@ module spi_master_fl
             r_ndatatxbits <= 7'd32;
 			r_dummy_cycles <= 4'd0;
             r_frame_struct <= 10'h0;
+            r_xipbit_en <= 2'b00;
 		end else begin
 			if (r_validedge) begin
 				r_datain <= data_in;
@@ -197,6 +209,7 @@ module spi_master_fl
 				r_ndatatxbits <= ndata_bits;
 				r_dummy_cycles <= dummy_cycles;
                 r_frame_struct <= frame_struct;
+                r_xipbit_en <= xipbit_en;
 				r_inputread <= 1'b1;
 			end
 			else if (~validflag) begin
@@ -249,27 +262,29 @@ module spi_master_fl
 		end else begin
 			r_build_done <= 1'b0;
 			if (r_setup_start) begin
-					r_build_done <= 1'b1;
-					if (~r_4byteaddr_on) begin//add alt support
-						r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address[23:0], r_datain, {8{1'b0}}};
-					end else begin
-						r_str2sendbuild <= (r_commandtype == 3'b011) ? {r_command, data_in, {32{1'b0}}}: {r_command, r_address, r_datain};
-					end
+                r_build_done <= 1'b1;
+                case(r_commandtype)
+                    3'b011: begin
+                            r_str2sendbuild <= {r_command, data_in, {32{1'b0}}};
+                            end
+                    3'b110: begin
+                            r_str2sendbuild <= (r_4byteaddr_on) ? {r_address, {40{1'b0}}}: {r_address[23:0], {48{1'b0}}};            
+                            end
+                    default: begin
+                            r_str2sendbuild <= (r_4byteaddr_on) ? {r_command, r_address, r_datain}:{r_command, r_address[23:0], r_datain, {8{1'b0}}};
+                            end
+                endcase
 			end
 		end
 	end
 
-		
     /**
     *   Mosi Frame Driving control
     *   From frame_struct
     *   Data transmit control fsm
-        *
         * **/
-    wire command_en;
-    wire address_en;
-    wire alt_en;
-    wire datatx_en;
+    wire command_en, address_en;
+    wire alt_en, datatx_en;
     assign command_en = (r_frame_struct[9:8] != 2'b11);
     assign address_en = (r_frame_struct[7:6] != 2'b11);
     assign datatx_en = (r_frame_struct[5:4] != 2'b11);
@@ -438,12 +453,28 @@ module spi_master_fl
         .quadrx(quadrx),
         .dummy_cycles(r_dummy_cycles),
         .misostop_cnt(r_misoctrstop),
+        .xipbit_en(xipbit_en),
+        .xipbit_phase(xipbit_phase),
         .sending_done(w_sending_done),
         .mosifinish(w_mosifinish),
         .mosicounter(mosicounter),
         .read_data(w_misodata)
     );
     
+    //Detect recover sequence
+    reg [3:0] dqvalues;
+    reg recoverseq;
+    always @* begin
+       dqvalues = 4'h0; 
+       recoverseq = 1'b0;
+       if (r_commandtype == 3'b111) begin
+           dqvalues[0] = (r_frame_struct[1:0]==2'b00 || r_frame_struct[1:0]==2'b01) ? r_frame_struct[0]: 1'bz;
+           dqvalues[1] = (r_frame_struct[3:2]==2'b00 || r_frame_struct[3:2]==2'b01) ? r_frame_struct[2]: 1'bz;
+           dqvalues[2] = (r_frame_struct[5:4]==2'b00 || r_frame_struct[5:4]==2'b01) ? r_frame_struct[4]: 1'bz;
+           dqvalues[3] = (r_frame_struct[7:6]==2'b00 || r_frame_struct[7:6]==2'b01) ? r_frame_struct[6]: 1'bz;
+           recoverseq = 1'b1;
+       end
+    end
 
 	//MUX
 	//Frame structure decoding/controls
@@ -504,7 +535,16 @@ module spi_master_fl
 								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
 								r_sclk_edges <= {w_commdcycles + w_addrcycles,1'b0};
 							end
-					default:	begin//Add code for XIP mode
+                        3'b110: begin//XIP mode, address + answer
+                                r_counterstop <= (r_4byteaddr_on? 8'd32:8'd24);
+								r_misoctrstop <= w_misocycles - 1'b1;
+								r_sclk_edges <= {w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
+                            end
+                        3'b111: begin//reset sequences
+								r_counterstop <= r_ndatatxbits;
+								r_sclk_edges <= {w_datatxcycles,1'b0};                       
+                            end
+					default:	begin
 								r_counterstop <= 8'd8;
 								//TODO other control signals default
 								r_sclk_edges <= {w_commdcycles, 1'b0};

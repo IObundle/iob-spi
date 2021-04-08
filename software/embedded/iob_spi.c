@@ -1,126 +1,74 @@
 #include <stddef.h>
 #include "iob_spi.h"
-#include "SPIsw_reg.h"
-#include "interconnect.h"
+#include "iob_spiplatform.h"
 #include "iob_spidefs.h"
 #include "stdint.h"
 
 static unsigned int base;
 //create another static variable for upper addresses
 
-//SET
-void spifl_reset()
+typedef enum {SINGLE=0, DUAL, QUAD} spilaneMode;
+
+static spilaneMode spimode = SINGLE;                            
+
+/*static struct flashConfig_ 
 {
-	IO_SET(base, FL_RESET, 1);//soft reset
-	IO_SET(base, FL_RESET, 0);
+    spilaneMode spimode = SINGLE;                            
+} flashConfig;
+
+
+void spifl_setMode(spilaneMode mode)
+{
+    flashConfig.spimode = mode;
 }
 
-void spifl_setDATAIN(unsigned int datain)
+spilaneMode spifl_getMode()
 {
-	IO_SET(base, FL_DATAIN, datain);
+    return flashConfig.spimode;
+}*/
 
+//Xip functions
+int spifl_XipEnable()
+{
+    //write to bit 3 of volatile configuration
+    //register to enable xip
+    unsigned int writebyte = 0xf3000000;
+    unsigned int bits = 8;
+    
+    //execute WRITE ENABLE
+	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+    
+    spifl_executecommand(COMM_DTIN, writebyte, 0, (bits << 8) | WRITE_VOLCFGREG, NULL);
+    return 1;
 }
 
-void spifl_setADDRESS(unsigned int address)
+int spifl_terminateXipSequence()
 {
-	IO_SET(base, FL_ADDRESS, address);
+    unsigned bits=0;
+    unsigned frame= 0x0fd;
+    unsigned int regvalue = 0;
+    unsigned int numbits = 8;
+    unsigned int bitmask = 0x08;
+
+    if (spimode == QUAD)
+        bits = 8;    
+    else if (spimode == DUAL)
+        bits = 13;
+    else
+        bits = 25;
+
+	spifl_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8), NULL);
+    //Read volatile register to check if xip succesfully terminated
+    spifl_readVolConfigReg(&regvalue);
+
+    //Check for specific xip bit [3]
+    if(bitmask & regvalue)
+        return 1;
+    else
+        return 0;
 }
 
-void spifl_setCOMMAND(unsigned int command)
-{
-	IO_SET(base, FL_COMMAND, command);
-}
-
-void spifl_setCOMMTYPE(unsigned int commtype)
-{
-	IO_SET(base, FL_COMMANDTP, commtype);
-}
-
-void spifl_setVALIDIN(unsigned int validin)
-{
-	IO_SET(base, FL_VALIDFLG, validin);
-}
-
-//GET
-unsigned int spifl_getDATAOUT()
-{
-	unsigned int dataout;
-	dataout = (unsigned int) IO_GET(base, FL_DATAOUT);
-	return dataout;
-}
-
-unsigned int spifl_getVALIDOUT()
-{
-	unsigned int validout;
-	validout = (unsigned int) IO_GET(base, FL_VALIDFLGOUT);
-	return validout;
-}
-
-//Higher functions
-void spifl_init(int base_address)
-{
-	base = base_address;
-	spifl_reset();
-	//spifl_resetmem();
-}
-
-void spifl_waitvalidout()
-{
-	while(!IO_GET(base, FL_VALIDFLGOUT));//not using wrapper getter
-}
-
-void spifl_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout)
-{
-	
-	spifl_setCOMMAND(command);
-	spifl_setCOMMTYPE(typecode);
-	
-	switch(typecode)
-	{
-		case COMM:
-				spifl_setVALIDIN(1);
-				//spifl_waitvalidout();
-				spifl_setVALIDIN(0);
-				//deassert valid?
-				break;
-		case COMMANS:
-				spifl_setVALIDIN(1);
-				spifl_setVALIDIN(0);
-				//spifl_waitvalidout();
-				*dataout = spifl_getDATAOUT();
-				break;
-		case COMMADDR_ANS:
-				spifl_setADDRESS(address);
-				spifl_setVALIDIN(1);
-				spifl_setVALIDIN(0);
-				//spifl_waitvalidout();
-				*dataout = spifl_getDATAOUT();
-				break;
-		case COMM_DTIN:
-				spifl_setDATAIN(datain);
-				spifl_setVALIDIN(1);
-				//spifl_waitvalidout();
-				spifl_setVALIDIN(0);
-				break;
-		case COMMADDR_DTIN:
-				spifl_setADDRESS(address);
-				spifl_setDATAIN(datain);
-				spifl_setVALIDIN(1);
-				//spifl_waitvalidout();
-				spifl_setVALIDIN(0);
-				break;
-		case COMMADDR:
-				spifl_setADDRESS(address);
-				spifl_setVALIDIN(1);
-				//spifl_waitvalidout();
-				spifl_setVALIDIN(0);
-				break;
-		default:;
-
-	}
-}
-
-
+//Reset commands
 void spifl_resetmem()
 {
 	//execute RESET ENABLE
@@ -129,6 +77,7 @@ void spifl_resetmem()
 	spifl_executecommand(COMM, 0, 0, RESET_MEM, NULL);
 }
 
+//Program/Write Memory commands
 void spifl_writemem(unsigned int word, unsigned int address)
 {
 	//execute WRITE ENABLE
@@ -137,6 +86,7 @@ void spifl_writemem(unsigned int word, unsigned int address)
 	spifl_executecommand(COMMADDR_DTIN, word, address, PAGE_PROGRAM, NULL);
 }
 
+//Read Register Commands
 unsigned int spifl_readStatusReg(unsigned *regstatus)
 {
      unsigned int bytes = 1;
@@ -144,13 +94,52 @@ unsigned int spifl_readStatusReg(unsigned *regstatus)
      return 1;//Correct later
 }
 
-unsigned int spifl_readfastDualOutput(unsigned address)
+//Read Volatile Configuration Register
+unsigned int spifl_readVolConfigReg(unsigned *regvalue)
+{
+     unsigned int numbits = 8;
+     spifl_executecommand(COMMANS, 0, 0, (numbits << 8) | READ_VOLCFGREG, regvalue);
+     return 1;//Correct later
+}
+
+//Xip Read Commands
+unsigned int spifl_readMemXip(unsigned address, unsigned activateXip)
 {
     unsigned misobytes = 4, data=0;
     unsigned frame_struct = 0x00000004;//uint8 later
 	unsigned dummy_cycles = 8;
-    unsigned command = (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_DUALOUT;
-	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
+    unsigned command = 0;
+    unsigned xipbit = 1;
+    
+    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+        xipbit = activateXip;
+    else
+        xipbit = 0;
+    
+    command = (xipbit << 30)|(frame_struct << 20)|(dummy_cycles<<16)|((misobytes*8)<<8)|0x00;
+	
+    spifl_executecommand(XIP_ADDRANS, 0, address, command, &data);
+	return data;
+
+}
+
+//Read Memory Commands
+unsigned int spifl_readfastDualOutput(unsigned address, unsigned activateXip)
+{
+    unsigned misobytes = 4, data=0;
+    unsigned frame_struct = 0x00000004;//uint8 later
+	unsigned dummy_cycles = 8;
+    unsigned command = 0;
+    unsigned xipbit = 1;
+    
+    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+        xipbit = activateXip;
+    else
+        xipbit = 0;
+    
+    command = (xipbit << 30)|(frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_DUALOUT;
+	
+    spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
 	return data;
 }
 
@@ -190,6 +179,8 @@ unsigned int spifl_readFlashParam(unsigned address)
 	spifl_executecommand(COMMADDR_ANS, 0, address, (dummy_cycles<<16)|((bytes*8)<<8)|READ_FLPARAMS, &data);
 	return data;
 }
+
+//Erase Memory commands
 void spifl_erasemem(unsigned int subsector_address)
 {
 	//execute ERASE
