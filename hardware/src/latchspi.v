@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+`define SINGLEMODE 2'b00
+
 module latchspi
 (
     input clk,
@@ -21,6 +23,8 @@ module latchspi
     input [3:0] dummy_cycles,
     input [6:0] misostop_cnt,
     input [1:0] xipbit_en,
+    input [9:0] txcntmarks [2:0],
+    input [1:0] spimode,
     output xipbit_phase,
     output sending_done,
     output mosifinish,
@@ -62,7 +66,7 @@ module latchspi
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			//mosi <= 1'b0;
-            r_mosi <= 1'b0;
+            r_mosi <= 4'h0;
 			r_mosicounter <= 8'd0;
 			r_mosifinish <= 1'b0;
 			r_sending_done <= 1'b0;
@@ -167,5 +171,30 @@ module latchspi
 			end
 		end
 	end
+
+    // Control lanes to use when on req
+    //reg [9:0] txcntholder;
+    wire [9:0] txcntholder = txcntmarks[nextcnt]; 
+    reg [1:0] nextcnt;
+    wire modeswitch_en = (spimode == `SINGLEMODE && r_mosicounter == txcntholder[7:0] && r_mosicounter < mosistop_cnt); 
+    wire [1:0] mode = txcntholder[9:8]; 
+    wire quad_en_test = (mode == 2'b10) ? 1'b1 : 1'b0;
+    wire dual_en_test = (mode == 2'b01) ? 1'b1 : 1'b0;
+
+    /*always @(nextcnt) begin
+        txcntholder = txcntmarks[nextcnt];
+    end
+    */
+    always @(posedge clk, posedge rst) begin
+        if (rst) begin
+            nextcnt <= 2'h0;
+        end else begin
+            if (modeswitch_en) begin
+               nextcnt <= nextcnt + 1'b1;
+            end
+            if (setup_rst)
+                nextcnt <= 0;
+        end
+    end
 
 endmodule
