@@ -18,6 +18,10 @@ unsigned int spifl_readfastQuadOutput(unsigned address, unsigned activateXip);
 unsigned int spifl_readfastDualInOutput(unsigned address, unsigned activateXip);
 unsigned int spifl_readfastQuadInOutput(unsigned address, unsigned activateXip);
 
+void spifl_programfastDualInput(unsigned int word, unsigned address);
+void spifl_programfastDualInputExt(unsigned int word, unsigned address);
+void spifl_programfastQuadInput(unsigned int word, unsigned address);
+void spifl_programfastQualInputExt(unsigned int word, unsigned address);
 //wear-leveling
 //set DIV
 //set num bytes in and out, aligned, padded?

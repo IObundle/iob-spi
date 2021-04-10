@@ -88,6 +88,50 @@ void spifl_writemem(unsigned int word, unsigned int address)
 	spifl_executecommand(COMMADDR_DTIN, word, address, PAGE_PROGRAM, NULL);
 }
 
+void spifl_programfastDualInput(unsigned int word, unsigned address)
+{
+	//execute WRITE ENABLE
+	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+	//execute PAGE PROGRAM
+    unsigned frame_struct = 0x00000010;
+    unsigned numbytes = 4;
+    unsigned command = (frame_struct << 20) | (numbytes*8 << 8) | PROGRAMFAST_DUALIN;
+	spifl_executecommand(COMMADDR_DTIN, word, address, command, NULL);
+}
+
+void spifl_programfastDualInputExt(unsigned int word, unsigned address)
+{
+	//execute WRITE ENABLE
+	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+	//execute PAGE PROGRAM
+    unsigned frame_struct = 0x00000050;
+    unsigned numbytes = 4;
+    unsigned command = (frame_struct << 20) | (numbytes*8 << 8) | PROGRAMFAST_DUALINEXT;
+	spifl_executecommand(COMMADDR_DTIN, word, address, command, NULL);
+}
+
+void spifl_programfastQuadInput(unsigned int word, unsigned address)
+{
+	//execute WRITE ENABLE
+	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+	//execute PAGE PROGRAM
+    unsigned frame_struct = 0x00000020;
+    unsigned numbytes = 4;
+    unsigned command = (frame_struct << 20) | (numbytes*8 << 8) | PROGRAMFAST_QUADIN;
+	spifl_executecommand(COMMADDR_DTIN, word, address, command, NULL);
+}
+
+void spifl_programfastQualInputExt(unsigned int word, unsigned address)
+{
+	//execute WRITE ENABLE
+	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+	//execute PAGE PROGRAM
+    unsigned frame_struct = 0x000000a0;
+    unsigned numbytes = 4;
+    unsigned command = (frame_struct << 20) | (numbytes*8 << 8) | PROGRAMFAST_QUADINEXT;
+	spifl_executecommand(COMMADDR_DTIN, word, address, command, NULL);
+}
+
 //Read Register Commands
 unsigned int spifl_readStatusReg(unsigned *regstatus)
 {
