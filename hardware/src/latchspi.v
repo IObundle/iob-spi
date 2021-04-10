@@ -16,8 +16,8 @@ module latchspi
     input loadtxdata_en,
     input [7:0] mosistop_cnt,
     input [71:0] txstr,
-    input dualtx_en,
-    input quadtx_en,
+    output dualtx_en,
+    output quadtx_en,
     input dualrx,
     input quadrx,
     input [3:0] dummy_cycles,
@@ -180,6 +180,9 @@ module latchspi
     wire [1:0] mode = txcntholder[9:8]; 
     wire quad_en_test = (mode == 2'b10) ? 1'b1 : 1'b0;
     wire dual_en_test = (mode == 2'b01) ? 1'b1 : 1'b0;
+
+    assign dualtx_en = dual_en_test;
+    assign quadtx_en = quad_en_test;
 
     /*always @(nextcnt) begin
         txcntholder = txcntmarks[nextcnt];

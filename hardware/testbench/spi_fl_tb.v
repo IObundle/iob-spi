@@ -117,7 +117,7 @@ module spi_tb;
 		address=24'h555555;
 		commtype = 3'b100;
         //frame_struct = 10'b0101110111;
-        frame_struct = 10'h220;
+        frame_struct = 10'h260;
         xipbit_en = 2'b00;
 		nmiso_bits = 7'd32;
 		dummy_cycles = 4'd0;
