@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Sat Apr 10 00:45:22 2021
+[*] Sat Apr 10 20:11:04 2021
 [*]
 [dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
-[dumpfile_mtime] "Sat Apr 10 00:43:28 2021"
-[dumpfile_size] 42251
+[dumpfile_mtime] "Sat Apr 10 20:04:32 2021"
+[dumpfile_size] 37482
 [savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
-[timestart] 2004600
+[timestart] 2519900
 [size] 1361 599
 [pos] -1 -1
-*-16.564953 2162600 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.564953 2663300 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] spi_tb.
 [treeopen] spi_tb.spi_m.
 [sst_width] 214
@@ -39,12 +39,11 @@ spi_tb.spi_m.data_out[31:0]
 spi_tb.spi_m.r_str2sendbuild[71:0]
 spi_tb.spi_m.latchspi0.r_misodata[31:0]
 spi_tb.spi_m.latchspi0.mosicounter[7:0]
-spi_tb.spi_m.latchspi0.r_mosi[3:0]
+@29
+spi_tb.spi_m.r_spimode[1:0]
 @28
 spi_tb.spi_m.dualtx_state
-@29
 spi_tb.spi_m.quadtx_state
-@28
 spi_tb.spi_m.ss
 spi_tb.spi_m.latchspi0.nextcnt[1:0]
 spi_tb.spi_m.latchspi0.mode[1:0]

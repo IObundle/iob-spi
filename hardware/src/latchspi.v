@@ -1,6 +1,12 @@
 `timescale 1ns / 1ps
 
-`define SINGLEMODE 2'b00
+`define SINGLEMODE0 2'b00
+`define SINGLEMODE1 2'b11
+`define DUALMODE 2'b01
+`define QUADMODE 2'b10
+`define SINGLEMODEON (spimode==`SINGLEMODE0 || spimode==`SINGLEMODE1)
+`define DUALMODEON (spimode==`DUALMODE)
+`define QUADMODEON (spimode==`QUADMODE)
 
 module latchspi
 (
@@ -176,13 +182,13 @@ module latchspi
     //reg [9:0] txcntholder;
     wire [9:0] txcntholder = txcntmarks[nextcnt]; 
     reg [1:0] nextcnt;
-    wire modeswitch_en = (spimode == `SINGLEMODE && r_mosicounter == txcntholder[7:0] && r_mosicounter < mosistop_cnt); 
+    wire modeswitch_en = (`SINGLEMODEON && r_mosicounter == txcntholder[7:0] && r_mosicounter < mosistop_cnt); 
     wire [1:0] mode = txcntholder[9:8]; 
     wire quad_en_test = (mode == 2'b10) ? 1'b1 : 1'b0;
     wire dual_en_test = (mode == 2'b01) ? 1'b1 : 1'b0;
 
-    assign dualtx_en = dual_en_test;
-    assign quadtx_en = quad_en_test;
+    assign dualtx_en = (`DUALMODEON) ? 1'b1 : (`QUADMODEON) ? 1'b0 : dual_en_test;
+    assign quadtx_en = (`QUADMODEON) ? 1'b1 : (`DUALMODEON) ? 1'b0 : quad_en_test;
 
     /*always @(nextcnt) begin
         txcntholder = txcntmarks[nextcnt];

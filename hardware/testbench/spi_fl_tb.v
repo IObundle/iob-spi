@@ -112,6 +112,7 @@ module spi_tb;
         wait(tready);
         #120
         //New command
+        spimode = 2'b11;
         data_in=32'h5A5A5A5A;
 		command=8'h6b;
 		address=24'h555555;
@@ -132,11 +133,12 @@ module spi_tb;
         wait(tready);
         #120
         //New command
+        spimode = 2'b10;
         data_in=8'h5A;
 		command=8'h0b;
 		address=24'h555555;
 		commtype = 3'b110;
-        frame_struct = 10'h0;
+        frame_struct = 10'h108;
         xipbit_en = 2'b01;
 		nmiso_bits = 7'd8;
 		dummy_cycles = 4'd10;

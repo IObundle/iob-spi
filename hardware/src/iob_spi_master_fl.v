@@ -52,12 +52,16 @@ module iob_spi_master_fl
 		.clk(clk),
 		.rst(rst_int),
 		//Not sw registers
+        //Flash Memory interface
 		.sclk(SCLK),
 		.ss(SS),
 		.mosi_dq0(MOSI),
 		.wp_n_dq2(WP_N),
 		.hold_n_dq3(HOLD_N),
 		.miso_dq1(MISO)
+
+        //Xip interface
+        //for Cache
 	);
 
 

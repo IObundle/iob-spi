@@ -261,16 +261,36 @@ module spi_master_fl
     wire dualrx, quadrx;
     wire dualdatatx, quaddatatx;
 
-    assign dualcommd = (r_frame_struct[9:8] == 2'b01) ? 1'b1:1'b0;
-    assign quadcommd = (r_frame_struct[9:8] == 2'b10) ? 1'b1:1'b0;
-    assign dualaddr = (r_frame_struct[7:6] == 2'b01) ? 1'b1:1'b0;
-    assign quadaddr = (r_frame_struct[7:6] == 2'b10) ? 1'b1:1'b0;
-    assign dualdatatx = (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
-    assign quaddatatx = (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
-    assign dualrx = (r_frame_struct[3:2] == 2'b01) ? 1'b1:1'b0;
-    assign quadrx = (r_frame_struct[3:2] == 2'b10) ? 1'b1:1'b0;
-    assign dualalt = (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
-    assign quadalt = (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
+    assign dualcommd = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 : 
+                                (r_frame_struct[9:8] == 2'b01) ? 1'b1:1'b0;
+    assign quadcommd = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[9:8] == 2'b10) ? 1'b1:1'b0;
+    assign dualaddr = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 :
+                                (r_frame_struct[7:6] == 2'b01) ? 1'b1:1'b0;
+    assign quadaddr = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[7:6] == 2'b10) ? 1'b1:1'b0;
+    assign dualdatatx = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 :
+                                (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
+    assign quaddatatx = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
+    assign dualrx = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 :
+                                (r_frame_struct[3:2] == 2'b01) ? 1'b1:1'b0;
+    assign quadrx = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[3:2] == 2'b10) ? 1'b1:1'b0;
+    assign dualalt = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 :
+                                (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
+    assign quadalt = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
 
     //Build r_str2sendbuild
 	always @(posedge rst, posedge clk) begin
