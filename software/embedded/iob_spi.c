@@ -50,14 +50,15 @@ int spifl_terminateXipSequence()
     unsigned int numbits = 8;
     unsigned int bitmask = 0x08;
 
-    if (spimode == QUAD)
+    /*if (spimode == QUAD)
         bits = 8;    
     else if (spimode == DUAL)
         bits = 13;
     else
         bits = 25;
-
-	spifl_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8), NULL);
+*/
+    bits = 25;
+	spifl_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
     //Read volatile register to check if xip succesfully terminated
     spifl_readVolConfigReg(&regvalue);
 

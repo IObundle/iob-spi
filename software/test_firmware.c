@@ -161,15 +161,21 @@ int main()
 	uart_printf("\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
     uart_txwait();
     
-    /*int xipEnabled = 10;
+    //Confirmation bit 0
+    read_mem = 1;
+    uart_printf("\nTesting dual output fast read with xip confirmation bit 0\n");
+    read_mem = spifl_readfastDualOutput(address + 1, ACTIVEXIP);
+    uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
+    
+    int xipEnabled = 10;
     xipEnabled = spifl_terminateXipSequence();
     uart_printf("\nAfter xip termination sequence: %d\n", xipEnabled);
     volconfigReg = 0;
     spifl_readVolConfigReg(&volconfigReg);
 	uart_printf("\nAfter xip termination sequence, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
-    uart_txwait();*/
+    uart_txwait();
     
-    read_mem = 1;
+    /*read_mem = 1;
     uart_printf("\nTesting dual output fast read with xip confirmation bit 0\n");
     read_mem = spifl_readfastDualOutput(address + 1, ACTIVEXIP);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
@@ -179,8 +185,21 @@ int main()
     read_mem = spifl_readMemXip(address+1, ACTIVEXIP);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
     uart_txwait();
-	
-    uart_printf("\nAssuming Xip active, read from memory, confirmation bit 1\n");
+    */
+    if(volconfigReg == 0xf3 || volconfigReg != 0xfb){
+
+        uart_printf("\nAssuming Xip active, read from memory, confirmation bit 1\n");
+        read_mem = 1;
+        read_mem = spifl_readMemXip(address+1, TERMINATEXIP);
+        uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
+        uart_txwait();
+        
+        volconfigReg = 0;
+        spifl_readVolConfigReg(&volconfigReg);
+        uart_printf("\nAfter xip termination xip bit 1, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
+        uart_txwait();
+    }
+    /*uart_printf("\nAssuming Xip active, read from memory, confirmation bit 1\n");
     read_mem = 1;
     read_mem = spifl_readMemXip(address+1, TERMINATEXIP);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
@@ -189,6 +208,6 @@ int main()
     volconfigReg = 0;
     spifl_readVolConfigReg(&volconfigReg);
 	uart_printf("\nAfter xip termination with confirmation bit 1, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
-    uart_txwait();
+    uart_txwait();*/
     return 0;
 }
