@@ -10,7 +10,7 @@ static unsigned int base;
 typedef enum {SINGLE=0, DUAL, QUAD} spilaneMode;
 
 static spilaneMode spimode = SINGLE;                            
-static xipframestruct = 0;
+static unsigned xipframestruct = 0;
 
 /*static struct flashConfig_ 
 {
@@ -153,6 +153,7 @@ unsigned int spifl_readfastQuadOutput(unsigned address, unsigned activateXip)
     unsigned misobytes = 4, data=0;
     unsigned frame_struct = 0x00000008;//uint8 later
 	unsigned dummy_cycles = 8;
+    unsigned xipbit = 1;
     
     if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
     {    
@@ -172,6 +173,7 @@ unsigned int spifl_readfastDualInOutput(unsigned address, unsigned activateXip)
     unsigned misobytes = 4, data=0;
     unsigned frame_struct = 0x00000044;//uint8 later
 	unsigned dummy_cycles = 8;
+    unsigned xipbit = 1;
     
     if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
     {    
@@ -191,6 +193,7 @@ unsigned int spifl_readfastQuadInOutput(unsigned address, unsigned activateXip)
     unsigned misobytes = 4, data=0;
     unsigned frame_struct = 0x00000088;//uint8 later
 	unsigned dummy_cycles = 10;
+    unsigned xipbit = 1;
 
     if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
     {    
