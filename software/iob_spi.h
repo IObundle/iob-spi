@@ -16,6 +16,7 @@ unsigned int spifl_readFlashParam(unsigned address);
 unsigned int spifl_readfastDualOutput(unsigned address, unsigned activateXip);
 unsigned int spifl_readfastQuadOutput(unsigned address);
 unsigned int spifl_readfastDualInOutput(unsigned address);
+unsigned int spifl_readfastQuadInOutput(unsigned address);
 
 //wear-leveling
 //set DIV

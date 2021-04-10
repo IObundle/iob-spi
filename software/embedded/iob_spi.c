@@ -156,9 +156,19 @@ unsigned int spifl_readfastQuadOutput(unsigned address)
 unsigned int spifl_readfastDualInOutput(unsigned address)
 {
     unsigned misobytes = 4, data=0;
-    unsigned frame_struct = 0x00000177;//uint8 later
+    unsigned frame_struct = 0x00000044;//uint8 later
 	unsigned dummy_cycles = 8;
     unsigned command = (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_DUALINOUT;
+	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
+	return data;
+}
+
+unsigned int spifl_readfastQuadInOutput(unsigned address)
+{
+    unsigned misobytes = 4, data=0;
+    unsigned frame_struct = 0x00000088;//uint8 later
+	unsigned dummy_cycles = 8;
+    unsigned command = (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_QUADINOUT;
 	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
 	return data;
 }

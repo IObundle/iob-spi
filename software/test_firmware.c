@@ -110,6 +110,15 @@ int main()
     read_mem = spifl_readfastQuadOutput(address + 1);
     uart_printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
     
+    read_mem = 3;
+    uart_printf("\nTesting dual input output fast read 0xbb\n");
+    read_mem = spifl_readfastDualInOutput(address + 1);
+    uart_printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
+
+    read_mem = 4;
+    uart_printf("\nTesting quad input output fast read 0xeb\n");
+    read_mem = spifl_readfastQuadInOutput(address + 1);
+    uart_printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
 
     uart_printf("\nRead Non volatile Register\n");
     unsigned nonVolatileReg = 0;

@@ -93,9 +93,9 @@ module spi_tb;
 		address=24'h5a5a11;
 		commtype = 3'b010;
 		nmiso_bits = 7'd25;
-        frame_struct = 10'h044;
+        frame_struct = 10'h244;
         xipbit_en = 2'b00;
-		dummy_cycles = 4'd0;
+		dummy_cycles = 4'd4;
 		mem	= 32'hA0A0A0A3;
 
 		#50

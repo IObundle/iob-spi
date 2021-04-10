@@ -29,3 +29,4 @@
 #define READFAST_DUALOUT    0x3B   
 #define READFAST_QUADOUT    0x6B   
 #define READFAST_DUALINOUT  0xbb
+#define READFAST_QUADINOUT  0xeb
