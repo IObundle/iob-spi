@@ -10,6 +10,7 @@ static unsigned int base;
 typedef enum {SINGLE=0, DUAL, QUAD} spilaneMode;
 
 static spilaneMode spimode = SINGLE;                            
+static xipframestruct = 0;
 
 /*static struct flashConfig_ 
 {
@@ -107,7 +108,7 @@ unsigned int spifl_readVolConfigReg(unsigned *regvalue)
 unsigned int spifl_readMemXip(unsigned address, unsigned activateXip)
 {
     unsigned misobytes = 4, data=0;
-    unsigned frame_struct = 0x00000004;//uint8 later
+    unsigned frame_struct = xipframestruct;//uint8 later
 	unsigned dummy_cycles = 8;
     unsigned command = 0;
     unsigned xipbit = 1;
@@ -134,7 +135,10 @@ unsigned int spifl_readfastDualOutput(unsigned address, unsigned activateXip)
     unsigned xipbit = 1;
     
     if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+    {    
         xipbit = activateXip;
+        xipframestruct = (activateXip == ACTIVEXIP) ? frame_struct: 0;
+    }
     else
         xipbit = 0;
     
@@ -144,32 +148,61 @@ unsigned int spifl_readfastDualOutput(unsigned address, unsigned activateXip)
 	return data;
 }
 
-unsigned int spifl_readfastQuadOutput(unsigned address)
+unsigned int spifl_readfastQuadOutput(unsigned address, unsigned activateXip)
 {
     unsigned misobytes = 4, data=0;
     unsigned frame_struct = 0x00000008;//uint8 later
 	unsigned dummy_cycles = 8;
-    unsigned command = (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_QUADOUT;
-	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
+    
+    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+    {    
+        xipbit = activateXip;
+        xipframestruct = (activateXip == ACTIVEXIP) ? frame_struct: 0;
+    }
+    else
+        xipbit = 0;
+    
+    unsigned command = (xipbit << 30) | (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_QUADOUT;
+	
+    spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
 	return data;
 }
-unsigned int spifl_readfastDualInOutput(unsigned address)
+unsigned int spifl_readfastDualInOutput(unsigned address, unsigned activateXip)
 {
     unsigned misobytes = 4, data=0;
     unsigned frame_struct = 0x00000044;//uint8 later
 	unsigned dummy_cycles = 8;
-    unsigned command = (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_DUALINOUT;
-	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
+    
+    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+    {    
+        xipbit = activateXip;
+        xipframestruct = (activateXip == ACTIVEXIP) ? frame_struct: 0;
+    }
+    else
+        xipbit = 0;
+	
+    unsigned command = (xipbit << 30) | (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_DUALINOUT;
+    spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
 	return data;
 }
 
-unsigned int spifl_readfastQuadInOutput(unsigned address)
+unsigned int spifl_readfastQuadInOutput(unsigned address, unsigned activateXip)
 {
     unsigned misobytes = 4, data=0;
     unsigned frame_struct = 0x00000088;//uint8 later
-	unsigned dummy_cycles = 8;
-    unsigned command = (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_QUADINOUT;
-	spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
+	unsigned dummy_cycles = 10;
+
+    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+    {    
+        xipbit = activateXip;
+        xipframestruct = (activateXip == ACTIVEXIP) ? frame_struct: 0;
+    }
+    else
+        xipbit = 0;
+
+    unsigned command = (xipbit << 30) | (frame_struct<<20)|(dummy_cycles<<16)|((misobytes*8)<<8)|READFAST_QUADINOUT;
+	
+    spifl_executecommand(COMMADDR_ANS, 0, address, command, &data);
 	return data;
 }
 

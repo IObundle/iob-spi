@@ -14,9 +14,9 @@ unsigned int spifl_readmem(unsigned int address);//extend for more than 4 bytes
 void spifl_erasemem(unsigned int subsector_address);//extend for other erase type, ex bulk
 unsigned int spifl_readFlashParam(unsigned address);
 unsigned int spifl_readfastDualOutput(unsigned address, unsigned activateXip);
-unsigned int spifl_readfastQuadOutput(unsigned address);
-unsigned int spifl_readfastDualInOutput(unsigned address);
-unsigned int spifl_readfastQuadInOutput(unsigned address);
+unsigned int spifl_readfastQuadOutput(unsigned address, unsigned activateXip);
+unsigned int spifl_readfastDualInOutput(unsigned address, unsigned activateXip);
+unsigned int spifl_readfastQuadInOutput(unsigned address, unsigned activateXip);
 
 //wear-leveling
 //set DIV
