@@ -172,8 +172,8 @@ int main()
     
     //Confirmation bit 0
     read_mem = 1;
-    uart_printf("\nTesting dual output fast read with xip confirmation bit 0\n");
-    read_mem = spifl_readfastDualOutput(address + 1, ACTIVEXIP);
+    uart_printf("\nTesting quad input output fast read with xip confirmation bit 0\n");
+    read_mem = spifl_readfastQuadInOutput(address + 1, ACTIVEXIP);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
     
     int xipEnabled = 10;

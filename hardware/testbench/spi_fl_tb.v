@@ -28,6 +28,7 @@ module spi_tb;
 	wire validflag_out; //check
 	wire tready;
 	reg tofrom_fl;
+    reg fourbyteaddr_on;
 
 	integer i;
 	reg [31:0]	mem;
@@ -59,6 +60,7 @@ module spi_tb;
 			.dummy_cycles (dummy_cycles),
             .manualframe_en (manualframe_en),
             .spimode (spimode),
+            .fourbyteaddr_on (fourbyteaddr_on),
 			.validflag	(validflag),
 			.validflag_out	(validflag_out),
 			.tready		(tready)
@@ -86,11 +88,13 @@ module spi_tb;
 	//Master Process
 	initial begin
 		#100
+        fourbyteaddr_on = 1'b1;
+
         manualframe_en = 0;
         spimode = 0;
 		data_in=32'hdf000000;
 		command=8'h66;
-		address=24'h5a5a11;
+		address=32'haa5a5a11;
 		commtype = 3'b010;
 		nmiso_bits = 7'd32;
         frame_struct = 10'h088;

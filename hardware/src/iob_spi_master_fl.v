@@ -45,7 +45,10 @@ module iob_spi_master_fl
         .frame_struct(FL_COMMAND[29:20]),
         .xipbit_en(FL_COMMAND[31:30]),
 		.validflag(FL_VALIDFLG),
-		.commtype(FL_COMMANDTP),
+		.commtype(FL_COMMANDTP[2:0]),
+        .spimode(FL_COMMANDTP[31:30]),
+        .manualframe_en(FL_COMMANDTP[29]),
+        .fourbyteaddr_on(FL_COMMAND[15]),
 		.validflag_out(FL_VALIDFLGOUT),
 		.tready(ready_int),
 

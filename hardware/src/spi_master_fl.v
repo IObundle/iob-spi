@@ -40,6 +40,7 @@ module spi_master_fl
     input [1:0]             xipbit_en,
     input                   manualframe_en,
     input [1:0]             spimode,
+    input                   fourbyteaddr_on,
 	output reg				validflag_out,
 	output reg				tready,
 
@@ -108,6 +109,7 @@ module spi_master_fl
 
 	reg [8:0]	r_sclk_edges;
 	reg		r_transfer_start;
+    
 	
 	//assign sclk_halfperiod = {1'b0, sclk_period[5:1]};
 	
@@ -155,6 +157,18 @@ module spi_master_fl
 		end
 	end
 	
+    //Sizes reg
+    reg [5:0] r_address_size;
+    always @(posedge clk, posedge rst) begin
+        if (rst) begin
+            r_address_size <= 6'd24;
+        end else begin
+            r_address_size <= 6'd24;
+            if(r_4byteaddr_on)
+                r_address_size <= 6'd32;
+        end
+    end
+
     wire [3:0] data_tx;
     wire [3:0] data_rx;
     reg dualtx_state;
@@ -215,6 +229,7 @@ module spi_master_fl
             r_xipbit_en <= 2'b00;
             r_manualframe_en <= 1'b0;
             r_spimode <= 2'b00;
+            r_4byteaddr_on <= 1'b0;
 		end else begin
 			if (r_validedge) begin
 				r_datain <= data_in;
@@ -228,6 +243,7 @@ module spi_master_fl
                 r_xipbit_en <= xipbit_en;
                 r_manualframe_en <= manualframe_en;
                 r_spimode <= spimode;
+                r_4byteaddr_on <= fourbyteaddr_on;
 				r_inputread <= 1'b1;
 			end
 			else if (~validflag) begin
@@ -392,9 +408,9 @@ module spi_master_fl
     assign w_commdcycles = dualcommd ? 4'd4: //Parameterize with reg later, param, now fixed at max 8bits
                             quadcommd ? {4'd2}:
                                 4'd8;
-    assign w_addrcycles = dualaddr ? (r_4byteaddr_on? 7'd16: 7'd12):
-                            quadaddr ? (r_4byteaddr_on? 7'd8: 7'd6):
-                                (r_4byteaddr_on? 7'd32: 7'd24);
+    assign w_addrcycles = dualaddr ? (r_4byteaddr_on ? 7'd16: 7'd12):
+                            quadaddr ? (r_4byteaddr_on ? 7'd8: 7'd6):
+                                (r_4byteaddr_on ? 7'd32: 7'd24);
     assign w_altcycles = 4'd0;
     assign w_datatxcycles = dualdatatx ? {{1'b0, r_ndatatxbits[6:1]} + (|r_ndatatxbits[0])}:
                                 quaddatatx ? {{2'b00, r_ndatatxbits[6:2]} + (|r_ndatatxbits[1:0])}:
@@ -429,11 +445,11 @@ module spi_master_fl
                                 txcntmarks[2] <= 0;
 							end
 						3'b010: begin//command + address + (+ dummy cycles +) + answer 
-								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
+								r_counterstop <= 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24);
 								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
                                 txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
-                                txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on? 8'd32:8'd24)}; //command_size + address_size
+                                txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24)}; //command_size + address_size
                                 txcntmarks[2] <= 0; 
 							end
 						3'b011:	begin//command + data_in
@@ -444,24 +460,24 @@ module spi_master_fl
                                 txcntmarks[2] <= 0;
 							end
 						3'b100: begin//command + address + data_in (+dummy cycles ?) 
-								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24) + r_ndatatxbits;
+								r_counterstop <= 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24) + r_ndatatxbits;
 								r_sclk_edges <= {w_commdcycles + w_addrcycles + w_datatxcycles,1'b0};//(+r_dummycycles)
                                 txcntmarks[0] <= {r_frame_struct[9:8], 8'd8};
-                                txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on? 8'd32:8'd24)}; //command + data_in 
-                                txcntmarks[2] <= {r_frame_struct[5:4], 8'd8 + (r_4byteaddr_on? 8'd32:8'd24) + r_ndatatxbits}; //command + data_in 
+                                txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24)}; //command + data_in 
+                                txcntmarks[2] <= {r_frame_struct[5:4], 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24) + r_ndatatxbits}; //command + data_in 
 							end
 						3'b101: begin//command+address
-								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
+								r_counterstop <= 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24);
 								r_sclk_edges <= {w_commdcycles + w_addrcycles,1'b0};
                                 txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
-                                txcntmarks[1] <= {r_frame_struct[7:6], (r_4byteaddr_on? 8'd32:8'd24)}; //command + address 
+                                txcntmarks[1] <= {r_frame_struct[7:6], (r_4byteaddr_on ? 8'd32:8'd24)}; //command + address 
                                 txcntmarks[2] <= 0;
 							end
                         3'b110: begin//XIP mode, address + answer
-                                r_counterstop <= (r_4byteaddr_on? 8'd32:8'd24);
+                                r_counterstop <= (r_4byteaddr_on ? 8'd32:8'd24);
 								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= {w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
-                                txcntmarks[0] <= {r_frame_struct[7:6], (r_4byteaddr_on? 8'd32:8'd24)};
+                                txcntmarks[0] <= {r_frame_struct[7:6], (r_4byteaddr_on ? 8'd32:8'd24)};
                                 txcntmarks[1] <= 0; 
                                 txcntmarks[2] <= 0;
                             end
