@@ -223,12 +223,12 @@ int main()
     address = 104;
     uart_printf("\nTesting PROGRAM functions\n");
     word = 0x11335577;
-    uart_printf("Fast program dual input ext\n")
+    uart_printf("Fast program dual input ext\n");
     spifl_programfastDualInputExt(word, address);
 
     address = 108;
     word = 0x99aabbcc;
-    uart_printf("Fast program quad input\n")
+    uart_printf("Fast program quad input\n");
     spifl_programfastQuadInput(word, address);
 
     address = 104;
