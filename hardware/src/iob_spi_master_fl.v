@@ -51,6 +51,12 @@ module iob_spi_master_fl
         .fourbyteaddr_on(FL_COMMAND[15]),
 		.validflag_out(FL_VALIDFLGOUT),
 		.tready(ready_int),
+        
+    `ifdef FLASHCACHE
+        //Xip interface
+        //for Cache
+        
+    `endif
 
 		.clk(clk),
 		.rst(rst_int),
@@ -63,8 +69,6 @@ module iob_spi_master_fl
 		.hold_n_dq3(HOLD_N),
 		.miso_dq1(MISO)
 
-        //Xip interface
-        //for Cache
 	);
 
 

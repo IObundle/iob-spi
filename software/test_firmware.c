@@ -218,5 +218,30 @@ int main()
     spifl_readVolConfigReg(&volconfigReg);
 	uart_printf("\nAfter xip termination with confirmation bit 1, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
     uart_txwait();*/
+
+    //Testing programming functions
+    address = 104;
+    uart_printf("\nTesting PROGRAM functions\n");
+    word = 0x11335577;
+    uart_printf("Fast program dual input ext\n")
+    spifl_programfastDualInputExt(word, address);
+
+    address = 108;
+    word = 0x99aabbcc;
+    uart_printf("Fast program quad input\n")
+    spifl_programfastQuadInput(word, address);
+
+    address = 104;
+    read_mem = 0;
+    uart_printf("\nAfter program, Quad input output fast read 0xeb\n");
+    read_mem = spifl_readfastQuadInOutput(address, 0);
+    uart_printf("\nRead after program from memory address (%x) the word: (%x)\n", address, read_mem);
+
+    address = 108;
+    read_mem = 1;
+    uart_printf("\nAfter program, Quad input output fast read 0xeb\n");
+    read_mem = spifl_readfastQuadInOutput(address, 0);
+    uart_printf("\nRead after program from memory address (%x) the word: (%x)\n", address, read_mem);
+    uart_txwait();
     return 0;
 }
