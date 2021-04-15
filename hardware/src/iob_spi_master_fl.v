@@ -12,6 +12,7 @@ module iob_spi_master_fl
 (
 	
 `include "cpu_nat_s_if.v"
+`include "cpu_nat_s_cache_if.v"
 `include "flash_if.v"
 `include "gen_if.v"
 );
@@ -28,6 +29,18 @@ module iob_spi_master_fl
 	//Ready signal from flash controller
 	`SIGNAL(ready_int, 1)
 	`SIGNAL2OUT(ready, ready_int)
+    
+    //TODO conditional include of cache interface
+    //Cache interface connection
+    `SIGNAL2OUT(rdata_cache, FL_DATAOUT)
+    `SIGNAL2OUT(ready_cache, ready_int)
+    `SIGNAL_OUT(cache_read_req_en, 1)
+    `SIGNAL2OUT(cache_read_req_en, valid_cache & (~wstrb_cache))
+    //store cache address in reg for stability, delay problems, ready?
+    //2 consecutive address possible? while core not latch in
+    `SIGNAL_OUT(address_int, ADDR_W)
+    `SIGNAL2OUT(address_int, cache_read_req_en ? address_cache : FL_ADDRESS)
+    `SIGNAL2OUT(ready_cache, ready_int)
 
 	//Instantiate core
 	spi_master_fl 
@@ -38,7 +51,7 @@ module iob_spi_master_fl
 	(
 		.data_in(FL_DATAIN),
 		.data_out(FL_DATAOUT),
-		.address(FL_ADDRESS),
+		.address(address_int),
 		.command(FL_COMMAND[7:0]),
 		.ndata_bits(FL_COMMAND[14:8]),
 		.dummy_cycles(FL_COMMAND[19:16]),
@@ -52,12 +65,6 @@ module iob_spi_master_fl
 		.validflag_out(FL_VALIDFLGOUT),
 		.tready(ready_int),
         
-    `ifdef FLASHCACHE
-        //Xip interface
-        //for Cache
-        
-    `endif
-
 		.clk(clk),
 		.rst(rst_int),
 		//Not sw registers
