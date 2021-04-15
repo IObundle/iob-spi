@@ -41,6 +41,8 @@ module iob_spi_master_fl
     `SIGNAL_OUT(address_int, ADDR_W)
     `SIGNAL2OUT(address_int, cache_read_req_en ? address_cache : FL_ADDRESS)
     `SIGNAL2OUT(ready_cache, ready_int)
+    `SIGNAL_OUT(valid_int, 1)
+    `SIGNAL2OUT(valid_int, cache_read_req_en ? valid_cache : FL_VALIDFLG)
 
 	//Instantiate core
 	spi_master_fl 
@@ -57,7 +59,7 @@ module iob_spi_master_fl
 		.dummy_cycles(FL_COMMAND[19:16]),
         .frame_struct(FL_COMMAND[29:20]),
         .xipbit_en(FL_COMMAND[31:30]),
-		.validflag(FL_VALIDFLG),
+		.validflag(valid_int),
 		.commtype(FL_COMMANDTP[2:0]),
         .spimode(FL_COMMANDTP[31:30]),
         .manualframe_en(FL_COMMANDTP[29]),
