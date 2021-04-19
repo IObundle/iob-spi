@@ -220,7 +220,7 @@ int main()
     uart_txwait();*/
 
     //Testing programming functions
-    address = 104;
+    /*address = 104;
     uart_printf("\nTesting PROGRAM functions\n");
     word = 0x11335577;
     uart_printf("Fast program dual input ext\n");
@@ -242,6 +242,6 @@ int main()
     uart_printf("\nAfter program, Quad input output fast read 0xeb\n");
     read_mem = spifl_readfastQuadInOutput(address, 0);
     uart_printf("\nRead after program from memory address (%x) the word: (%x)\n", address, read_mem);
-    uart_txwait();
+    uart_txwait();*/
     return 0;
 }
