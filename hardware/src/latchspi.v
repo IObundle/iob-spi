@@ -35,7 +35,8 @@ module latchspi
     output sending_done,
     output mosifinish,
     output [7:0] mosicounter,
-    output [31:0] read_data
+    output [31:0] read_data,
+    output [31:0] read_datarev
 );
 
 
@@ -50,7 +51,6 @@ module latchspi
 
 	reg [31:0] r_misodata;
 	reg [6:0] r_misocounter;
-	reg r_misofinish;
 
     //Load tx data into array
     always @(posedge clk, posedge rst) begin
@@ -148,11 +148,15 @@ module latchspi
 	end
 
 	//Drive miso
+    //Reverse endianness of misodata
+    wire [31:0] w_misodatarev;
+    assign w_misodatarev = {r_misodata[7:0], r_misodata[7:0], r_misodata[15:8], r_misodata[7:0], 
+                                r_misodata[23:16], r_misodata[7:0], r_misodata[31:24], r_misodata[7:0]};
+    assign read_datarev = w_misodatarev;
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			r_misodata <= 32'd0;
 			r_misocounter <= 7'd0;
-			r_misofinish <= 1'b0;
 		end else begin
 			if(latchin_en && sclk_en && (r_mosifinish) && (r_dummy_done)) begin
 				//r_misodata[r_misocounter] <= miso;
@@ -166,13 +170,9 @@ module latchspi
                     r_misodata <= {r_misodata[30:0], {data_rx[1]}};
 				    r_misocounter <= r_misocounter + 3'h1;
                 end
-                if (r_misocounter == misostop_cnt) begin
-					r_misocounter <= 7'd0; 
-					r_misofinish <= 1'b1;
-				end
 			end
 			if (setup_rst) begin
-				r_misofinish <= 1'b0;
+                r_misocounter <= 7'd0;
                 r_misodata <= 0;
 			end
 		end

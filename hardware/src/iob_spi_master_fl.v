@@ -38,7 +38,7 @@ module iob_spi_master_fl
     `SIGNAL2OUT(cache_read_req_en, valid_cache & (~wstrb_cache))
     //store cache address in reg for stability, delay problems, ready?
     //2 consecutive address possible? while core not latch in
-    `SIGNAL_OUT(address_int, ADDR_W)
+    `SIGNAL_OUT(address_int, 32)
     `SIGNAL2OUT(address_int, cache_read_req_en ? address_cache : FL_ADDRESS)
     `SIGNAL2OUT(ready_cache, ready_int)
     `SIGNAL_OUT(valid_int, 1)

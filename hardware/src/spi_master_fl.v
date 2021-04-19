@@ -110,6 +110,7 @@ module spi_master_fl
 	reg [8:0]	r_sclk_edges;
 	reg		r_transfer_start;
     
+    reg r_endianness = 1'b0;// 0 for little-endian, on data read from flash
 	
 	//assign sclk_halfperiod = {1'b0, sclk_period[5:1]};
 	
@@ -347,6 +348,7 @@ module spi_master_fl
     wire w_mosifinish;
     wire [7:0] mosicounter;
     wire [31:0] w_misodata;
+    wire [31:0] w_misodatarev;
 
     //Instantiate module to tx and rx data
     latchspi latchspi0
@@ -376,7 +378,8 @@ module spi_master_fl
         .mosicounter(mosicounter),
         .txcntmarks(txcntmarks),
         .spimode(r_spimode),
-        .read_data(w_misodata)
+        .read_data(w_misodata),
+        .read_datarev(w_misodatarev)
     );
     
     //Detect recover sequence
@@ -562,7 +565,7 @@ module spi_master_fl
 					if(tranfers_done) begin
 						r_ss_n <= 1'b1;
 						r_sclk_out_en <= 1'b0;
-						data_out <= w_misodata;
+						data_out <= (r_endianness) ? w_misodata : w_misodatarev;
 						r_currstate <= IDLE;
 					end
 				end
