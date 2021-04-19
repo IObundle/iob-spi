@@ -147,12 +147,39 @@ module latchspi
 		end
 	end
 
-	//Drive miso
     //Reverse endianness of misodata
-    wire [31:0] w_misodatarev;
-    assign w_misodatarev = {r_misodata[7:0], r_misodata[7:0], r_misodata[15:8], r_misodata[7:0], 
-                                r_misodata[23:16], r_misodata[7:0], r_misodata[31:24], r_misodata[7:0]};
+    reg [31:0] w_misodatarev;
+    //assign w_misodatarev = {r_misodata[7:0], r_misodata[7:0], r_misodata[15:8], r_misodata[7:0], 
+    //                            r_misodata[23:16], r_misodata[7:0], r_misodata[31:24], r_misodata[7:0]};
     assign read_datarev = w_misodatarev;
+    //Assuming max 32 bits received 
+    wire [2:0] numrxbytes;
+    wire [2:0] numrxbits_left;
+    assign {numrxbytes, numrxbits_left} = {r_misocounter[5:3], r_misocounter[2:0]};
+    always @(*) begin
+        w_misodatarev = 32'd0; 
+        case (numrxbytes)
+            3'h0: begin
+                w_misodatarev = r_misodata; 
+            end
+            3'h1: begin
+                w_misodatarev = r_misodata;
+            end
+            3'h2: begin
+                w_misodatarev = {r_misodata[31:16], r_misodata[7:0], r_misodata[15:8]};
+            end
+            3'h3: begin
+                w_misodatarev = {r_misodata[31:24], r_misodata[7:0], r_misodata[15:8], r_misodata[23:16]};
+            end
+            3'h4: begin
+                w_misodatarev = {r_misodata[7:0], r_misodata[15:8], r_misodata[23:16], r_misodata[31:24]};
+            end
+            default:
+                w_misodatarev = {r_misodata[7:0], r_misodata[15:8], r_misodata[23:16], r_misodata[31:24]};
+        endcase
+    end
+
+	//Drive miso
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			r_misodata <= 32'd0;
