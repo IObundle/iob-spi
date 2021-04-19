@@ -31,6 +31,7 @@ module latchspi
     input [1:0] xipbit_en,
     input [9:0] txcntmarks [2:0],
     input [1:0] spimode,
+    input [6:0] numrxbits,
     output xipbit_phase,
     output sending_done,
     output mosifinish,
@@ -155,8 +156,9 @@ module latchspi
     //Assuming max 32 bits received 
     wire [2:0] numrxbytes;
     wire [2:0] numrxbits_left;
-    assign {numrxbytes, numrxbits_left} = {r_misocounter[5:3], r_misocounter[2:0]};
-    always @(*) begin
+    //assign {numrxbytes, numrxbits_left} = {r_misocounter[5:3], r_misocounter[2:0]};
+    assign numrxbytes = numrxbits[5:3];
+    always @* begin
         w_misodatarev = 32'd0; 
         case (numrxbytes)
             3'h0: begin

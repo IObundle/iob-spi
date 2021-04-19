@@ -371,6 +371,7 @@ module spi_master_fl
         .quadrx(quadrx),
         .dummy_cycles(r_dummy_cycles),
         .misostop_cnt(r_misoctrstop),
+        .numrxbits(r_nmisobits),
         .xipbit_en(xipbit_en),
         .xipbit_phase(xipbit_phase),
         .sending_done(w_sending_done),
