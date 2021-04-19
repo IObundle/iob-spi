@@ -1,5 +1,13 @@
 `timescale 1ns / 1ps
 
+`define SINGLEMODE0 2'b00
+`define SINGLEMODE1 2'b11
+`define DUALMODE 2'b01
+`define QUADMODE 2'b10
+`define SINGLEMODEON (spimode==`SINGLEMODE0 || spimode==`SINGLEMODE1)
+`define DUALMODEON (spimode==`DUALMODE)
+`define QUADMODEON (spimode==`QUADMODE)
+
 module latchspi
 (
     input clk,
@@ -14,18 +22,22 @@ module latchspi
     input loadtxdata_en,
     input [7:0] mosistop_cnt,
     input [71:0] txstr,
-    input dualtx_en,
-    input quadtx_en,
+    output dualtx_en,
+    output quadtx_en,
     input dualrx,
     input quadrx,
     input [3:0] dummy_cycles,
     input [6:0] misostop_cnt,
     input [1:0] xipbit_en,
+    input [9:0] txcntmarks [2:0],
+    input [1:0] spimode,
+    input [6:0] numrxbits,
     output xipbit_phase,
     output sending_done,
     output mosifinish,
     output [7:0] mosicounter,
-    output [31:0] read_data
+    output [31:0] read_data,
+    output [31:0] read_datarev
 );
 
 
@@ -40,7 +52,6 @@ module latchspi
 
 	reg [31:0] r_misodata;
 	reg [6:0] r_misocounter;
-	reg r_misofinish;
 
     //Load tx data into array
     always @(posedge clk, posedge rst) begin
@@ -62,7 +73,7 @@ module latchspi
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			//mosi <= 1'b0;
-            r_mosi <= 1'b0;
+            r_mosi <= 4'h0;
 			r_mosicounter <= 8'd0;
 			r_mosifinish <= 1'b0;
 			r_sending_done <= 1'b0;
@@ -137,12 +148,44 @@ module latchspi
 		end
 	end
 
+    //Reverse endianness of misodata
+    reg [31:0] w_misodatarev;
+    //assign w_misodatarev = {r_misodata[7:0], r_misodata[7:0], r_misodata[15:8], r_misodata[7:0], 
+    //                            r_misodata[23:16], r_misodata[7:0], r_misodata[31:24], r_misodata[7:0]};
+    assign read_datarev = w_misodatarev;
+    //Assuming max 32 bits received 
+    wire [2:0] numrxbytes;
+    wire [2:0] numrxbits_left;
+    //assign {numrxbytes, numrxbits_left} = {r_misocounter[5:3], r_misocounter[2:0]};
+    assign numrxbytes = numrxbits[5:3];
+    always @* begin
+        w_misodatarev = 32'd0; 
+        case (numrxbytes)
+            3'h0: begin
+                w_misodatarev = r_misodata; 
+            end
+            3'h1: begin
+                w_misodatarev = r_misodata;
+            end
+            3'h2: begin
+                w_misodatarev = {r_misodata[31:16], r_misodata[7:0], r_misodata[15:8]};
+            end
+            3'h3: begin
+                w_misodatarev = {r_misodata[31:24], r_misodata[7:0], r_misodata[15:8], r_misodata[23:16]};
+            end
+            3'h4: begin
+                w_misodatarev = {r_misodata[7:0], r_misodata[15:8], r_misodata[23:16], r_misodata[31:24]};
+            end
+            default:
+                w_misodatarev = {r_misodata[7:0], r_misodata[15:8], r_misodata[23:16], r_misodata[31:24]};
+        endcase
+    end
+
 	//Drive miso
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			r_misodata <= 32'd0;
 			r_misocounter <= 7'd0;
-			r_misofinish <= 1'b0;
 		end else begin
 			if(latchin_en && sclk_en && (r_mosifinish) && (r_dummy_done)) begin
 				//r_misodata[r_misocounter] <= miso;
@@ -156,16 +199,40 @@ module latchspi
                     r_misodata <= {r_misodata[30:0], {data_rx[1]}};
 				    r_misocounter <= r_misocounter + 3'h1;
                 end
-                if (r_misocounter == misostop_cnt) begin
-					r_misocounter <= 7'd0; 
-					r_misofinish <= 1'b1;
-				end
 			end
 			if (setup_rst) begin
-				r_misofinish <= 1'b0;
+                r_misocounter <= 7'd0;
                 r_misodata <= 0;
 			end
 		end
 	end
+
+    // Control lanes to use when on req
+    //reg [9:0] txcntholder;
+    wire [9:0] txcntholder = txcntmarks[nextcnt]; 
+    reg [1:0] nextcnt;
+    wire modeswitch_en = (`SINGLEMODEON && r_mosicounter == txcntholder[7:0] && r_mosicounter < mosistop_cnt); 
+    wire [1:0] mode = txcntholder[9:8]; 
+    wire quad_en_test = (mode == 2'b10) ? 1'b1 : 1'b0;
+    wire dual_en_test = (mode == 2'b01) ? 1'b1 : 1'b0;
+
+    assign dualtx_en = (`DUALMODEON) ? 1'b1 : (`QUADMODEON) ? 1'b0 : dual_en_test;
+    assign quadtx_en = (`QUADMODEON) ? 1'b1 : (`DUALMODEON) ? 1'b0 : quad_en_test;
+
+    /*always @(nextcnt) begin
+        txcntholder = txcntmarks[nextcnt];
+    end
+    */
+    always @(posedge clk, posedge rst) begin
+        if (rst) begin
+            nextcnt <= 2'h0;
+        end else begin
+            if (modeswitch_en) begin
+               nextcnt <= nextcnt + 1'b1;
+            end
+            if (setup_rst)
+                nextcnt <= 0;
+        end
+    end
 
 endmodule

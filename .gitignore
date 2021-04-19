@@ -2,6 +2,7 @@
 .*.swp
 .*.swo
 *.vcd
+*.vim
 hardware/fpga/vivado/XCKU
 hardware/fpga/quartus/CYCLONEV-GT
 hardware/include/SPIsw_reg_gen.v

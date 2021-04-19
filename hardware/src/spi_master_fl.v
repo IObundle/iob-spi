@@ -38,6 +38,9 @@ module spi_master_fl
 	input [3:0]				dummy_cycles,
     input [9:0]             frame_struct,
     input [1:0]             xipbit_en,
+    input                   manualframe_en,
+    input [1:0]             spimode,
+    input                   fourbyteaddr_on,
 	output reg				validflag_out,
 	output reg				tready,
 
@@ -90,6 +93,10 @@ module spi_master_fl
 	reg		hold_n_int;
 
     reg [1:0]   r_xipbit_en;    
+    reg         r_manualframe_en; 
+    reg [1:0]        r_spimode;
+    reg [9:0] txcntmarks [2:0];
+
     wire    xipbit_phase;
 	
 	reg [8:0]	r_sclk_edges_counter;
@@ -102,6 +109,8 @@ module spi_master_fl
 
 	reg [8:0]	r_sclk_edges;
 	reg		r_transfer_start;
+    
+    reg r_endianness = 1'b0;// 0 for little-endian, on data read from flash
 	
 	//assign sclk_halfperiod = {1'b0, sclk_period[5:1]};
 	
@@ -149,22 +158,42 @@ module spi_master_fl
 		end
 	end
 	
+    //Sizes reg
+    reg [5:0] r_address_size;
+    always @(posedge clk, posedge rst) begin
+        if (rst) begin
+            r_address_size <= 6'd24;
+        end else begin
+            r_address_size <= 6'd24;
+            if(r_4byteaddr_on)
+                r_address_size <= 6'd32;
+        end
+    end
+
     wire [3:0] data_tx;
     wire [3:0] data_rx;
+    reg dualtx_state;
+    reg quadtx_state;
     assign data_tx = (recoverseq) ? dqvalues:
-                        (dualtx_en) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
-                            (quadtx_en) ? w_mosi[3:0]:
-                                {hold_n_int, wp_n_int, w_mosi[1],w_mosi[0]};
-    //assign data_tx = (dualcommd || dualaddr || dualdatatx || dualalt) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
-    //                    (quadcommd || quadaddr || quaddatatx || quadalt) ? w_mosi[3:0]:
-    //                        {hold_n_int, wp_n_int, w_mosi[1],w_mosi[0]};
+                        (dualtx_state) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
+                            (quadtx_state) ? w_mosi[3:0]:
+                                {hold_n_int, wp_n_int, w_mosi[1] ,w_mosi[0]};//check w_mosi[1] later
     
+    
+    always @(posedge clk, posedge rst) begin
+        if (rst) begin
+            dualtx_state <= 1'b0;
+            quadtx_state <= 1'b0;
+        end else begin
+            if (`LATCHOUT_EDGE) begin
+                dualtx_state <= dualtx_en;
+                quadtx_state <= quadtx_en;
+            end
+        end
+    end
 
     //Configure inout tristate i/o
     reg [3:0] oe = 4'b1111;
-    //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe? data_tx:4'hz;
-    //assign {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0} = oe ? data_tx:
-    //                                (quadcommd || quadaddr || quaddatatx || quadalt)? 4'hz:{2'b11, 2'hz};
     assign hold_n_dq3 = oe[3] ? data_tx[3] :(quadcommd || quadaddr || quaddatatx || quadalt || quadrx)? 1'hz:1'b1;
     assign wp_n_dq2 = oe[2] ? data_tx[2] :(quadcommd || quadaddr || quaddatatx || quadalt || quadrx)? 1'hz:1'b1;
     assign miso_dq1 = oe[1] ? data_tx[1] :1'hz;
@@ -199,6 +228,9 @@ module spi_master_fl
 			r_dummy_cycles <= 4'd0;
             r_frame_struct <= 10'h0;
             r_xipbit_en <= 2'b00;
+            r_manualframe_en <= 1'b0;
+            r_spimode <= 2'b00;
+            r_4byteaddr_on <= 1'b0;
 		end else begin
 			if (r_validedge) begin
 				r_datain <= data_in;
@@ -210,6 +242,9 @@ module spi_master_fl
 				r_dummy_cycles <= dummy_cycles;
                 r_frame_struct <= frame_struct;
                 r_xipbit_en <= xipbit_en;
+                r_manualframe_en <= manualframe_en;
+                r_spimode <= spimode;
+                r_4byteaddr_on <= fourbyteaddr_on;
 				r_inputread <= 1'b1;
 			end
 			else if (~validflag) begin
@@ -243,16 +278,36 @@ module spi_master_fl
     wire dualrx, quadrx;
     wire dualdatatx, quaddatatx;
 
-    assign dualcommd = (r_frame_struct[9:8] == 2'b01) ? 1'b1:1'b0;
-    assign quadcommd = (r_frame_struct[9:8] == 2'b10) ? 1'b1:1'b0;
-    assign dualaddr = (r_frame_struct[7:6] == 2'b01) ? 1'b1:1'b0;
-    assign quadaddr = (r_frame_struct[7:6] == 2'b10) ? 1'b1:1'b0;
-    assign dualdatatx = (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
-    assign quaddatatx = (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
-    assign dualrx = (r_frame_struct[3:2] == 2'b01) ? 1'b1:1'b0;
-    assign quadrx = (r_frame_struct[3:2] == 2'b10) ? 1'b1:1'b0;
-    assign dualalt = (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
-    assign quadalt = (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
+    assign dualcommd = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 : 
+                                (r_frame_struct[9:8] == 2'b01) ? 1'b1:1'b0;
+    assign quadcommd = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[9:8] == 2'b10) ? 1'b1:1'b0;
+    assign dualaddr = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 :
+                                (r_frame_struct[7:6] == 2'b01) ? 1'b1:1'b0;
+    assign quadaddr = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[7:6] == 2'b10) ? 1'b1:1'b0;
+    assign dualdatatx = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 :
+                                (r_frame_struct[5:4] == 2'b01) ? 1'b1:1'b0;
+    assign quaddatatx = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[5:4] == 2'b10) ? 1'b1:1'b0;
+    assign dualrx = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 :
+                                (r_frame_struct[3:2] == 2'b01) ? 1'b1:1'b0;
+    assign quadrx = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[3:2] == 2'b10) ? 1'b1:1'b0;
+    assign dualalt = (r_spimode==2'b01) ? 1'b1 :
+                            (r_spimode==2'b10) ? 1'b0 :
+                                (r_frame_struct[1:0] == 2'b01) ? 1'b1:1'b0;
+    assign quadalt = (r_spimode==2'b10) ? 1'b1 :
+                            (r_spimode==2'b01) ? 1'b0 :
+                                (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
 
     //Build r_str2sendbuild
 	always @(posedge rst, posedge clk) begin
@@ -283,154 +338,17 @@ module spi_master_fl
     *   From frame_struct
     *   Data transmit control fsm
         * **/
-    wire command_en, address_en;
-    wire alt_en, datatx_en;
-    assign command_en = (r_frame_struct[9:8] != 2'b11);
-    assign address_en = (r_frame_struct[7:6] != 2'b11);
-    assign datatx_en = (r_frame_struct[5:4] != 2'b11);
-    assign alt_en = (r_frame_struct[1:0] != 2'b11);
-
+    //manual_frame_en
+    //
     wire dualtx_en;
     wire quadtx_en;
-    assign dualtx_en = (dualcommd && (curr_delayed==`COMM_PHASE) ) || 
-                        (dualaddr && (curr_delayed==`ADDR_PHASE) )|| 
-                        (dualdatatx && (curr_delayed==`DATATX_PHASE)) || 
-                        (dualalt && (curr_delayed==`ALT_PHASE));
-    assign quadtx_en = (quadcommd && (curr_delayed==`COMM_PHASE) ) || 
-                        (quadaddr && (curr_delayed==`ADDR_PHASE) )|| 
-                        (quaddatatx && (curr_delayed==`DATATX_PHASE)) || 
-                        (quadalt && (curr_delayed==`ALT_PHASE));
-
-    // Frame transmission phase
-
-    reg [2:0] curr;
-    reg [2:0] curr_delayed;
-    
-    always @(posedge clk, posedge rst) begin//Adding delay, or later on latchout
-        if (rst) curr_delayed <= 0;
-        else curr_delayed <= curr;
-    end
-
-    always @(posedge clk, posedge rst) begin
-        if (rst) curr <= 0;
-        else begin
-            if (w_sending_done ) begin
-                if (`LATCHIN_EDGE) curr <= `IDLE_PHASE;
-                else curr <= curr;
-
-            end else begin
-                case (curr)
-                    `IDLE_PHASE://not transfering
-                    begin
-                        if (r_transfer_start) begin
-                            if (command_en) curr <= `COMM_PHASE;
-                            else if ((!command_en) && address_en) curr <= `ADDR_PHASE;//(!)
-                        end
-                    end
-                    `COMM_PHASE://command phase
-                    begin
-                        if (command_done && address_en) curr <= `ADDR_PHASE;
-                        if (command_done && !address_en && datatx_en) curr <= `DATATX_PHASE;
-                    end
-                    `ADDR_PHASE://address phase
-                    begin
-                       if (address_done && datatx_en) curr <= `DATATX_PHASE;
-                       else if (address_done && !datatx_en && alt_en) curr <= `ALT_PHASE;
-                    end
-                    `DATATX_PHASE://datatx phase
-                    begin
-                       if (datatx_done) curr <= `IDLE_PHASE; 
-                    end
-                    `ALT_PHASE://alt phase
-                    begin
-                        if (alt_done) curr <= `IDLE_PHASE;
-                    end
-                    /*3'b101://dummy TODO
-                    begin
-                        if (w_sending_done) curr <= 0;
-                    end*/
-                    default:;
-                endcase
-            end
-        end
-    end
-    
-    /*
-    *   Phase done signals
-        * */
-    reg [5:0] r_command_size = 6'd8;
-    reg [5:0] r_address_size = 6'd24;
-
-    reg command_done;
-    reg address_done;
-    reg datatx_done;
-    reg alt_done;
-
-    wire [5:0] comm_addr_sum;
-    wire [6:0] comm_addr_data_sum;
-    assign comm_addr_sum = r_command_size + r_address_size;
-    assign comm_addr_data_sum = r_command_size + r_address_size + r_ndatatxbits;
-    always @* begin
-        command_done = 1'b0;
-        address_done = 1'b0;
-        datatx_done = 1'b0;
-        alt_done = 1'b0;
-        case ({command_en, address_en, datatx_en, alt_done})
-            4'b1000:
-                if ((mosicounter >= r_command_size))
-                    command_done = 1;
-            4'b0100:
-                if ((mosicounter >= r_address_size))
-                    address_done = 1;
-            4'b1100:   
-            begin
-                if ((mosicounter >= r_command_size))
-                    command_done = 1;
-                if (mosicounter >= (comm_addr_sum)) begin
-                    command_done = 1;
-                    address_done = 1;
-                end
-            end
-            4'b1110:
-            begin
-                if ((mosicounter >= r_command_size))
-                    command_done = 1;
-                if (mosicounter >= (comm_addr_sum)) begin
-                    command_done = 1;
-                    address_done = 1;
-                end
-                if (mosicounter >= (comm_addr_data_sum)) begin
-                    command_done = 1;
-                    address_done = 1;
-                    datatx_done = 1;
-                end
-            end
-            4'b1111:
-            begin
-                if ((mosicounter >= r_command_size))
-                    command_done = 1;
-                if (mosicounter >= (comm_addr_sum)) begin
-                    command_done = 1;
-                    address_done = 1;
-                end
-                if (mosicounter >= (comm_addr_data_sum)) begin//alt
-                    command_done = 1;
-                    address_done = 1;
-                    datatx_done = 1;
-                    alt_done = 1;//for now, doesn't affect
-                end
-            end
-            default:;
-                //alt 
-                //dummy
-        endcase
-    end
 
     wire [3:0] w_mosi;
     wire w_sending_done;
     wire w_mosifinish;
     wire [7:0] mosicounter;
     wire [31:0] w_misodata;
+    wire [31:0] w_misodatarev;
 
     //Instantiate module to tx and rx data
     latchspi latchspi0
@@ -453,12 +371,16 @@ module spi_master_fl
         .quadrx(quadrx),
         .dummy_cycles(r_dummy_cycles),
         .misostop_cnt(r_misoctrstop),
+        .numrxbits(r_nmisobits),
         .xipbit_en(xipbit_en),
         .xipbit_phase(xipbit_phase),
         .sending_done(w_sending_done),
         .mosifinish(w_mosifinish),
         .mosicounter(mosicounter),
-        .read_data(w_misodata)
+        .txcntmarks(txcntmarks),
+        .spimode(r_spimode),
+        .read_data(w_misodata),
+        .read_datarev(w_misodatarev)
     );
     
     //Detect recover sequence
@@ -490,20 +412,22 @@ module spi_master_fl
     assign w_commdcycles = dualcommd ? 4'd4: //Parameterize with reg later, param, now fixed at max 8bits
                             quadcommd ? {4'd2}:
                                 4'd8;
-    assign w_addrcycles = dualaddr ? (r_4byteaddr_on? 7'd16: 7'd12):
-                            quadaddr ? (r_4byteaddr_on? 7'd8: 7'd6):
-                                (r_4byteaddr_on? 7'd32: 7'd24);
+    assign w_addrcycles = dualaddr ? (r_4byteaddr_on ? 7'd16: 7'd12):
+                            quadaddr ? (r_4byteaddr_on ? 7'd8: 7'd6):
+                                (r_4byteaddr_on ? 7'd32: 7'd24);
     assign w_altcycles = 4'd0;
     assign w_datatxcycles = dualdatatx ? {{1'b0, r_ndatatxbits[6:1]} + (|r_ndatatxbits[0])}:
                                 quaddatatx ? {{2'b00, r_ndatatxbits[6:2]} + (|r_ndatatxbits[1:0])}:
                                     r_ndatatxbits;
-
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_counterstop <= 8'd0;
 			r_misoctrstop <= 7'd8;
 			r_sclk_edges <= 0;
 			r_counters_done <= 1'b0;
+            txcntmarks[0] <= 0;
+            txcntmarks[1] <= 0;
+            txcntmarks[2] <= 0;
 		end else begin
 			r_counters_done <= 1'b0;
 			if (r_setup_start) begin
@@ -512,42 +436,69 @@ module spi_master_fl
 						3'b000:	begin//Only command
 								r_counterstop <= 8'd8;//Parameterize with regs
 								r_sclk_edges <= {w_commdcycles, 1'b0};
+                                txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[1] <= 0; //command_size
+                                txcntmarks[2] <= 0; //command_size
 							end
 						3'b001: begin//command + answer
 								r_counterstop <= 8'd8;//Parameterize
 								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= {w_commdcycles + w_misocycles, 1'b0};
+                                txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[1] <= 0; 
+                                txcntmarks[2] <= 0;
 							end
 						3'b010: begin//command + address + (+ dummy cycles +) + answer 
-								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
+								r_counterstop <= 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24);
 								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
+                                txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24)}; //command_size + address_size
+                                txcntmarks[2] <= 0; 
 							end
 						3'b011:	begin//command + data_in
 								r_counterstop <= 8'd8 + r_ndatatxbits;
 								r_sclk_edges <= {w_commdcycles + w_datatxcycles,1'b0};
+                                txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[1] <= {r_frame_struct[5:4], 8'd8 + r_ndatatxbits}; //command + data_in 
+                                txcntmarks[2] <= 0;
 							end
-						3'b100: begin//command + address + (+ dummy cycles +) + data_in 
-								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24) + r_ndatatxbits;
-								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_datatxcycles,1'b0};
+						3'b100: begin//command + address + data_in (+dummy cycles ?) 
+								r_counterstop <= 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24) + r_ndatatxbits;
+								r_sclk_edges <= {w_commdcycles + w_addrcycles + w_datatxcycles,1'b0};//(+r_dummycycles)
+                                txcntmarks[0] <= {r_frame_struct[9:8], 8'd8};
+                                txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24)}; //command + data_in 
+                                txcntmarks[2] <= {r_frame_struct[5:4], 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24) + r_ndatatxbits}; //command + data_in 
 							end
 						3'b101: begin//command+address
-								r_counterstop <= 8'd8 + (r_4byteaddr_on? 8'd32:8'd24);
+								r_counterstop <= 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24);
 								r_sclk_edges <= {w_commdcycles + w_addrcycles,1'b0};
+                                txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[1] <= {r_frame_struct[7:6], (r_4byteaddr_on ? 8'd32:8'd24)}; //command + address 
+                                txcntmarks[2] <= 0;
 							end
                         3'b110: begin//XIP mode, address + answer
-                                r_counterstop <= (r_4byteaddr_on? 8'd32:8'd24);
+                                r_counterstop <= (r_4byteaddr_on ? 8'd32:8'd24);
 								r_misoctrstop <= w_misocycles - 1'b1;
 								r_sclk_edges <= {w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
+                                txcntmarks[0] <= {r_frame_struct[7:6], (r_4byteaddr_on ? 8'd32:8'd24)};
+                                txcntmarks[1] <= 0; 
+                                txcntmarks[2] <= 0;
                             end
                         3'b111: begin//reset sequences
 								r_counterstop <= r_ndatatxbits;
 								r_sclk_edges <= {w_datatxcycles,1'b0};                       
+                                txcntmarks[0] <= 0;
+                                txcntmarks[1] <= 0;
+                                txcntmarks[2] <= 0; 
                             end
 					default:	begin
 								r_counterstop <= 8'd8;
 								//TODO other control signals default
 								r_sclk_edges <= {w_commdcycles, 1'b0};
+                                txcntmarks[0] <= 0;
+                                txcntmarks[1] <= 0; 
+                                txcntmarks[2] <= 0; 
 							end
 					endcase
 			end
@@ -576,9 +527,7 @@ module spi_master_fl
 			data_out <= 0;
 		end else begin
 			validflag_out <= 1'b1;//No use for now
-
 			case(r_currstate)
-
 				IDLE:
 				begin
 					//default
@@ -617,7 +566,7 @@ module spi_master_fl
 					if(tranfers_done) begin
 						r_ss_n <= 1'b1;
 						r_sclk_out_en <= 1'b0;
-						data_out <= w_misodata;
+						data_out <= (r_endianness) ? w_misodata : w_misodatarev;
 						r_currstate <= IDLE;
 					end
 				end

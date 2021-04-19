@@ -22,10 +22,13 @@ module spi_tb;
 	reg [3:0] dummy_cycles;
     reg [9:0] frame_struct;
     reg [1:0] xipbit_en;
+    reg [1:0] spimode;
+    reg manualframe_en;
 	reg validflag; //check later
 	wire validflag_out; //check
 	wire tready;
 	reg tofrom_fl;
+    reg fourbyteaddr_on;
 
 	integer i;
 	reg [31:0]	mem;
@@ -55,6 +58,9 @@ module spi_tb;
             .frame_struct (frame_struct),
             .xipbit_en  (xipbit_en),
 			.dummy_cycles (dummy_cycles),
+            .manualframe_en (manualframe_en),
+            .spimode (spimode),
+            .fourbyteaddr_on (fourbyteaddr_on),
 			.validflag	(validflag),
 			.validflag_out	(validflag_out),
 			.tready		(tready)
@@ -65,8 +71,9 @@ module spi_tb;
 	initial begin
 		$dumpfile("spi_fl_tb.vcd");
 		$dumpvars();
-		//$dumpvars(0,spi_tb.spi_m.r_spistr2send[0]);
-		//$dumpvars(0,spi_tb.spi_m.r_spistr2send[1]);
+		$dumpvars(0,spi_tb.spi_m.txcntmarks[0]);
+		$dumpvars(0,spi_tb.spi_m.txcntmarks[1]);
+		$dumpvars(0,spi_tb.spi_m.txcntmarks[2]);
 		
 		//Clks and reset
 		rst = 1;
@@ -81,14 +88,18 @@ module spi_tb;
 	//Master Process
 	initial begin
 		#100
+        fourbyteaddr_on = 1'b1;
+
+        manualframe_en = 0;
+        spimode = 0;
 		data_in=32'hdf000000;
 		command=8'h66;
-		address=24'h5a5a11;
-		commtype = 3'b110;
-		nmiso_bits = 7'd32;
-        frame_struct = 10'h000;
-        xipbit_en = 2'b10;
-		dummy_cycles = 4'd8;
+		address=32'haa5a5a11;
+		commtype = 3'b010;
+		nmiso_bits = 7'd28;
+        frame_struct = 10'h084;
+        xipbit_en = 2'b00;
+		dummy_cycles = 4'd4;
 		mem	= 32'hA0A0A0A3;
 
 		#50
@@ -105,15 +116,16 @@ module spi_tb;
         wait(tready);
         #120
         //New command
+        spimode = 2'b11;
         data_in=32'h5A5A5A5A;
 		command=8'h6b;
 		address=24'h555555;
 		commtype = 3'b010;
         //frame_struct = 10'b0101110111;
-        frame_struct = 10'h8;
+        frame_struct = 10'h260;
         xipbit_en = 2'b00;
 		nmiso_bits = 7'd32;
-		dummy_cycles = 4'd8;
+		dummy_cycles = 4'd0;
 		mem	= 32'hA0A0A0A3;
 		#50
 		validflag=1'b1;
@@ -125,11 +137,12 @@ module spi_tb;
         wait(tready);
         #120
         //New command
+        spimode = 2'b10;
         data_in=8'h5A;
 		command=8'h0b;
 		address=24'h555555;
 		commtype = 3'b110;
-        frame_struct = 10'h0;
+        frame_struct = 10'h108;
         xipbit_en = 2'b01;
 		nmiso_bits = 7'd8;
 		dummy_cycles = 4'd10;
