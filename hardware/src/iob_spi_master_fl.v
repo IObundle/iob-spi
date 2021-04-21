@@ -32,7 +32,9 @@ module iob_spi_master_fl
     
     //TODO conditional include of cache interface
     //Cache interface connection
-    `SIGNAL2OUT(rdata_cache, FL_DATAOUT)
+    `SIGNAL_OUT(rdata_int, DATA_W)
+    `SIGNAL2OUT(FL_DATAOUT, rdata_int)
+    `SIGNAL2OUT(rdata_cache, rdata_int) 
     `SIGNAL2OUT(ready_cache, ready_int)
     `SIGNAL_OUT(cache_read_req_en, 1)
     `SIGNAL2OUT(cache_read_req_en, valid_cache & (~wstrb_cache))
@@ -52,7 +54,7 @@ module iob_spi_master_fl
 	fl_spi0
 	(
 		.data_in(FL_DATAIN),
-		.data_out(FL_DATAOUT),
+		.data_out(rdata_int),
 		.address(address_int),
 		.command(FL_COMMAND[7:0]),
 		.ndata_bits(FL_COMMAND[14:8]),
