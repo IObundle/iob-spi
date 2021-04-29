@@ -11,6 +11,7 @@ typedef enum {SINGLE=0, DUAL, QUAD} spilaneMode;
 
 static spilaneMode spimode = SINGLE;                            
 static unsigned xipframestruct = 0;
+static page_size=256;
 
 /*static struct flashConfig_ 
 {

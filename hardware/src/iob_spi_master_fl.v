@@ -12,7 +12,9 @@ module iob_spi_master_fl
 (
 	
 `include "cpu_nat_s_if.v"
+`ifdef RUN_FLASH
 `include "cpu_nat_s_cache_if.v"
+`endif
 `include "flash_if.v"
 `include "gen_if.v"
 );
@@ -34,17 +36,22 @@ module iob_spi_master_fl
     //Cache interface connection
     `SIGNAL_OUT(dataout_int, DATA_W)
     `SIGNAL2OUT(FL_DATAOUT, dataout_int)
+    `SIGNAL_OUT(address_int, 32)
+    `SIGNAL_OUT(valid_int, 1)
+`ifdef RUN_FLASH
     `SIGNAL2OUT(rdata_cache, dataout_int) 
     `SIGNAL2OUT(ready_cache, ready_int)
     `SIGNAL_OUT(cache_read_req_en, 1)
     `SIGNAL2OUT(cache_read_req_en, valid_cache & (~wstrb_cache))
     //store cache address in reg for stability, delay problems, ready?
     //2 consecutive address possible? while core not latch in
-    `SIGNAL_OUT(address_int, 32)
     `SIGNAL2OUT(address_int, cache_read_req_en ? address_cache : FL_ADDRESS)
     `SIGNAL2OUT(ready_cache, ready_int)
-    `SIGNAL_OUT(valid_int, 1)
     `SIGNAL2OUT(valid_int, cache_read_req_en ? valid_cache : FL_VALIDFLG)
+`else
+    `SIGNAL2OUT(address_int, FL_ADDRESS)
+    `SIGNAL2OUT(valid_int, FL_VALIDFLG)
+`endif
 
 	//Instantiate core
 	spi_master_fl 
