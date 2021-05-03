@@ -310,6 +310,8 @@ module spi_master_fl
                                 (r_frame_struct[1:0] == 2'b10) ? 1'b1:1'b0;
 
     //Build r_str2sendbuild
+    wire [`SPI_DATA_W-1:0] w_revertedbytes;
+    assign w_revertedbytes = {r_datain[7:0], r_datain[15:8], r_datain[23:16], r_datain[31:24]};//not general
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_str2sendbuild <= 72'h0;//not accounting for alt mode
@@ -320,13 +322,13 @@ module spi_master_fl
                 r_build_done <= 1'b1;
                 case(r_commandtype)
                     3'b011: begin
-                            r_str2sendbuild <= {r_command, data_in, {32{1'b0}}};
+                            r_str2sendbuild <= {r_command, w_revertedbytes, {32{1'b0}}};
                             end
                     3'b110: begin
                             r_str2sendbuild <= (r_4byteaddr_on) ? {r_address, {40{1'b0}}}: {r_address[23:0], {48{1'b0}}};            
                             end
                     default: begin
-                            r_str2sendbuild <= (r_4byteaddr_on) ? {r_command, r_address, r_datain}:{r_command, r_address[23:0], r_datain, {8{1'b0}}};
+                            r_str2sendbuild <= (r_4byteaddr_on) ? {r_command, r_address, w_revertedbytes}:{r_command, r_address[23:0], w_revertedbytes, {8{1'b0}}};
                             end
                 endcase
 			end
@@ -442,7 +444,7 @@ module spi_master_fl
 							end
 						3'b001: begin//command + answer
 								r_counterstop <= 8'd8;//Parameterize
-								r_misoctrstop <= w_misocycles - 1'b1;
+								r_misoctrstop <= r_nmisobits;
 								r_sclk_edges <= {w_commdcycles + w_misocycles, 1'b0};
                                 txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
                                 txcntmarks[1] <= 0; 
@@ -450,7 +452,7 @@ module spi_master_fl
 							end
 						3'b010: begin//command + address + (+ dummy cycles +) + answer 
 								r_counterstop <= 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24);
-								r_misoctrstop <= w_misocycles - 1'b1;
+								r_misoctrstop <= r_nmisobits;
 								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
                                 txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
                                 txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24)}; //command_size + address_size
@@ -479,7 +481,7 @@ module spi_master_fl
 							end
                         3'b110: begin//XIP mode, address + answer
                                 r_counterstop <= (r_4byteaddr_on ? 8'd32:8'd24);
-								r_misoctrstop <= w_misocycles - 1'b1;
+								r_misoctrstop <= r_nmisobits;
 								r_sclk_edges <= {w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
                                 txcntmarks[0] <= {r_frame_struct[7:6], (r_4byteaddr_on ? 8'd32:8'd24)};
                                 txcntmarks[1] <= 0; 
