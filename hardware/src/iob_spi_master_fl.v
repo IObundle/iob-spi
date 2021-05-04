@@ -3,6 +3,8 @@
 `include "interconnect.vh"
 `include "iob_spi_fl.vh"
 
+`define FLASH_CACHE_ADDR_W 25
+
 module iob_spi_master_fl
 #(
 	parameter ADDR_W = `FL_ADDR_W,
