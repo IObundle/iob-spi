@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Mon Apr  5 00:49:56 2021
+[*] Fri Apr 30 02:53:10 2021
 [*]
 [dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
-[dumpfile_mtime] "Mon Apr  5 00:46:27 2021"
-[dumpfile_size] 60587
+[dumpfile_mtime] "Fri Apr 30 02:44:22 2021"
+[dumpfile_size] 41442
 [savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
-[timestart] 8883300
-[size] 1362 599
+[timestart] 6296900
+[size] 1361 599
 [pos] -1 -1
-*-16.564953 8937500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.564953 6520000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] spi_tb.
 [treeopen] spi_tb.spi_m.
 [sst_width] 214
@@ -37,20 +37,45 @@ spi_tb.spi_m.commtype[2:0]
 spi_tb.spi_m.data_in[31:0]
 spi_tb.spi_m.data_out[31:0]
 spi_tb.spi_m.r_str2sendbuild[71:0]
+spi_tb.spi_m.r_address[31:0]
+spi_tb.spi_m.w_misocycles[6:0]
+spi_tb.spi_m.latchspi0.misostop_cnt[6:0]
+@28
+spi_tb.spi_m.latchspi0.bytesort_en
+spi_tb.spi_m.latchspi0.rxsort_en
+@22
+spi_tb.spi_m.latchspi0.r_misobyte[7:0]
+@28
+spi_tb.spi_m.latchspi0.r_bytecounter[2:0]
+@22
+spi_tb.spi_m.latchspi0.r_misodatasorted[31:0]
 spi_tb.spi_m.latchspi0.r_misodata[31:0]
+spi_tb.spi_m.latchspi0.w_misodatarev[31:0]
+@23
+spi_tb.spi_m.latchspi0.r_misocounter[6:0]
 @28
-spi_tb.spi_m.latchspi0.r_mosifinish
-spi_tb.spi_m.latchspi0.dummy_count_en
-spi_tb.spi_m.latchspi0.w_xipbit_phase
+spi_tb.spi_m.latchspi0.numrxbytes[2:0]
+@22
+spi_tb.spi_m.latchspi0.mosicounter[7:0]
+@28
+spi_tb.spi_m.r_spimode[1:0]
+spi_tb.spi_m.dualtx_state
+spi_tb.spi_m.quadtx_state
 spi_tb.spi_m.ss
-spi_tb.spi_m.curr[2:0]
-@29
-spi_tb.spi_m.r_xipbit_en[1:0]
+spi_tb.spi_m.latchspi0.nextcnt[1:0]
+spi_tb.spi_m.latchspi0.mode[1:0]
+@22
+spi_tb.spi_m.latchspi0.txcntholder[9:0]
 @28
-spi_tb.spi_m.xipbit_phase
+spi_tb.spi_m.latchspi0.modeswitch_en
 @22
 spi_tb.spi_m.sclk_gen0.sclk_edges_counter[8:0]
+spi_tb.spi_m.\txcntmarks[0][9:0]
+spi_tb.spi_m.\txcntmarks[1][9:0]
+spi_tb.spi_m.\txcntmarks[2][9:0]
 @28
+spi_tb.spi_m.latchspi0.dual_en_test
+spi_tb.spi_m.latchspi0.quad_en_test
 spi_tb.spi_m.dualtx_en
 spi_tb.spi_m.quadtx_en
 spi_tb.spi_m.dualcommd
@@ -68,14 +93,6 @@ spi_tb.spi_m.dualrx
 spi_tb.spi_m.quadrx
 spi_tb.spi_m.dualalt
 spi_tb.spi_m.quadalt
-spi_tb.spi_m.command_done
-spi_tb.spi_m.address_done
-spi_tb.spi_m.datatx_done
-spi_tb.spi_m.alt_done
-spi_tb.spi_m.command_en
-spi_tb.spi_m.address_en
-spi_tb.spi_m.datatx_en
-spi_tb.spi_m.alt_en
 @22
 spi_tb.spi_m.w_commdcycles[3:0]
 spi_tb.spi_m.w_addrcycles[6:0]

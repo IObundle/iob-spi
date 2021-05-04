@@ -107,9 +107,18 @@ int main()
 
     read_mem = 2;
     uart_printf("\nTesting quad output fast read\n");
-    read_mem = spifl_readfastQuadOutput(address + 1);
+    read_mem = spifl_readfastQuadOutput(address + 1, 0);
     uart_printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
     
+    read_mem = 3;
+    uart_printf("\nTesting dual input output fast read 0xbb\n");
+    read_mem = spifl_readfastDualInOutput(address + 1, 0);
+    uart_printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
+
+    read_mem = 4;
+    uart_printf("\nTesting quad input output fast read 0xeb\n");
+    read_mem = spifl_readfastQuadInOutput(address + 1, 0);
+    uart_printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
 
     uart_printf("\nRead Non volatile Register\n");
     unsigned nonVolatileReg = 0;
@@ -161,15 +170,21 @@ int main()
 	uart_printf("\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
     uart_txwait();
     
-    /*int xipEnabled = 10;
+    //Confirmation bit 0
+    read_mem = 1;
+    uart_printf("\nTesting quad input output fast read with xip confirmation bit 0\n");
+    read_mem = spifl_readfastQuadInOutput(address + 1, ACTIVEXIP);
+    uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
+    
+    int xipEnabled = 10;
     xipEnabled = spifl_terminateXipSequence();
     uart_printf("\nAfter xip termination sequence: %d\n", xipEnabled);
     volconfigReg = 0;
     spifl_readVolConfigReg(&volconfigReg);
 	uart_printf("\nAfter xip termination sequence, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
-    uart_txwait();*/
+    uart_txwait();
     
-    read_mem = 1;
+    /*read_mem = 1;
     uart_printf("\nTesting dual output fast read with xip confirmation bit 0\n");
     read_mem = spifl_readfastDualOutput(address + 1, ACTIVEXIP);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
@@ -179,8 +194,21 @@ int main()
     read_mem = spifl_readMemXip(address+1, ACTIVEXIP);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
     uart_txwait();
-	
-    uart_printf("\nAssuming Xip active, read from memory, confirmation bit 1\n");
+    */
+    if(volconfigReg == 0xf3 || volconfigReg != 0xfb){
+
+        uart_printf("\nAssuming Xip active, read from memory, confirmation bit 1\n");
+        read_mem = 1;
+        read_mem = spifl_readMemXip(address+1, TERMINATEXIP);
+        uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
+        uart_txwait();
+        
+        volconfigReg = 0;
+        spifl_readVolConfigReg(&volconfigReg);
+        uart_printf("\nAfter xip termination xip bit 1, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
+        uart_txwait();
+    }
+    /*uart_printf("\nAssuming Xip active, read from memory, confirmation bit 1\n");
     read_mem = 1;
     read_mem = spifl_readMemXip(address+1, TERMINATEXIP);
     uart_printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
@@ -189,6 +217,31 @@ int main()
     volconfigReg = 0;
     spifl_readVolConfigReg(&volconfigReg);
 	uart_printf("\nAfter xip termination with confirmation bit 1, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
-    uart_txwait();
+    uart_txwait();*/
+
+    //Testing programming functions
+    /*address = 104;
+    uart_printf("\nTesting PROGRAM functions\n");
+    word = 0x11335577;
+    uart_printf("Fast program dual input ext\n");
+    spifl_programfastDualInputExt(word, address);
+
+    address = 108;
+    word = 0x99aabbcc;
+    uart_printf("Fast program quad input\n");
+    spifl_programfastQuadInput(word, address);
+
+    address = 104;
+    read_mem = 0;
+    uart_printf("\nAfter program, Quad input output fast read 0xeb\n");
+    read_mem = spifl_readfastQuadInOutput(address, 0);
+    uart_printf("\nRead after program from memory address (%x) the word: (%x)\n", address, read_mem);
+
+    address = 108;
+    read_mem = 1;
+    uart_printf("\nAfter program, Quad input output fast read 0xeb\n");
+    read_mem = spifl_readfastQuadInOutput(address, 0);
+    uart_printf("\nRead after program from memory address (%x) the word: (%x)\n", address, read_mem);
+    uart_txwait();*/
     return 0;
 }

@@ -3,6 +3,8 @@
 `include "interconnect.vh"
 `include "iob_spi_fl.vh"
 
+`define FLASH_CACHE_ADDR_W 25
+
 module iob_spi_master_fl
 #(
 	parameter ADDR_W = `FL_ADDR_W,
@@ -12,6 +14,9 @@ module iob_spi_master_fl
 (
 	
 `include "cpu_nat_s_if.v"
+`ifdef RUN_FLASH
+`include "cpu_nat_s_cache_if.v"
+`endif
 `include "flash_if.v"
 `include "gen_if.v"
 );
@@ -28,6 +33,27 @@ module iob_spi_master_fl
 	//Ready signal from flash controller
 	`SIGNAL(ready_int, 1)
 	`SIGNAL2OUT(ready, ready_int)
+    
+    //TODO conditional include of cache interface
+    //Cache interface connection
+    `SIGNAL_OUT(dataout_int, DATA_W)
+    `SIGNAL2OUT(FL_DATAOUT, dataout_int)
+    `SIGNAL_OUT(address_int, 32)
+    `SIGNAL_OUT(valid_int, 1)
+`ifdef RUN_FLASH
+    `SIGNAL2OUT(rdata_cache, dataout_int) 
+    `SIGNAL2OUT(ready_cache, ready_int)
+    `SIGNAL_OUT(cache_read_req_en, 1)
+    `SIGNAL2OUT(cache_read_req_en, valid_cache & (~wstrb_cache))
+    //store cache address in reg for stability, delay problems, ready?
+    //2 consecutive address possible? while core not latch in
+    `SIGNAL2OUT(address_int, cache_read_req_en ? address_cache : FL_ADDRESS)
+    `SIGNAL2OUT(ready_cache, ready_int)
+    `SIGNAL2OUT(valid_int, cache_read_req_en ? valid_cache : FL_VALIDFLG)
+`else
+    `SIGNAL2OUT(address_int, FL_ADDRESS)
+    `SIGNAL2OUT(valid_int, FL_VALIDFLG)
+`endif
 
 	//Instantiate core
 	spi_master_fl 
@@ -37,27 +63,32 @@ module iob_spi_master_fl
 	fl_spi0
 	(
 		.data_in(FL_DATAIN),
-		.data_out(FL_DATAOUT),
-		.address(FL_ADDRESS),
+		.data_out(dataout_int),
+		.address(address_int),
 		.command(FL_COMMAND[7:0]),
 		.ndata_bits(FL_COMMAND[14:8]),
 		.dummy_cycles(FL_COMMAND[19:16]),
         .frame_struct(FL_COMMAND[29:20]),
         .xipbit_en(FL_COMMAND[31:30]),
-		.validflag(FL_VALIDFLG),
-		.commtype(FL_COMMANDTP),
+		.validflag(valid_int),
+		.commtype(FL_COMMANDTP[2:0]),
+        .spimode(FL_COMMANDTP[31:30]),
+        .manualframe_en(FL_COMMANDTP[29]),
+        .fourbyteaddr_on(FL_COMMAND[15]),
 		.validflag_out(FL_VALIDFLGOUT),
 		.tready(ready_int),
-
+        
 		.clk(clk),
 		.rst(rst_int),
 		//Not sw registers
+        //Flash Memory interface
 		.sclk(SCLK),
 		.ss(SS),
 		.mosi_dq0(MOSI),
 		.wp_n_dq2(WP_N),
 		.hold_n_dq3(HOLD_N),
 		.miso_dq1(MISO)
+
 	);
 
 

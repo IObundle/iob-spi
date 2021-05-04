@@ -14,6 +14,15 @@ iob_spi_master_fl spifl
 	 .WP_N(spi_wpn),
 	 .HOLD_N(spi_holdn),
 	 .MISO(spi_miso),
+
+`ifdef RUN_FLASH
+     //cache interface
+     .valid_cache(mem_valid_flash),
+     .address_cache(mem_addr_flash),
+     .wdata_cache(mem_wdata_flash),
+     .wstrb_cache(mem_wstrb_flash),
+     .rdata_cache(mem_rdata_flash),
+`endif
 	 
 	 //cpu interface
 	 .valid(slaves_req[`valid(`SPI)]),
