@@ -95,11 +95,11 @@ module spi_tb;
 		data_in=32'haabbccdd;
 		command=8'h66;
 		address=32'haa5a5a11;
-		commtype = 3'b011;
-		nmiso_bits = 7'd14;
+		commtype = 3'b001;
+		nmiso_bits = 7'd16;
         frame_struct = 10'h084;
         xipbit_en = 2'b00;
-		dummy_cycles = 4'd4;
+		dummy_cycles = 4'd0;
 		mem	= 32'hA0A0A0A3;
 
 		#50
