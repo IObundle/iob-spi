@@ -6,7 +6,6 @@
 `SWREG_W(FL_COMMAND,		32,	0)//FL command
 `SWREG_W(FL_COMMANDTP,		32,	0)//FL command type
 `SWREG_W(FL_VALIDFLG,		1,	0)//FL valigflag
+`SWREG_R(FL_READY,           1,  0)//FL ready flag
 `SWREG_R(FL_DATAOUT,		32,	0)//FL data_out
 `SWREG_R(FL_VALIDFLGOUT,	1,	0)//FL valigflag_out
-//`SWREG_R(FL_TREADY,			1,	0)//FL tready
-//

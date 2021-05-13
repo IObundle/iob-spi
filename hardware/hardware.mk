@@ -31,6 +31,6 @@ $(SPI_HW_INC_DIR)/SPIsw_reg_gen.v: $(SPI_HW_INC_DIR)/SPIsw_reg.v
 	mv SPIsw_reg.vh $(SPI_HW_INC_DIR)
 
 spi_clean_hw:
-	@rm -rf $(SPI_HW_INC_DIR)/SPIsw_reg_gen.v $(SPI_HW_INC_DIR)/SPIsw_reg_w.vh #tmp $(SPI_HW_DIR)/fpga/vivado/XCKU $(SPI_HW_DIR)/fpga/quartus/CYCLONEV-GT
+	@rm -rf $(SPI_HW_INC_DIR)/SPIsw_reg_gen.v $(SPI_HW_INC_DIR)/SPIsw_reg.vh #tmp $(SPI_HW_DIR)/fpga/vivado/XCKU $(SPI_HW_DIR)/fpga/quartus/CYCLONEV-GT
 
 .PHONY: spi_clean_hw
