@@ -3,6 +3,7 @@
 #include "iob_spiplatform.h"
 #include "iob_spidefs.h"
 #include "stdint.h"
+#include "printf.h"
 
 static unsigned int base;
 //create another static variable for upper addresses
@@ -81,6 +82,64 @@ void spifl_resetmem()
 }
 
 //Program/Write Memory commands
+int spifl_memProgram(char* mem, int memsize, unsigned int address)
+{
+    //Check if erase needed
+    //address should start at beginning of mem page
+    //do while
+    int pages_programmed = 0;
+    //Command Config
+    unsigned frame_struct = 0x000000a0;
+    unsigned numbytes = 4;//max 4
+    unsigned command = (frame_struct << 20) | (numbytes*8 << 8) | PROGRAMFAST_QUADINEXT;
+
+    unsigned int strtoProgram = 0;//must be at least 32 bits
+    
+    const int memblocks = memsize / numbytes;
+    const int remainder_memblocks = memsize % numbytes;
+
+    //Main programming cycle
+    int i=0, j=0, k=0;
+    unsigned int address_aux = address, statusReg=0;
+    uint8_t statusRegByte = 0;
+    int numbytes_aux = numbytes;
+    for(i=0; i <= memblocks; i=i+numbytes){
+        
+        if (i==memblocks){
+            if (remainder_memblocks == 0) break;
+            else numbytes_aux = remainder_memblocks; 
+        }
+        else numbytes_aux = numbytes;
+
+        //concat bytes into strtoProgram
+        for(j=0, strtoProgram=0; j < numbytes_aux; j++){
+            strtoProgram |= (mem[i+j] & 0x0ff) << (j*8); 
+        }
+	    
+        statusReg = 0;
+        //execute WRITE ENABLE
+	    spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+        //check if successfull? 
+	    spifl_executecommand(COMMADDR_DTIN, strtoProgram, address_aux, command, NULL);
+        //check if str programming completed
+        for(k=0;k < 5; k++){//create end condition constant based on freqs
+            //read status flags
+            spifl_readStatusReg(&statusReg);   
+            statusRegByte = 0xff000000 & statusReg;
+            if((0x80 & statusRegByte) && !(0x10 & statusRegByte)) break;
+            else{
+                if(0x10 & statusReg) printf("programming word %x, address %x, index %d, statusReg %x\n", strtoProgram, address_aux, i, statusReg);
+            }
+        }
+        
+        address_aux += numbytes;
+
+    }
+    pages_programmed = ((address_aux-numbytes) - address) / page_size;
+    return pages_programmed;
+
+}
+
 void spifl_writemem(unsigned int word, unsigned int address)
 {
 	//execute WRITE ENABLE

@@ -18,6 +18,8 @@ unsigned int spifl_readfastQuadOutput(unsigned address, unsigned activateXip);
 unsigned int spifl_readfastDualInOutput(unsigned address, unsigned activateXip);
 unsigned int spifl_readfastQuadInOutput(unsigned address, unsigned activateXip);
 
+int spifl_memProgram(char* mem, int memsize, unsigned int address);
+
 void spifl_programfastDualInput(unsigned int word, unsigned address);
 void spifl_programfastDualInputExt(unsigned int word, unsigned address);
 void spifl_programfastQuadInput(unsigned int word, unsigned address);
