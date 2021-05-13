@@ -6,7 +6,7 @@
 hardware/fpga/vivado/XCKU
 hardware/fpga/quartus/CYCLONEV-GT
 hardware/include/SPIsw_reg_gen.v
-hardware/include/SPIsw_reg_w.vh
+hardware/include/SPIsw_reg.vh
 hardware/simulation/icarus/a.out
 hardware/src/tags
 document/pb/xil_results.tex

@@ -48,6 +48,11 @@ unsigned int spifl_getDATAOUT()
 	return dataout;
 }
 
+inline unsigned spifl_getREADY()
+{
+    return (unsigned int) IO_GET(base, FL_getREADY);
+}
+
 unsigned int spifl_getVALIDOUT()
 {
 	unsigned int validout;
@@ -69,9 +74,9 @@ void spifl_waitvalidout()
 
 void spifl_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout)
 {
-	
 	spifl_setCOMMAND(command);
 	spifl_setCOMMTYPE(typecode);
+    while(!spifl_getREADY);
 	
 	switch(typecode)
 	{
@@ -85,12 +90,14 @@ void spifl_executecommand(int typecode, unsigned int datain, unsigned int addres
 				spifl_setVALIDIN(1);
 				spifl_setVALIDIN(0);
 				//spifl_waitvalidout();
+                while(!spifl_getREADY);
 				*dataout = spifl_getDATAOUT();
 				break;
 		case COMMADDR_ANS:
 				spifl_setADDRESS(address);
 				spifl_setVALIDIN(1);
 				spifl_setVALIDIN(0);
+                while(!spifl_getREADY);
 				//spifl_waitvalidout();
 				*dataout = spifl_getDATAOUT();
 				break;
@@ -117,6 +124,7 @@ void spifl_executecommand(int typecode, unsigned int datain, unsigned int addres
 				spifl_setADDRESS(address);
 				spifl_setVALIDIN(1);
 				spifl_setVALIDIN(0);
+                while(!spifl_getREADY);
 				*dataout = spifl_getDATAOUT();
                 break;
         case RECOVER_SEQ:
