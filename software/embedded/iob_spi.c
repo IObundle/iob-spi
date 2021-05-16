@@ -3,7 +3,7 @@
 #include "iob_spiplatform.h"
 #include "iob_spidefs.h"
 #include "stdint.h"
-#include "printf.h"
+//#include "printf.h"
 
 static unsigned int base;
 //create another static variable for upper addresses
@@ -88,6 +88,7 @@ int spifl_memProgram(char* mem, int memsize, unsigned int address)
     //address should start at beginning of mem page
     //do while
     int pages_programmed = 0;
+    unsigned read_word= 0;
     //Command Config
     unsigned frame_struct = 0x000000a0;
     unsigned numbytes = 4;//max 4
@@ -95,44 +96,60 @@ int spifl_memProgram(char* mem, int memsize, unsigned int address)
 
     unsigned int strtoProgram = 0;//must be at least 32 bits
     
-    const int memblocks = memsize / numbytes;
-    const int remainder_memblocks = memsize % numbytes;
-
+    int memblocks = memsize / numbytes;
+    int remainder_memblocks = memsize % numbytes;
+    printf("Entering programming cycle %d\n", memblocks);
     //Main programming cycle
     int i=0, j=0, k=0;
     unsigned int address_aux = address, statusReg=0;
-    uint8_t statusRegByte = 0;
+    int l=0;
     int numbytes_aux = numbytes;
-    for(i=0; i <= memblocks; i=i+numbytes){
-        
+    //printf("after static allocations\n");
+    for(i=0; i <= memblocks; i=i+numbytes_aux){
+        //printf("in for\n"); 
         if (i==memblocks){
             if (remainder_memblocks == 0) break;
-            else numbytes_aux = remainder_memblocks; 
+            else{ 
+                numbytes_aux = remainder_memblocks; 
+                command = 0;
+                command = (frame_struct << 20) | (numbytes_aux*8 << 8) | PROGRAMFAST_QUADINEXT;
+            }
         }
         else numbytes_aux = numbytes;
-
+        
+        //printf("after numbytes\n");
+        //printf("%c\n", mem[i]);
         //concat bytes into strtoProgram
         for(j=0, strtoProgram=0; j < numbytes_aux; j++){
-            strtoProgram |= (mem[i+j] & 0x0ff) << (j*8); 
+            //printf("%c ,  %x\n", mem[i+j], (unsigned int)mem[i+j]);
+            strtoProgram |= ((unsigned int)mem[i+j] & 0x0ff) << (j*8); 
         }
+        //printf("numbytes %d\n", numbytes_aux);
+        //printf("str: %x\n", strtoProgram);
+        //printf("after concat\n");
 	    
         statusReg = 0;
         //execute WRITE ENABLE
 	    spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+        //printf("after write enable\n");
         //check if successfull? 
 	    spifl_executecommand(COMMADDR_DTIN, strtoProgram, address_aux, command, NULL);
+        //printf("after command sent\n");
         //check if str programming completed
-        for(k=0;k < 5; k++){//create end condition constant based on freqs
-            //read status flags
-            spifl_readStatusReg(&statusReg);   
-            statusRegByte = 0xff000000 & statusReg;
-            if((0x80 & statusRegByte) && !(0x10 & statusRegByte)) break;
-            else{
-                if(0x10 & statusReg) printf("programming word %x, address %x, index %d, statusReg %x\n", strtoProgram, address_aux, i, statusReg);
-            }
-        }
         
-        address_aux += numbytes;
+        spifl_readStatusReg(&statusReg);
+        //printf("\tstatus:%x\n", statusReg);
+        if(statusReg != 0){
+            do{
+                spifl_readStatusReg(&statusReg);
+                l++;
+            }while(statusReg != 0 && l<2);
+        }
+        l=0;
+
+        //read_word = spifl_readfastQuadOutput(address_aux, 0);
+       //printf("Programmed: %x, read: %x\n", strtoProgram, read_word); 
+        address_aux += numbytes_aux;
 
     }
     pages_programmed = ((address_aux-numbytes) - address) / page_size;
@@ -181,7 +198,7 @@ void spifl_programfastQuadInput(unsigned int word, unsigned address)
 	spifl_executecommand(COMMADDR_DTIN, word, address, command, NULL);
 }
 
-void spifl_programfastQualInputExt(unsigned int word, unsigned address)
+void spifl_programfastQuadInputExt(unsigned int word, unsigned address)
 {
 	//execute WRITE ENABLE
 	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);

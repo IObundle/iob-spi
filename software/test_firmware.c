@@ -101,10 +101,11 @@ int main()
 		printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)\n", read_mem, word);
 	}
     
+    address = 0x0;
     read_mem = 1;
     printf("\nTesting dual output fast read\n");
     read_mem = spifl_readfastDualOutput(address + 1, 0);
-    printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
+    printf("\nRead from memory address (%x) the word: (%x)\n", address, read_mem);
 
     read_mem = 2;
     printf("\nTesting quad output fast read\n");
@@ -114,12 +115,12 @@ int main()
     read_mem = 3;
     printf("\nTesting dual input output fast read 0xbb\n");
     read_mem = spifl_readfastDualInOutput(address + 1, 0);
-    printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
+    printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+2, read_mem);
 
     read_mem = 4;
     printf("\nTesting quad input output fast read 0xeb\n");
     read_mem = spifl_readfastQuadInOutput(address + 1, 0);
-    printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+1, read_mem);
+    printf("\nRead 2 from memory address (%x) the word: (%x)\n", address+3, read_mem);
 
     printf("\nRead Non volatile Register\n");
     unsigned nonVolatileReg = 0;
@@ -152,8 +153,30 @@ int main()
 	spifl_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &enhancedReg);
 	printf("\nEnhanced volatile Register after write (8 bits):(%x)\n", enhancedReg);	
     */
-    uart_txwait();
-    
+    //uart_txwait();
+    //Testing memory program
+    /*unsigned int program_address = 0x200;
+    unsigned int program_word = 0;
+    char word_bytes[4] = "aqui";
+    printf("\n====================\n");
+    printf("\nTesting word program\n");
+    int j=0;
+    for(j=0; j < 4; j++){   
+        program_word |= ((unsigned int)word_bytes[j] & 0x0ff)     << (j*8);
+         }
+    printf("Concate'd word: %x\n", program_word);
+    spifl_programfastQuadInputExt(program_word, program_address);
+    unsigned int statusRegP = 0xff;
+    for(j=0;j<5;j++){
+        spifl_readStatusReg(&statusRegP);
+        printf("After program: status reg %x\n", statusRegP);
+    }
+    //printf("After quad ext program command\n");
+    unsigned int readmemP =0;
+    readmemP = spifl_readfastQuadOutput(program_address,0);
+    printf("Read from memory: %x\n", readmemP);
+    printf("\n===================\n");
+    */
     //Testing xip bit enabling and xip termination sequence
 	printf("\nTesting xip enabling through volatile bit and termination by sequence\n");	
     unsigned volconfigReg = 0;
