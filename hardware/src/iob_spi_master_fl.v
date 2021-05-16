@@ -2,8 +2,8 @@
 `include "iob_lib.vh"
 `include "interconnect.vh"
 `include "iob_spi_fl.vh"
-
-`define FLASH_CACHE_ADDR_W 25
+//check later
+`define FLASH_CACHE_ADDR_W 24
 
 module iob_spi_master_fl
 #(
@@ -43,10 +43,10 @@ module iob_spi_master_fl
 `ifdef RUN_FLASH
     `SIGNAL2OUT(rdata_cache, dataout_int) 
     `SIGNAL_OUT(cache_read_req_en, 1)
-    `SIGNAL2OUT(cache_read_req_en, valid_cache & (~wstrb_cache))
+    `SIGNAL2OUT(cache_read_req_en, valid_cache & (~|wstrb_cache))
     //store cache address in reg for stability, delay problems, ready?
     //2 consecutive address possible? while core not latch in
-    `SIGNAL2OUT(address_int, cache_read_req_en ? address_cache : FL_ADDRESS)
+    `SIGNAL2OUT(address_int, cache_read_req_en ? {{(32-FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS)
     `SIGNAL2OUT(ready_cache, readyflash_int)
     `SIGNAL2OUT(valid_int, cache_read_req_en ? valid_cache : FL_VALIDFLG)
 `else
