@@ -58,10 +58,10 @@
 
 
 
-`include "include/UserData.h"
+`include "UserData.h"
 
 module paramConfig();
-`include "include/DevParam.h"
+`include "DevParam.h"
 
 endmodule
 
@@ -86,7 +86,7 @@ endmodule
     `endif
 `endif
 
-`include "include/DevParam.h"
+`include "DevParam.h"
  parameter [1:0] rdeasystacken = 0;
  parameter [1:0] rdeasystacken2 = 0;
  parameter [15:0] NVConfigReg_default = `NVCR_DEFAULT_VALUE;
@@ -166,6 +166,7 @@ reg die_active = 'h1;  // Indicates that this die is active
                        // Used for stacked die
 
 
+wire C;
 buf (strong1, strong0) b0(C, C_);
 
 //----------------------
@@ -209,6 +210,7 @@ reg NVCR_HoldResetEnable;
 
 //aggiunta verificare
    //latchingMode=="E"                                                                                                                                                                 
+    wire HOLD;
     assign HOLD = (read.enable_quad || 
                    quadMode == 1 || 
                    latchingMode=="Q"  || 
@@ -249,7 +251,7 @@ reg [2:0] ck_count = 0; //clock counter (modulo 8)
 
 reg reset_by_powerOn = 1; //reset_by_powerOn is updated in "Power Up & Voltage check" section
 
-
+wire int_reset;
 `ifdef Feature_8
         assign RESET = ((read.enable_quad || latchingMode=="Q" || quadMode == 1 ||
                         cmdRecName=="Quad Output Read" || cmdRecName=="Quad I/O Fast Read" ||
@@ -283,7 +285,8 @@ reg reset_by_powerOn = 1; //reset_by_powerOn is updated in "Power Up & Voltage c
     `else
         assign int_reset = reset_by_powerOn;
     `endif  
-
+     
+    wire logicOn;
     `ifdef HOLD_pin
         assign logicOn = !int_reset && !S && intHOLD; 
     `else
@@ -333,13 +336,14 @@ wire read_enable = read.enable ||
 //  Vpp_W signal : write protect feature
 //---------------------------------------
 
+wire W_int;
 assign W_int = Vpp_W_DQ2;
 
 //----------------------------
 // CUI decoders istantiation
 //----------------------------
 
-`include "include/Decoders.h"
+`include "Decoders.h"
 
 
 
@@ -484,7 +488,7 @@ ProtectionManagementRegister PMReg(); // instantiated the protection management 
 OTP_memory      OTP (); 
 
 
-`include "include/PLRSDetectors.h"
+`include "PLRSDetectors.h"
 
 DebugModule Debug ();
 
@@ -1243,6 +1247,7 @@ join
 
 
 //--- Reset internal logic (latching disabled when Vcc<Vcc_wi)
+wire Vcc_L1, Vcc_L2, Vcc_L3;
 
 assign Vcc_L1 = (Vcc>=Vcc_wi) ?  1 : 0 ;
 
@@ -1485,6 +1490,7 @@ end
 
 event voltageFault; //used in Program and erase dynamic check (see also "CP_voltageCheck" process)
 
+wire VccOk;
 assign VccOk = (Vcc>=Vcc_min && Vcc<=Vcc_max) ?  1 : 0 ;
 
 always @VccOk if (!VccOk) ->voltageFault; //check is active when device is not reset
@@ -2573,7 +2579,7 @@ endmodule //N25Qxxx
 module CUIdecoder (cmdAllowed);
 
 
-    `include "include/DevParam.h" 
+    `include "DevParam.h" 
 
     input cmdAllowed;
 
@@ -2697,7 +2703,7 @@ endmodule //CUIdecoder
 `ifdef MEDT_MSE
 //CUIdecoderEFI captures 
 module CUIdecoderEFI_MSE (cmdAllowed);
-    `include "include/DevParam.h" 
+    `include "DevParam.h" 
 
     input cmdAllowed;
 
@@ -3377,7 +3383,7 @@ endmodule //CUIdecoderEFI_MSE
 
 `ifdef MEDT_TDP
 module CUIdecoder_TDP (cmdAllowed);
-    `include "include/DevParam.h" 
+    `include "DevParam.h" 
 
     input cmdAllowed;
 
@@ -3775,7 +3781,7 @@ module Memory(mem_file);
 
     
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
 
     input [40*8:1] mem_file;
@@ -4180,7 +4186,7 @@ endmodule
 
 module UtilFunctions;
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     integer i;
 
@@ -4463,7 +4469,7 @@ module Program;
 
     
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     
 
@@ -6153,7 +6159,7 @@ endmodule
 module StatusRegister;
 
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
 
 
@@ -6332,7 +6338,7 @@ endmodule
 module FlagStatusRegister;
 
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
 
 
@@ -6516,7 +6522,7 @@ endmodule
 
 module ProtectionManagementRegister;
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     parameter [7:0] ProcManReg_default = 'b11111111;
    
@@ -6588,7 +6594,7 @@ module ProtectionManagementRegister;
 
 module NonVolatileConfigurationRegister(NVConfigReg);
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     // parameter [15:0] NVConfigReg_default = 'b1111111111111110;
     // parameter [15:0] NVConfigReg_default = 'b1111111111111111;
@@ -6694,7 +6700,7 @@ endmodule
 
 module VolatileConfigurationRegister;
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     parameter [7:0] VConfigReg_default = 'b11111011;
    
@@ -6787,7 +6793,7 @@ endmodule
 
 module VolatileEnhancedConfigurationRegister;
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     `ifdef MEDITERANEO
     parameter [7:0] VEConfigReg_default = 'b11111111;
@@ -6933,7 +6939,7 @@ endmodule
 
 module PasswordRegister();
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     reg [(8*8)-1:0] PSWORD = 64'hFFFF_FFFF_FFFF_FFFF;
     //reg [(8*8)-1:0] PSWORD = 'h0011_2233_44cc_ddee;
@@ -7034,7 +7040,7 @@ endmodule
 module Read;
 
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
     
    
    
@@ -7543,7 +7549,7 @@ endmodule
 
 module FlashDiscoveryParameter(sfdp_file);
 
-`include "include/DevParam.h"
+`include "DevParam.h"
 
 
   //input [2048*8:1] sfdp_file ;
@@ -7635,7 +7641,7 @@ endmodule
 module LockManager;
 
 
-`include "include/DevParam.h"
+`include "DevParam.h"
 
 
 
@@ -7934,7 +7940,7 @@ endmodule
 module LockManager4KB;
 
 
-`include "include/DevParam.h"
+`include "DevParam.h"
 
 //---------------------------------------------------
 // Data structures for protection status modelling
@@ -8225,7 +8231,7 @@ endmodule // LockManager4KB
 `else
   module DualQuadOps (S, C, ck_count, DoubleTransferRate, DQ0, DQ1, Vpp_W_DQ2, RESET_DQ3);
 `endif
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     input S;
     input C;
@@ -9209,7 +9215,7 @@ endmodule
 module OTP_memory;
 
     
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
 
     reg [dataDim-1:0] mem [0:OTP_dim-1];
@@ -9367,7 +9373,7 @@ endmodule
   module TimingCheck (S, C, D, Q, W, R);
 `endif
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     input S, C, D, Q;
     `ifdef HOLD_pin
@@ -9759,7 +9765,7 @@ endmodule
 module ExtendedAddressRegister;
 
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     parameter [7:0] ExtendAddrReg_default = 'b00000000;
 
@@ -9879,7 +9885,7 @@ endmodule  // ExtendedAddressRegister
     module N25QxxxTop (S, C, RESET_DQ3, DQ0, DQ1, Vcc, Vpp_W_DQ2);
   `endif
 
-  `include "include/DevParam.h"
+  `include "DevParam.h"
   
   // parameter [15:0] NVConfigReg_default = 'b1111111111111110;
 
@@ -10157,7 +10163,7 @@ endmodule  // ExtendedAddressRegister
         `endif
     `endif // Feature_8
 
-`include "include/DevParam.h"
+`include "DevParam.h"
 
   input S;
   input C;
@@ -10426,7 +10432,7 @@ endmodule // MT25QxxxTop
         `endif
     `endif // Feature_8
 
-`include "include/DevParam.h"
+`include "DevParam.h"
 
   input S;
   input C;
@@ -10938,7 +10944,7 @@ endmodule // PLRSpart2Detect module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 module GeneralPurposeRegister;
 
-//    `include "include/DevParam.h"
+//    `include "DevParam.h"
 
     parameter [(64*8)-1:0] GPRR_default = 512'b0;
    
@@ -10994,7 +11000,7 @@ endmodule
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 `ifdef MEDT_PPB //Non-volatile block lock
 module PPBManager();
-    `include "include/DevParam.h"
+    `include "DevParam.h"
     reg [nSector-1:0] PPBReg;
     reg enable_PPBReg_read;
     integer i;
@@ -11216,7 +11222,7 @@ endmodule
 
 module PPBLockBitRegister;
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     parameter [7:0] PLBReg_default = 'b00000001;
    
@@ -11286,7 +11292,7 @@ end
 
 module ASPRegister();
 
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
     reg [15:0] ASP = 'hFFFF;
 
@@ -11338,7 +11344,7 @@ endmodule // MEDT_ADVANCED_SECTOR
 
 
 module DebugModule ();
-    `include "include/DevParam.h"
+    `include "DevParam.h"
 
 event x0;
 event x1;

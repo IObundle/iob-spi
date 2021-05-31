@@ -13,6 +13,10 @@ VHDR+=$(wildcard $(LIB_DIR)/hardware/include/*.vh)
 VHDR+=$(wildcard $(INTERCON_DIR)/hardware/include/*.vh $(INTERCON_DIR)/hardware/include/*.v)
 VHDR+=$(SPI_HW_INC_DIR)/SPIsw_reg_gen.v
 
+#flash mem
+#VSRC+=$(wildcard $(SPI_HW_INC_DIR)/*.hex)
+#VSRC+=$(wildcard $(SPI_HW_INC_DIR)/*.vmf)
+
 #sources
 ifeq ($(FPGA_FAMILY),CYCLONEV_GT)
 	NETLSRC+=$(SPI_HW_DIR)/fpga/$(FPGA_COMP)/$(FPGA_FAMILY)/iob_spi_master_fl_0.qxp

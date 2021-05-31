@@ -3,7 +3,7 @@
 #include "iob_spiplatform.h"
 #include "iob_spidefs.h"
 #include "stdint.h"
-//#include "printf.h"
+#include "printf.h"
 
 static unsigned int base;
 //create another static variable for upper addresses

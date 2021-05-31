@@ -92,7 +92,7 @@ int main()
 	//Read from flash memory
 	printf("\nReading from flash (address: (%x))\n", address);
 	read_mem = spifl_readmem(address);
-	uart_txwait();
+	//uart_txwait();
 
 	if(word == read_mem){
 		printf("\nMemory Read (%x) got same word as Programmed(%x)\nSuccess\n", read_mem, word);
@@ -128,7 +128,7 @@ int main()
     unsigned command_aux = 0xb5;
 	spifl_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &nonVolatileReg);
 	printf("\nNon volatile Register (16 bits):(%x)\n", nonVolatileReg);	
-    uart_txwait();
+    //uart_txwait();
     
     printf("\nRead enhanced volatile Register\n");
     unsigned enhancedReg = 0;
@@ -192,7 +192,7 @@ int main()
     volconfigReg = 0;
     spifl_readVolConfigReg(&volconfigReg);
 	printf("\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
-    uart_txwait();
+    //uart_txwait();
     
     //Confirmation bit 0
     read_mem = 1;
@@ -269,5 +269,7 @@ int main()
     read_mem = spifl_readfastQuadInOutput(address, 0);
     printf("\nRead after program from memory address (%x) the word: (%x)\n", address, read_mem);
     uart_txwait();*/
-    return 0;
+    //return 0;
+    uart_finish();
+    //exit(0);
 }

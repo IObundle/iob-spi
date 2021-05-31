@@ -22,6 +22,7 @@ iob_spi_master_fl spifl
      .wdata_cache(mem_wdata_flash),
      .wstrb_cache(mem_wstrb_flash),
      .rdata_cache(mem_rdata_flash),
+     .ready_cache(mem_ready_flash),
 `endif
 	 
 	 //cpu interface
