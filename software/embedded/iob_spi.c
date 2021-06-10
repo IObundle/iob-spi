@@ -35,7 +35,7 @@ int spifl_XipEnable()
 {
     //write to bit 3 of volatile configuration
     //register to enable xip
-    unsigned int writebyte = 0xf3000000;
+    unsigned int writebyte = 0x000000f3;
     unsigned int bits = 8;
     
     //execute WRITE ENABLE
@@ -105,7 +105,8 @@ int spifl_memProgram(char* mem, int memsize, unsigned int address)
     int l=0;
     int numbytes_aux = numbytes;
     //printf("after static allocations\n");
-    for(i=0; i <= memblocks; i=i+numbytes_aux){
+    //for(i=0; i <= memblocks; i=i+numbytes_aux){
+    for(i=0; i < memsize; i=i+numbytes_aux){
         //printf("in for\n"); 
         if (i==memblocks){
             if (remainder_memblocks == 0) break;
@@ -152,8 +153,9 @@ int spifl_memProgram(char* mem, int memsize, unsigned int address)
         address_aux += numbytes_aux;
 
     }
-    pages_programmed = ((address_aux-numbytes) - address) / page_size;
-    return pages_programmed;
+    //pages_programmed = ((address_aux-numbytes) - address) / page_size;
+    //return pages_programmed;
+    return address_aux; 
 
 }
 
@@ -239,7 +241,7 @@ unsigned int spifl_readMemXip(unsigned address, unsigned activateXip)
     else
         xipbit = 0;
     
-    command = (xipbit << 30)|(frame_struct << 20)|(dummy_cycles<<16)|((misobytes*8)<<8)|0x00;
+    command = (xipbit << 30)|(frame_struct << 20)|(dummy_cycles<<16)|((misobytes*8)<<8)|0x00;//check
 	
     spifl_executecommand(XIP_ADDRANS, 0, address, command, &data);
 	return data;
@@ -349,8 +351,18 @@ unsigned int spifl_readFlashParam(unsigned address)
 }
 
 //Erase Memory commands
-void spifl_erasemem(unsigned int subsector_address)
+void spifl_erase_subsector(unsigned int subsector_address)
 {
+    //write enable
+    spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
 	//execute ERASE
 	spifl_executecommand(COMMADDR, 0, subsector_address,SUB_ERASE, NULL);
+}
+
+void spifl_erase_sector(unsigned int sector_address)
+{
+    //Write Enable	
+    spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+	//execute ERASE
+	spifl_executecommand(COMMADDR, 0, sector_address,SEC_ERASE, NULL);
 }
