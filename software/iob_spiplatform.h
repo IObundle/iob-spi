@@ -13,6 +13,7 @@ void spifl_setVALIDIN(unsigned int validin);
 
 unsigned int spifl_getDATAOUT();
 unsigned int spifl_getVALIDOUT();
+unsigned int spifl_getREADY();
 
 void spifl_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout);
 void spifl_waitvalidout();

@@ -3,6 +3,7 @@
 #include "iob_spiplatform.h"
 #include "iob_spidefs.h"
 #include "stdint.h"
+#include "printf.h"
 
 static unsigned int base;
 //create another static variable for upper addresses
@@ -34,7 +35,7 @@ int spifl_XipEnable()
 {
     //write to bit 3 of volatile configuration
     //register to enable xip
-    unsigned int writebyte = 0xf3000000;
+    unsigned int writebyte = 0x000000f3;
     unsigned int bits = 8;
     
     //execute WRITE ENABLE
@@ -81,6 +82,83 @@ void spifl_resetmem()
 }
 
 //Program/Write Memory commands
+int spifl_memProgram(char* mem, int memsize, unsigned int address)
+{
+    //Check if erase needed
+    //address should start at beginning of mem page
+    //do while
+    int pages_programmed = 0;
+    unsigned read_word= 0;
+    //Command Config
+    unsigned frame_struct = 0x000000a0;
+    unsigned numbytes = 4;//max 4
+    unsigned command = (frame_struct << 20) | (numbytes*8 << 8) | PROGRAMFAST_QUADINEXT;
+
+    unsigned int strtoProgram = 0;//must be at least 32 bits
+    
+    int memblocks = memsize / numbytes;
+    int remainder_memblocks = memsize % numbytes;
+    printf("Entering programming cycle %d\n", memblocks);
+    //Main programming cycle
+    int i=0, j=0, k=0;
+    unsigned int address_aux = address, statusReg=0;
+    int l=0;
+    int numbytes_aux = numbytes;
+    //printf("after static allocations\n");
+    //for(i=0; i <= memblocks; i=i+numbytes_aux){
+    for(i=0; i < memsize; i=i+numbytes_aux){
+        //printf("in for\n"); 
+        if (i==memblocks){
+            if (remainder_memblocks == 0) break;
+            else{ 
+                numbytes_aux = remainder_memblocks; 
+                command = 0;
+                command = (frame_struct << 20) | (numbytes_aux*8 << 8) | PROGRAMFAST_QUADINEXT;
+            }
+        }
+        else numbytes_aux = numbytes;
+        
+        //printf("after numbytes\n");
+        //printf("%c\n", mem[i]);
+        //concat bytes into strtoProgram
+        for(j=0, strtoProgram=0; j < numbytes_aux; j++){
+            //printf("%c ,  %x\n", mem[i+j], (unsigned int)mem[i+j]);
+            strtoProgram |= ((unsigned int)mem[i+j] & 0x0ff) << (j*8); 
+        }
+        //printf("numbytes %d\n", numbytes_aux);
+        //printf("str: %x\n", strtoProgram);
+        //printf("after concat\n");
+	    
+        statusReg = 0;
+        //execute WRITE ENABLE
+	    spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+        //printf("after write enable\n");
+        //check if successfull? 
+	    spifl_executecommand(COMMADDR_DTIN, strtoProgram, address_aux, command, NULL);
+        //printf("after command sent\n");
+        //check if str programming completed
+        
+        spifl_readStatusReg(&statusReg);
+        //printf("\tstatus:%x\n", statusReg);
+        if(statusReg != 0){
+            do{
+                spifl_readStatusReg(&statusReg);
+                l++;
+            }while(statusReg != 0 && l<2);
+        }
+        l=0;
+
+        //read_word = spifl_readfastQuadOutput(address_aux, 0);
+       //printf("Programmed: %x, read: %x\n", strtoProgram, read_word); 
+        address_aux += numbytes_aux;
+
+    }
+    //pages_programmed = ((address_aux-numbytes) - address) / page_size;
+    //return pages_programmed;
+    return address_aux; 
+
+}
+
 void spifl_writemem(unsigned int word, unsigned int address)
 {
 	//execute WRITE ENABLE
@@ -122,7 +200,7 @@ void spifl_programfastQuadInput(unsigned int word, unsigned address)
 	spifl_executecommand(COMMADDR_DTIN, word, address, command, NULL);
 }
 
-void spifl_programfastQualInputExt(unsigned int word, unsigned address)
+void spifl_programfastQuadInputExt(unsigned int word, unsigned address)
 {
 	//execute WRITE ENABLE
 	spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
@@ -163,7 +241,7 @@ unsigned int spifl_readMemXip(unsigned address, unsigned activateXip)
     else
         xipbit = 0;
     
-    command = (xipbit << 30)|(frame_struct << 20)|(dummy_cycles<<16)|((misobytes*8)<<8)|0x00;
+    command = (xipbit << 30)|(frame_struct << 20)|(dummy_cycles<<16)|((misobytes*8)<<8)|0x00;//check
 	
     spifl_executecommand(XIP_ADDRANS, 0, address, command, &data);
 	return data;
@@ -273,8 +351,18 @@ unsigned int spifl_readFlashParam(unsigned address)
 }
 
 //Erase Memory commands
-void spifl_erasemem(unsigned int subsector_address)
+void spifl_erase_subsector(unsigned int subsector_address)
 {
+    //write enable
+    spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
 	//execute ERASE
 	spifl_executecommand(COMMADDR, 0, subsector_address,SUB_ERASE, NULL);
+}
+
+void spifl_erase_sector(unsigned int sector_address)
+{
+    //Write Enable	
+    spifl_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+	//execute ERASE
+	spifl_executecommand(COMMADDR, 0, sector_address,SEC_ERASE, NULL);
 }

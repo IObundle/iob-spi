@@ -232,7 +232,9 @@ module spi_master_fl
             r_spimode <= 2'b00;
             r_4byteaddr_on <= 1'b0;
 		end else begin
-			if (r_validedge) begin
+            //r_inputread <= 1'b0;
+			//if (r_validedge) begin
+            if (validflag && tready) begin
 				r_datain <= data_in;
 				r_address <= address;
 				r_command <= command;
@@ -245,11 +247,11 @@ module spi_master_fl
                 r_manualframe_en <= manualframe_en;
                 r_spimode <= spimode;
                 r_4byteaddr_on <= fourbyteaddr_on;
-				r_inputread <= 1'b1;
+				//r_inputread <= 1'b1;
 			end
-			else if (~validflag) begin
-				r_inputread <= 1'b0;
-			end//TODO reset r_nmisobits for idle states (default)
+			//else if (~validflag) begin
+			//	r_inputread <= 1'b0;
+			//end//TODO reset r_nmisobits for idle states (default)
 			else if (r_transfer_start) begin
 				r_nmisobits <= 0;
 				//r_dummy_cycles <= 0;
@@ -258,12 +260,16 @@ module spi_master_fl
 	end
 
 	// Register inputs
+    wire w_validedge; 
+    //assign w_validedge = validflag && (~r_inputread) && (~r_validedge);
+    assign w_validedge = validflag && tready; 
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_validedge <= 1'b0;
 		end
 		else begin
-			if (validflag && (~r_inputread) && (~r_validedge)) begin
+			//if (validflag && (~r_inputread) && (~r_validedge)) begin
+			if (validflag && tready) begin
 				r_validedge <= 1'b1;
 			end else begin
 				r_validedge <= 1'b0;
@@ -537,6 +543,7 @@ module spi_master_fl
 					r_sclk_out_en <= 1'b0;
 					r_ss_n <= 1'b1;
 					r_transfer_start <= 1'b0;
+					if(w_validedge) tready <= 1'b0;
 					if(r_validedge) begin
 						r_setup_rst <= 1'b1;
 						r_setup_start <= 1'b1;
@@ -569,6 +576,7 @@ module spi_master_fl
 						r_ss_n <= 1'b1;
 						r_sclk_out_en <= 1'b0;
 						data_out <= (r_endianness) ? w_misodata : w_misodatarev;
+                        tready <= 1'b1;
 						r_currstate <= IDLE;
 					end
 				end

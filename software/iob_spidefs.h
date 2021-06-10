@@ -22,6 +22,7 @@
 #define WRITE_VOLCFGREG     0x81
 #define PAGE_PROGRAM		0x02
 #define SUB_ERASE			0x20
+#define SEC_ERASE			0xD8
 #define READ_STATUSREG      0x05
 #define READ_VOLCFGREG      0x85
 #define READ_ID				0x9f
