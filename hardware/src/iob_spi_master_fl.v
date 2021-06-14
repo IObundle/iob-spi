@@ -48,8 +48,26 @@ module iob_spi_master_fl
     //2 consecutive address possible? while core not latch in
     //`SIGNAL2OUT(address_int, cache_read_req_en ? {{(32-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS)
     assign address_int = cache_read_req_en ? {{(32-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS;
-    `SIGNAL2OUT(ready_cache, readyflash_int)
+    //`SIGNAL2OUT(ready_cache, readyflash_int)
     `SIGNAL2OUT(valid_int, cache_read_req_en ? valid_cache : FL_VALIDFLG)
+    
+    //Cache Ready Output
+    `SIGNAL(cache_ready_en, 1)
+    `SIGNAL2OUT(ready_cache, cache_ready_en ? readyflash_int : 1'b0)
+    always @(posedge clk, posedge rst) begin
+       if (rst) cache_ready_en <= 1'b0; 
+       else begin
+           case (cache_ready_en)
+               1'b0: begin
+                    if (valid_cache) cache_ready_en <= 1'b1;
+               end
+               1'b1: begin
+                    if (readyflash_int) cache_ready_en <= 1'b0;
+               end
+               default: cache_ready_en <= 1'b0;
+           endcase
+       end
+    end
 `else
     `SIGNAL2OUT(address_int, FL_ADDRESS)
     `SIGNAL2OUT(valid_int, FL_VALIDFLG)
