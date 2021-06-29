@@ -8,6 +8,7 @@
 
 `define LATCHIN_EDGE (sclk_leade & ~w_CPHA | sclk_traile & w_CPHA)
 `define LATCHOUT_EDGE (sclk_leade & w_CPHA | sclk_traile & ~w_CPHA)
+`define LATCHOUT_EDGE_DTR (dtr_edge0 | dtr_edge1)
 `define IDLE_PHASE 3'b000
 `define COMM_PHASE 3'b001
 `define ADDR_PHASE 3'b010
@@ -34,6 +35,7 @@ module spi_master_fl
 	input [`SPI_COM_W-1:0]			command,
 	input 					validflag,
 	input [`SPI_CTYP_W-1:0]		        commtype,
+    input                   dtr_en,
 	input [6:0]				ndata_bits,	
 	input [3:0]				dummy_cycles,
     input [9:0]             frame_struct,
@@ -76,7 +78,6 @@ module spi_master_fl
 	reg     r_inputread = 1'b0;
 
 	reg         r_validedge = 1'b0;
-	reg [1:0]   r_validoutHold = 2'b10;
 
     //Frame structure
     reg [9:0]   r_frame_struct = 0;
@@ -107,6 +108,10 @@ module spi_master_fl
 	reg     r_sclk_out_en;
 	wire	sclk_int;
 
+    wire     dtr_edge0;
+    wire     dtr_edge1;
+    reg     r_dtr_en;
+
 	reg [8:0]	r_sclk_edges;
 	reg		r_transfer_start;
     
@@ -135,6 +140,8 @@ module spi_master_fl
         .sclk_en(r_sclk_out_en),
         .op_start(r_transfer_start),
         .op_done(tranfers_done),
+        .dtr_edge0(dtr_edge0),
+        .dtr_edge1(dtr_edge1),
         .sclk_leadedge(sclk_leade),
         .sclk_trailedge(sclk_traile),
         .sclk_int(sclk_int)
@@ -202,6 +209,8 @@ module spi_master_fl
     assign data_rx = {hold_n_dq3, wp_n_dq2, miso_dq1, mosi_dq0};
 
     //Drive oe
+    wire oe_latchout;
+    assign oe_latchout = r_dtr_en ? `LATCHOUT_EDGE_DTR : `LATCHOUT_EDGE;
     always @(posedge clk, posedge rst) begin
         if (rst) oe <= 4'b1111;
         else begin
@@ -209,7 +218,7 @@ module spi_master_fl
             //if (w_mosifinish) oe <= 1'b0;
             if (w_mosifinish) begin
                 if (r_xipbit_en[1] && xipbit_phase) oe <= 4'b0001; 
-                else if (`LATCHOUT_EDGE) oe <= 4'b0000;
+                else if (oe_latchout) oe <= 4'b0000;
                 else oe <= oe;
             end
         end
@@ -231,6 +240,7 @@ module spi_master_fl
             r_manualframe_en <= 1'b0;
             r_spimode <= 2'b00;
             r_4byteaddr_on <= 1'b0;
+            r_dtr_en <= 1'b0;
 		end else begin
             //r_inputread <= 1'b0;
 			//if (r_validedge) begin
@@ -247,15 +257,16 @@ module spi_master_fl
                 r_manualframe_en <= manualframe_en;
                 r_spimode <= spimode;
                 r_4byteaddr_on <= fourbyteaddr_on;
+                r_dtr_en <= dtr_en;
 				//r_inputread <= 1'b1;
 			end
 			//else if (~validflag) begin
 			//	r_inputread <= 1'b0;
 			//end//TODO reset r_nmisobits for idle states (default)
-			else if (r_transfer_start) begin
-				r_nmisobits <= 0;
-				//r_dummy_cycles <= 0;
-			end
+			//else if (r_transfer_start) begin
+			//	r_nmisobits <= 0;
+			//	//r_dummy_cycles <= 0;
+			//end
 		end
 	end
 
@@ -369,6 +380,8 @@ module spi_master_fl
         .sclk_en(r_sclk_out_en),
         .latchin_en(`LATCHIN_EDGE),
         .latchout_en(`LATCHOUT_EDGE),
+        .latchout_dtr_en(`LATCHOUT_EDGE_DTR),
+        .dtr_en(r_dtr_en),
         .setup_rst(r_setup_rst),
         .loadtxdata_en(r_counters_done && r_build_done),
         .mosistop_cnt(r_counterstop),
@@ -459,9 +472,9 @@ module spi_master_fl
 						3'b010: begin//command + address + (+ dummy cycles +) + answer 
 								r_counterstop <= 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24);
 								r_misoctrstop <= r_nmisobits;
-								r_sclk_edges <= {w_commdcycles + w_addrcycles + r_dummy_cycles + w_misocycles, 1'b0};
+								r_sclk_edges <= {w_commdcycles + (r_dtr_en ?  {1'b0,w_addrcycles[6:1]} : w_addrcycles) + r_dummy_cycles + (r_dtr_en ?  {1'b0,w_misocycles[6:1]} : w_misocycles), 1'b0} + (r_dtr_en ? 1'b1 : 0);
                                 txcntmarks[0] <= {r_frame_struct[9:8], 8'd8}; //command_size
-                                txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on ? 8'd32:8'd24)}; //command_size + address_size
+                                txcntmarks[1] <= {r_frame_struct[7:6], 8'd8 + (r_4byteaddr_on ? (r_dtr_en ? 8'd16 : 8'd32):(r_dtr_en ? 8'd12 : 8'd24))}; //command_size + address_size
                                 txcntmarks[2] <= 0; 
 							end
 						3'b011:	begin//command + data_in

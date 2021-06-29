@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
-[*] Fri Apr 30 02:53:10 2021
+[*] Tue Jun 29 06:47:43 2021
 [*]
 [dumpfile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/spi_fl_tb.vcd"
-[dumpfile_mtime] "Fri Apr 30 02:44:22 2021"
-[dumpfile_size] 41442
+[dumpfile_mtime] "Tue Jun 29 06:44:41 2021"
+[dumpfile_size] 110000
 [savefile] "/home/jowf/forks/iob-spi/hardware/simulation/icarus/waves.gtkw"
-[timestart] 6296900
+[timestart] 8768000
 [size] 1361 599
 [pos] -1 -1
-*-16.564953 6520000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-16.564953 9000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] spi_tb.
 [treeopen] spi_tb.spi_m.
 [sst_width] 214
@@ -40,28 +40,37 @@ spi_tb.spi_m.r_str2sendbuild[71:0]
 spi_tb.spi_m.r_address[31:0]
 spi_tb.spi_m.w_misocycles[6:0]
 spi_tb.spi_m.latchspi0.misostop_cnt[6:0]
-@28
-spi_tb.spi_m.latchspi0.bytesort_en
-spi_tb.spi_m.latchspi0.rxsort_en
-@22
-spi_tb.spi_m.latchspi0.r_misobyte[7:0]
-@28
-spi_tb.spi_m.latchspi0.r_bytecounter[2:0]
-@22
-spi_tb.spi_m.latchspi0.r_misodatasorted[31:0]
 spi_tb.spi_m.latchspi0.r_misodata[31:0]
 spi_tb.spi_m.latchspi0.w_misodatarev[31:0]
-@23
-spi_tb.spi_m.latchspi0.r_misocounter[6:0]
 @28
-spi_tb.spi_m.latchspi0.numrxbytes[2:0]
+spi_tb.spi_m.latchspi0.dummy_count_en
+@29
+spi_tb.spi_m.latchspi0.opaque_cycle
+@28
+spi_tb.spi_m.ss
+@22
+spi_tb.spi_m.latchspi0.r_dummy_counter[3:0]
+spi_tb.spi_m.r_sclk_edges[8:0]
+spi_tb.spi_m.sclk_gen0.sclk_edges_counter[8:0]
+@28
+spi_tb.spi_m.ss
+spi_tb.spi_m.latchspi0.r_dummy_done
+spi_tb.spi_m.latchspi0.r_extradummy
+spi_tb.spi_m.latchspi0.latchin_rx_en
+spi_tb.spi_m.latchspi0.latchin_en
+spi_tb.spi_m.latchspi0.latchout_en
+spi_tb.spi_m.latchspi0.latchout_tx_en
+spi_tb.spi_m.latchspi0.dtr_en
+spi_tb.spi_m.latchspi0.latchout_dtr_en
+spi_tb.spi_m.latchspi0.r_dtr_on
+spi_tb.spi_m.latchspi0.r_mosifinish
+spi_tb.spi_m.latchspi0.r_sending_done
 @22
 spi_tb.spi_m.latchspi0.mosicounter[7:0]
 @28
 spi_tb.spi_m.r_spimode[1:0]
 spi_tb.spi_m.dualtx_state
 spi_tb.spi_m.quadtx_state
-spi_tb.spi_m.ss
 spi_tb.spi_m.latchspi0.nextcnt[1:0]
 spi_tb.spi_m.latchspi0.mode[1:0]
 @22
@@ -102,6 +111,8 @@ spi_tb.spi_m.r_nmisobits[6:0]
 spi_tb.spi_m.r_command[7:0]
 @28
 spi_tb.spi_m.sclk_int
+spi_tb.spi_m.sclk_gen0.dtr_edge0
+spi_tb.spi_m.sclk_gen0.dtr_edge1
 spi_tb.spi_m.r_validedge
 spi_tb.spi_m.r_transfer_start
 spi_tb.spi_m.r_setup_start
@@ -119,7 +130,6 @@ spi_tb.spi_m.r_inputread
 @22
 spi_tb.spi_m.r_nmisobits[6:0]
 @28
-spi_tb.spi_m.r_validoutHold[1:0]
 spi_tb.spi_m.rst
 spi_tb.spi_m.tready
 spi_tb.spi_m.validflag

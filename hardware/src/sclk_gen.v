@@ -13,6 +13,8 @@ module sclk_gen
     input [8:0] sclk_edges,
     input sclk_en,
     input op_start,
+    output reg dtr_edge0,
+    output reg dtr_edge1,
     output reg op_done,
     output reg sclk_leadedge,
     output reg sclk_trailedge,
@@ -72,6 +74,26 @@ module sclk_gen
 			end
 		end
 	end
+    
+    // Generate clk edge for DTR mode
+    always @(posedge clk, posedge rst) begin
+        if (rst) begin
+            dtr_edge0 <= 0;
+            dtr_edge1 <= 0;
+        end else begin
+            dtr_edge0 <= 0;
+            dtr_edge1 <= 0;
+            if (op_start && sclk_edges_counter > 0) begin
+                if (clk_counter == 0) begin
+                    dtr_edge0 <= 1'b1;
+                    dtr_edge1 <= 1'b0;
+                end else if (clk_counter == CLKS_PER_HALF_SCLK) begin
+                    dtr_edge0 <= 1'b0;
+                    dtr_edge1 <= 1'b1;
+                end
+            end
+        end
+    end
 
 
 endmodule
