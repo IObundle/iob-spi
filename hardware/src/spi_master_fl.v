@@ -55,69 +55,54 @@ module spi_master_fl
 	inout		hold_n_dq3
 );
 
-	//Register TX data, address, command
-	reg [`SPI_DATA_W-1:0]	r_datain;
-	reg [`SPI_ADDR_W-1:0]	r_address;
-	reg [`SPI_COM_W-1:0]	r_command;
+    //
+    // INPUT LATCH REGS
+    //
 
-	//Extra reg for mode controlling
-	reg [2:0]	r_commandtype;
-	reg		    r_4byteaddr_on = 1'b0;
-	reg [7:0]	r_counterstop;
-	reg [6:0]	r_misoctrstop;
+	//Register TX data, address, command
+    reg [`SPI_DATA_W-1:0]	r_datain;
+    reg [`SPI_ADDR_W-1:0]	r_address;
+    reg [`SPI_COM_W-1:0]	r_command;
+    reg [2:0]	r_commandtype;
+    reg		    r_4byteaddr_on = 1'b0;
+    reg [6:0]   r_ndatatxbits;
+    reg [9:0]   r_frame_struct = 0;
+    reg [6:0]		r_nmisobits;
+    reg [3:0]	r_dummy_cycles;
+    reg [1:0]   r_xipbit_en;    
+    reg         r_validedge = 1'b0;
+    reg [1:0]        r_spimode;
+    reg     r_dtr_en;
+    reg         r_manualframe_en; 
+
+
+    //
+    // BEHAVIOUR REGS
+    //
 
 	//MOSI controller signals
 	reg [71:0]	r_str2sendbuild;//Parameterize with max
-    reg [6:0]   r_ndatatxbits;
-
-	//MISO controller signals
-	reg [6:0]		r_misocounter;
-	reg [6:0]		r_nmisobits;
-	
-	//Synchronization signals
-	reg     r_inputread = 1'b0;
-
-	reg         r_validedge = 1'b0;
-
-    //Frame structure
-    reg [9:0]   r_frame_struct = 0;
-
-	//SCLK generation signals
+	reg [7:0]	r_counterstop;
+	reg [6:0]	r_misoctrstop;
+	reg		r_transfer_start;
 	reg		r_setup_start;
 	reg		r_counters_done;
 	reg		r_build_done;
-	reg		r_misofinish;
 	reg		r_setup_rst;
-	reg [3:0]	r_dummy_cycles;
-
+	reg     r_sclk_out_en;
+	reg [8:0]	r_sclk_edges;
 	reg		wp_n_int;
 	reg		hold_n_int;
-
-    reg [1:0]   r_xipbit_en;    
-    reg         r_manualframe_en; 
-    reg [1:0]        r_spimode;
     reg [9:0] txcntmarks [2:0];
+    reg r_endianness = 1'b0;// 0 for little-endian, on data read from flash
 
     wire    xipbit_phase;
-	
-	reg [8:0]	r_sclk_edges_counter;
-
 	wire	tranfers_done;
 	wire	sclk_leade;
 	wire	sclk_traile;
-	reg     r_sclk_out_en;
 	wire	sclk_int;
-
-    wire     dtr_edge0;
-    wire     dtr_edge1;
-    reg     r_dtr_en;
-
-	reg [8:0]	r_sclk_edges;
-	reg		r_transfer_start;
-    
-    reg r_endianness = 1'b0;// 0 for little-endian, on data read from flash
-	
-	//assign sclk_halfperiod = {1'b0, sclk_period[5:1]};
+    wire    dtr_edge0;
+    wire    dtr_edge1;
 	
 	wire w_CPOL;
 	wire w_CPHA;
@@ -231,7 +216,6 @@ module spi_master_fl
 			r_address <= `SPI_ADDR_W'b0;
 			r_command <= `SPI_COM_W'b0;
 			r_commandtype <= `SPI_CTYP_W'b111;
-			r_inputread <= 1'b0;
 			r_nmisobits <= 7'd32;
             r_ndatatxbits <= 7'd32;
 			r_dummy_cycles <= 4'd0;
@@ -242,8 +226,6 @@ module spi_master_fl
             r_4byteaddr_on <= 1'b0;
             r_dtr_en <= 1'b0;
 		end else begin
-            //r_inputread <= 1'b0;
-			//if (r_validedge) begin
             if (validflag && tready) begin
 				r_datain <= data_in;
 				r_address <= address;
@@ -258,28 +240,18 @@ module spi_master_fl
                 r_spimode <= spimode;
                 r_4byteaddr_on <= fourbyteaddr_on;
                 r_dtr_en <= dtr_en;
-				//r_inputread <= 1'b1;
 			end
-			//else if (~validflag) begin
-			//	r_inputread <= 1'b0;
-			//end//TODO reset r_nmisobits for idle states (default)
-			//else if (r_transfer_start) begin
-			//	r_nmisobits <= 0;
-			//	//r_dummy_cycles <= 0;
-			//end
 		end
 	end
 
 	// Register inputs
     wire w_validedge; 
-    //assign w_validedge = validflag && (~r_inputread) && (~r_validedge);
     assign w_validedge = validflag && tready; 
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_validedge <= 1'b0;
 		end
 		else begin
-			//if (validflag && (~r_inputread) && (~r_validedge)) begin
 			if (validflag && tready) begin
 				r_validedge <= 1'b1;
 			end else begin
@@ -287,6 +259,40 @@ module spi_master_fl
 			end
 		end
 	end
+
+    configdecoder configdecoder0
+    (
+        .clk(clk),
+        .rst(rst),
+
+        .r_command(r_command),
+        .r_address(r_address),
+        .r_datain(r_datain),
+        .r_spimode(r_spimode),
+        .r_nmisobits(r_nmisobits),
+        .r_frame_struct(r_frame_struct),
+        .r_dtr_en(r_dtr_en),
+        .r_4byteaddr_on(r_4byteaddr_on),
+
+        .dualcommd(dualcommd),
+        .quadcommd(quadcommd),
+        .dualaddr(dualaddr),
+        .quadaddr(quadaddr),
+        .dualdatatx(dualdatatx),
+        .quaddatatx(quaddatatx),
+        .dualrx(dualrx),
+        .quadrx(quadrx),
+        .dualalt(dualalt),
+        .quadalt(quadalt),
+        
+		.r_str2sendbuild(str2sendbuild),
+        .txcntmarks(txcntmarks),
+	    .r_build_done(build_done),
+	    .r_counters_done(counters_done),
+		.r_sclk_edges(sclk_edges),
+		.r_counterstop(counterstop),
+		.r_misoctrstop(misoctrstop)
+    );
 
     //Frame structure decoding TODO
     wire dualcommd, quadcommd;
