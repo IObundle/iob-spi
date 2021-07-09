@@ -8,4 +8,3 @@
 `SWREG_W(FL_VALIDFLG,		1,	0)//FL valigflag
 `SWREG_R(FL_READY,           1,  0)//FL ready flag
 `SWREG_R(FL_DATAOUT,		32,	0)//FL data_out
-`SWREG_R(FL_VALIDFLGOUT,	1,	0)//FL valigflag_out

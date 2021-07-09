@@ -88,8 +88,8 @@ module iob_spi_master_fl
 		.commtype(FL_COMMANDTP[2:0]),
         .spimode(FL_COMMANDTP[31:30]),
         .manualframe_en(FL_COMMANDTP[29]),
+        .dtr_en(FL_COMMANDTP[20]),
         .fourbyteaddr_on(FL_COMMAND[15]),
-		.validflag_out(FL_VALIDFLGOUT),
 		.tready(readyflash_int),
         
 		.clk(clk),

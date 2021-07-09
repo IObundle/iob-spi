@@ -30,21 +30,20 @@ module spi_master_fl
 
 	//CONTROLLER FROM CPU
 	input [`SPI_DATA_W-1:0]			data_in,
-	output reg [`SPI_DATA_W-1:0]		data_out,
+	output reg [`SPI_DATA_W-1:0]    data_out,
 	input [`SPI_ADDR_W-1:0]			address,
 	input [`SPI_COM_W-1:0]			command,
-	input 					validflag,
-	input [`SPI_CTYP_W-1:0]		        commtype,
-    input                   dtr_en,
-	input [6:0]				ndata_bits,	
-	input [3:0]				dummy_cycles,
-    input [9:0]             frame_struct,
-    input [1:0]             xipbit_en,
-    input                   manualframe_en,
-    input [1:0]             spimode,
-    input                   fourbyteaddr_on,
-	output reg				validflag_out,
-	output reg				tready,
+	input 					        validflag,
+	input [`SPI_CTYP_W-1:0]	        commtype,
+    input                           dtr_en,
+	input [6:0]                     ndata_bits,	
+	input [3:0]                     dummy_cycles,
+    input [9:0]                     frame_struct,
+    input [1:0]                     xipbit_en,
+    input                           manualframe_en,
+    input [1:0]                     spimode,
+    input                           fourbyteaddr_on,
+	output reg                      tready,
 
 	//SPI INTERFACE
 	output reg		sclk,
@@ -304,13 +303,6 @@ module spi_master_fl
     );
 
 
-    /**
-    *   Mosi Frame Driving control
-    *   From frame_struct
-    *   Data transmit control fsm
-        * **/
-    //manual_frame_en
-    //
     wire dualtx_en;
     wire quadtx_en;
 
@@ -390,10 +382,8 @@ module spi_master_fl
 			r_setup_start <= 1'b0;
 			r_setup_rst <= 1'b0;
 			tready <= 1'b1;
-            validflag_out <= 1'b1;
 			data_out <= 0;
 		end else begin
-			validflag_out <= 1'b1;//No use for now
 			case(r_currstate)
 				IDLE:
 				begin

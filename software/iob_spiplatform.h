@@ -2,18 +2,18 @@
 
 //Functions
 
-void spifl_reset();
-void spifl_init(int base_address);
+void spiflash_reset();
+void spiflash_init(int base_address);
 
-void spifl_setDATAIN(unsigned int datain);
-void spifl_setADDRESS(unsigned int address);
-void spifl_setCOMMAND(unsigned int command);
-void spifl_setCOMMTYPE(unsigned int commtype);
-void spifl_setVALIDIN(unsigned int validin);
+void spiflash_setDATAIN(unsigned int datain);
+void spiflash_setADDRESS(unsigned int address);
+void spiflash_setCOMMAND(unsigned int command);
+void spiflash_setCOMMTYPE(unsigned int commtype);
+void spiflash_setVALIDIN(unsigned int validin);
 
-unsigned int spifl_getDATAOUT();
-unsigned int spifl_getVALIDOUT();
-unsigned int spifl_getREADY();
+unsigned int spiflash_getDATAOUT();
+unsigned int spiflash_getVALIDOUT();
+unsigned int spiflash_getREADY();
 
-void spifl_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout);
-void spifl_waitvalidout();
+void spiflash_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout);
+void spiflash_waitvalidout();
