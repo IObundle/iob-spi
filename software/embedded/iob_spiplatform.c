@@ -67,10 +67,6 @@ void spiflash_init(int base_address)
 	spiflash_reset();
 	//spiflash_resetmem();
 }
-void spiflash_waitvalidout()
-{
-	while(!IO_GET(base, FL_VALIDFLGOUT));//not using wrapper getter
-}
 
 void spiflash_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout)
 {
@@ -82,14 +78,11 @@ void spiflash_executecommand(int typecode, unsigned int datain, unsigned int add
 	{
 		case COMM:
 				spiflash_setVALIDIN(1);
-				//spiflash_waitvalidout();
 				spiflash_setVALIDIN(0);
-				//deassert valid?
 				break;
 		case COMMANS:
 				spiflash_setVALIDIN(1);
 				spiflash_setVALIDIN(0);
-				//spiflash_waitvalidout();
                 while(!spiflash_getREADY());
 				*dataout = spiflash_getDATAOUT();
 				break;
@@ -98,26 +91,22 @@ void spiflash_executecommand(int typecode, unsigned int datain, unsigned int add
 				spiflash_setVALIDIN(1);
 				spiflash_setVALIDIN(0);
                 while(!spiflash_getREADY());
-				//spiflash_waitvalidout();
 				*dataout = spiflash_getDATAOUT();
 				break;
 		case COMM_DTIN:
 				spiflash_setDATAIN(datain);
 				spiflash_setVALIDIN(1);
-				//spiflash_waitvalidout();
 				spiflash_setVALIDIN(0);
 				break;
 		case COMMADDR_DTIN:
 				spiflash_setADDRESS(address);
 				spiflash_setDATAIN(datain);
 				spiflash_setVALIDIN(1);
-				//spiflash_waitvalidout();
 				spiflash_setVALIDIN(0);
 				break;
 		case COMMADDR:
 				spiflash_setADDRESS(address);
 				spiflash_setVALIDIN(1);
-				//spiflash_waitvalidout();
 				spiflash_setVALIDIN(0);
 				break;
         case XIP_ADDRANS:

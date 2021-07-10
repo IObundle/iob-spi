@@ -8,27 +8,7 @@
 static unsigned int base;
 //create another static variable for upper addresses
 
-typedef enum {SINGLE=0, DUAL, QUAD} spilaneMode;
-
-static spilaneMode spimode = SINGLE;                            
 static unsigned xipframestruct = 0;
-static int page_size=256;
-
-/*static struct flashConfig_ 
-{
-    spilaneMode spimode = SINGLE;                            
-} flashConfig;
-
-
-void spiflash_setMode(spilaneMode mode)
-{
-    flashConfig.spimode = mode;
-}
-
-spilaneMode spiflash_getMode()
-{
-    return flashConfig.spimode;
-}*/
 
 //Xip functions
 int spiflash_XipEnable()
@@ -53,13 +33,6 @@ int spiflash_terminateXipSequence()
     unsigned int numbits = 8;
     unsigned int bitmask = 0x08;
 
-    /*if (spimode == QUAD)
-        bits = 8;    
-    else if (spimode == DUAL)
-        bits = 13;
-    else
-        bits = 25;
-*/
     bits = 25;
 	spiflash_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
     //Read volatile register to check if xip succesfully terminated
@@ -153,8 +126,6 @@ int spiflash_memProgram(char* mem, int memsize, unsigned int address)
         address_aux += numbytes_aux;
 
     }
-    //pages_programmed = ((address_aux-numbytes) - address) / page_size;
-    //return pages_programmed;
     return address_aux; 
 
 }
