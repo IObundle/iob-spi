@@ -33,17 +33,22 @@ int spiflash_terminateXipSequence()
     unsigned int regvalue = 0;
     unsigned int numbits = 8;
     unsigned int bitmask = 0x08;
+    uint8_t currentmode = commtypeReg & (0x3<<30);
 
-    bits = 25;
+    if (currentmode == 0 || currentmode == QUADMODE) bits = 7;
+    else if (currentmode == DUALMODE) bits = 13;
+    else bits = 25;
+
 	spiflash_executecommand(commtypeReg|RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
     //Read volatile register to check if xip succesfully terminated
-    spiflash_readVolConfigReg(&regvalue);
+    //spiflash_readVolConfigReg(&regvalue);
 
     //Check for specific xip bit [3]
-    if(bitmask & regvalue)
-        return 1;
-    else
-        return 0;
+    //if(bitmask & regvalue)
+    //    return 1;
+    //else
+    //    return 0;
+    return 0;
 }
 
 //Enter 4 byte addr mode 
