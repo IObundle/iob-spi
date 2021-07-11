@@ -6,7 +6,7 @@ unsigned int spiflash_readVolConfigReg(unsigned *regvalue);
 void enter4byteAddrMode();
 void exit4byteAddrMode();
 
-void enterSPIMode(int);
+void enterSPImode(int);
 
 //xip functions
 int spiflash_XipEnable();

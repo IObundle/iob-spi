@@ -33,7 +33,7 @@
 #define READ_ID				0x9f
 #define READ_FLPARAMS       0x5A
 
-#define READENHACEDREG      0x65
+#define READENHANCEDREG      0x65
 #define WRITEENHANCEDREG    0x61
 
 //Fast Read Commands

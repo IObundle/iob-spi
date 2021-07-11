@@ -73,7 +73,7 @@ void exit4byteAddrMode()
 }
 
 
-void enterSPIMode(int spimode)
+void enterSPImode(int spimode)
 {
     //Read Enhanced Volatile Register state
     unsigned enhancedReg = 0;
@@ -389,7 +389,7 @@ unsigned int spiflash_readfastDualOutDTR(unsigned address)
     return data;
 }
 
-unsigned int spiflash_readfastDualIODTR(unsigned address);
+unsigned int spiflash_readfastDualIODTR(unsigned address)
 {
     unsigned int data;
     unsigned int bytes = 4;
@@ -400,7 +400,7 @@ unsigned int spiflash_readfastDualIODTR(unsigned address);
     return data;
 }
 
-unsigned int spiflash_readfastQuadOutDTR(unsigned address);
+unsigned int spiflash_readfastQuadOutDTR(unsigned address)
 {
     unsigned int data;
     unsigned int bytes = 4;
@@ -411,7 +411,7 @@ unsigned int spiflash_readfastQuadOutDTR(unsigned address);
     return data;
 }
 
-unsigned int spiflash_readfastQuadIODTR(unsigned address);
+unsigned int spiflash_readfastQuadIODTR(unsigned address)
 {
     unsigned int data;
     unsigned int bytes = 4;

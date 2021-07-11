@@ -31,7 +31,7 @@ module iob_spi_master_fl
 	`COMB rst_int = rst | FL_RESET;
 	
 	//Ready signal from flash controller
-	`SIGNAL(readyflash_int, 1)
+	`SIGNAL_OUT(readyflash_int, 1)
     
     `SIGNAL2OUT(FL_READY, readyflash_int)
 

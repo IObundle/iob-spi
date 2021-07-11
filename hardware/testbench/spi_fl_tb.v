@@ -25,7 +25,6 @@ module spi_tb;
     reg [1:0] spimode;
     reg manualframe_en;
 	reg validflag; //check later
-	wire validflag_out; //check
 	wire tready;
 	reg tofrom_fl;
     reg fourbyteaddr_on;
@@ -64,7 +63,6 @@ module spi_tb;
             .spimode (spimode),
             .fourbyteaddr_on (fourbyteaddr_on),
 			.validflag	(validflag),
-			.validflag_out	(validflag_out),
 			.tready		(tready)
 			);
 			
