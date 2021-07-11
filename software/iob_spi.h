@@ -3,6 +3,12 @@
 unsigned int spiflash_readStatusReg(unsigned *reg);
 unsigned int spiflash_readVolConfigReg(unsigned *regvalue);
 
+void enter4byteAddrMode();
+void exit4byteAddrMode();
+
+void enterSPIMode();
+void enterQuadMode();
+
 //xip functions
 int spiflash_XipEnable();
 int spiflash_terminateXipSequence();
@@ -25,6 +31,15 @@ unsigned int spiflash_readfastQuadOutput(unsigned address, unsigned activateXip)
 unsigned int spiflash_readfastDualInOutput(unsigned address, unsigned activateXip);
 unsigned int spiflash_readfastQuadInOutput(unsigned address, unsigned activateXip);
 
+//Fast Read DTR functions
+unsigned int spiflash_readfastDTR(unsigned address);
+unsigned int spiflash_readfastDualOutDTR(unsigned address);
+unsigned int spiflash_readfastDualIODTR(unsigned address);
+unsigned int spiflash_readfastQuadOutDTR(unsigned address);
+unsigned int spiflash_readfastQuadIODTR(unsigned address);
+
+
+//Memory Program functions
 int spiflash_memProgram(char* mem, int memsize, unsigned int address);
 
 void spiflash_programfastDualInput(unsigned int word, unsigned address);

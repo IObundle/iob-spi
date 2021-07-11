@@ -53,13 +53,6 @@ inline unsigned spiflash_getREADY()
     return (unsigned int) IO_GET(base, FL_READY);
 }
 
-unsigned int spiflash_getVALIDOUT()
-{
-	unsigned int validout;
-	validout = (unsigned int) IO_GET(base, FL_VALIDFLGOUT);
-	return validout;
-}
-
 //Higher functions
 void spiflash_init(int base_address)
 {
