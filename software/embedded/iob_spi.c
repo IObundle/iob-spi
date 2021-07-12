@@ -51,6 +51,7 @@ int spiflash_terminateXipSequence()
     return 0;
 }
 
+/*
 //Enter 4 byte addr mode 
 void enter4byteAddrMode()
 {
@@ -71,7 +72,7 @@ void exit4byteAddrMode()
     // affect input sw reg
     commtypeReg &= ~(0x1 << 21); // clear 4 byte addr enable bit 
 }
-
+*/
 
 void enterSPImode(int spimode)
 {
@@ -366,7 +367,7 @@ unsigned int spiflash_readmem(unsigned int address)
 	spiflash_executecommand(commtypeReg|COMMADDR_ANS, 0, address, ((bytes*8)<<8)|READ, &data);
 	return data;
 }
-
+/*
 unsigned int spiflash_readfastDTR(unsigned address)
 {
     unsigned int data;
@@ -410,7 +411,7 @@ unsigned int spiflash_readfastQuadOutDTR(unsigned address)
     spiflash_executecommand(commtypeReg|COMMADDR_ANS, 0, address, command, &data);
     return data;
 }
-
+*/
 unsigned int spiflash_readfastQuadIODTR(unsigned address)
 {
     unsigned int data;

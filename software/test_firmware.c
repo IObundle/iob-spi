@@ -137,7 +137,7 @@ int main()
     frame = 0x00000000;
 	spiflash_executecommand(COMMANS, 0, 0, (frame<<20)|((bytes*8)<<8)|command_aux, &enhancedReg);
 	printf("\nEnhanced volatile Register (8 bits):(%x)\n", enhancedReg);	
-
+/*
     printf("\n================================");
     printf("\nTesting entering dual and quad modes plus DTR\n");
     //enter default mode, pedantic
@@ -166,7 +166,7 @@ int main()
     read_mem = spiflash_readfastDTR(address);
     printf("Read: %x\n", read_mem);
     
-    printf("\n================================");
+    printf("\n================================");*/
     //Write enhanced reg
     /*
     command_aux = 0x61;
