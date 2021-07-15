@@ -3,8 +3,10 @@
 unsigned int spiflash_readStatusReg(unsigned *reg);
 unsigned int spiflash_readVolConfigReg(unsigned *regvalue);
 
-void enter4byteAddrMode();
-void exit4byteAddrMode();
+//void enter4byteAddrMode();
+//void exit4byteAddrMode();
+
+void spiflash_RecoverSequence();
 
 void enterSPImode(int);
 

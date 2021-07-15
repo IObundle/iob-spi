@@ -30,9 +30,6 @@ int spiflash_terminateXipSequence()
 {
     unsigned bits=0;
     unsigned frame= 0x0fd;
-    unsigned int regvalue = 0;
-    unsigned int numbits = 8;
-    unsigned int bitmask = 0x08;
     uint8_t currentmode = commtypeReg & (0x3<<30);
 
     if (currentmode == 0 || currentmode == QUADMODE) bits = 7;
@@ -40,15 +37,30 @@ int spiflash_terminateXipSequence()
     else bits = 25;
 
 	spiflash_executecommand(commtypeReg|RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
-    //Read volatile register to check if xip succesfully terminated
-    //spiflash_readVolConfigReg(&regvalue);
-
-    //Check for specific xip bit [3]
-    //if(bitmask & regvalue)
-    //    return 1;
-    //else
-    //    return 0;
     return 0;
+}
+
+void spiflash_RecoverSequence()
+{
+    unsigned bits=7;
+    unsigned frame=0x07d;
+    // Power Loss Recover Sequence 
+    // 1st part
+	spiflash_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
+    bits = 9;
+	spiflash_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
+    bits = 13;
+	spiflash_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
+    bits = 17;
+	spiflash_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
+    bits = 25;
+	spiflash_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
+    bits = 33;
+	spiflash_executecommand(RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
+    
+    // 2nd part
+    bits = 8;
+	spiflash_executecommand(commtypeReg|RECOVER_SEQ, 0, 0, (frame <<20 | bits << 8 | 0x00), NULL);
 }
 
 /*
@@ -185,7 +197,7 @@ int spiflash_memProgram(char* mem, int memsize, unsigned int address)
     return address_aux; 
 
 }
-
+/*
 void spiflash_writemem(unsigned int word, unsigned int address)
 {
 	//execute WRITE ENABLE
@@ -193,8 +205,8 @@ void spiflash_writemem(unsigned int word, unsigned int address)
 	//execute PAGE PROGRAM
 	spiflash_executecommand(commtypeReg|COMMADDR_DTIN, word, address, PAGE_PROGRAM, NULL);
 }
-
-void spiflash_programfastDualInput(unsigned int word, unsigned address)
+*/
+/*void spiflash_programfastDualInput(unsigned int word, unsigned address)
 {
 	//execute WRITE ENABLE
 	spiflash_executecommand(commtypeReg|COMM, 0, 0, WRITE_ENABLE, NULL);
@@ -226,7 +238,7 @@ void spiflash_programfastQuadInput(unsigned int word, unsigned address)
     unsigned command = (frame_struct << 20) | (numbytes*8 << 8) | PROGRAMFAST_QUADIN;
 	spiflash_executecommand(commtypeReg|COMMADDR_DTIN, word, address, command, NULL);
 }
-
+*/
 void spiflash_programfastQuadInputExt(unsigned int word, unsigned address)
 {
 	//execute WRITE ENABLE
@@ -276,6 +288,7 @@ unsigned int spiflash_readMemXip(unsigned address, unsigned activateXip)
 }
 
 //Read Memory Commands
+
 unsigned int spiflash_readfastDualOutput(unsigned address, unsigned activateXip)
 {
     unsigned misobytes = 4, data=0;
@@ -412,14 +425,15 @@ unsigned int spiflash_readfastQuadOutDTR(unsigned address)
     return data;
 }
 */
-unsigned int spiflash_readfastQuadIODTR(unsigned address)
+unsigned int spiflash_readfastQuadIODTR(unsigned int address)
 {
     unsigned int data;
     unsigned int bytes = 4;
     unsigned int dummy_cycles = 8;
     unsigned int frame_struct = 0x88;
     unsigned int command = (frame_struct<<20)|(dummy_cycles<<16)|((bytes*8)<<8)|READFAST_QUADIODTR;
-    spiflash_executecommand(commtypeReg|COMMADDR_ANS, 0, address, command, &data);
+    unsigned int dtr_bit = 0x1 << 20;
+    spiflash_executecommand(commtypeReg|COMMADDR_ANS|dtr_bit, 0, address, command, &data);
     return data;
 }
 

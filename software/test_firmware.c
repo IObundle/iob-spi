@@ -32,12 +32,23 @@ int main()
 */
 	uart_txwait();
 	
-	printf("\nReading flash parameters: command 0x5a\n");
+    //printf("\nApplying Recover Sequence\n");
+    //spiflash_RecoverSequence();
+
+	/*printf("\nReading flash parameters: command 0x5a\n");
 	unsigned int addressparam = 0x30, wordparam=0;
 	wordparam = spiflash_readFlashParam(addressparam);
 
 	printf("\nParameter Values (address (%x)):(%x)\n",addressparam,wordparam);
-
+*/
+    unsigned addressdtr = 0x0;
+    read_mem = 0x0;
+    printf("Fast Read DTR in simple mode\n");
+    read_mem = spiflash_readfastQuadIODTR(addressdtr);
+    printf("Address: %x, Read: %x\n",addressdtr, read_mem);
+    printf("DONE\n");
+    uart_finish();
+    exit(0);
 	//printf("\nResetting flash memory\n");
 
 	//uart_txwait();
@@ -100,7 +111,15 @@ int main()
 	else{
 		printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)\n", read_mem, word);
 	}
-    
+    addressdtr = 0x0;
+    read_mem = 0x0;
+    printf("Fast Read DTR in simple mode\n");
+    read_mem = spiflash_readfastQuadIODTR(addressdtr);
+    printf("Address: %x, Read: %x\n",addressdtr, read_mem);
+    printf("DONE\n");
+    uart_finish();
+    exit(0);
+
     address = 0x0;
     read_mem = 1;
     printf("\nTesting dual output fast read\n");
@@ -137,6 +156,7 @@ int main()
     frame = 0x00000000;
 	spiflash_executecommand(COMMANS, 0, 0, (frame<<20)|((bytes*8)<<8)|command_aux, &enhancedReg);
 	printf("\nEnhanced volatile Register (8 bits):(%x)\n", enhancedReg);	
+
 /*
     printf("\n================================");
     printf("\nTesting entering dual and quad modes plus DTR\n");
@@ -145,28 +165,29 @@ int main()
     enterSPImode(SIMPLEMODE);
     
     printf("Fast Read DTR in simple mode\n");
-    read_mem = spiflash_readfastDTR(address);
+    read_mem = spiflash_readfastQuadIODTR(address);
     printf("Read: %x\n", read_mem);
 
     printf("Entering Dual mode");
     enterSPImode(DUALMODE);
     printf("Fast Read DTR in DUAL mode\n");
-    read_mem = spiflash_readfastDTR(address);
+    read_mem = spiflash_readfastQuadIODTR(address);
     printf("Read: %x\n", read_mem);
 
     printf("Entering Quad mode");
     enterSPImode(QUADMODE);
     printf("Fast Read DTR in QUAD mode\n");
-    read_mem = spiflash_readfastDTR(address);
+    read_mem = spiflash_readfastQuadIODTR(address);
     printf("Read: %x\n", read_mem);
 
     printf("Returning to SIMPLE mode");
     enterSPImode(SIMPLEMODE);
     printf("Fast Read DTR in simple mode\n");
-    read_mem = spiflash_readfastDTR(address);
+    read_mem = spiflash_readfastQuadIODTR(address);
     printf("Read: %x\n", read_mem);
     
-    printf("\n================================");*/
+    printf("\n================================");
+    */
     //Write enhanced reg
     /*
     command_aux = 0x61;
