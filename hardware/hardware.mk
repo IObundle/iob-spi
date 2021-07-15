@@ -7,6 +7,9 @@ INCLUDE+=$(incdir) $(SPI_HW_INC_DIR)
 INCLUDE+=$(incdir) $(LIB_DIR)/hardware/include
 INCLUDE+=$(incdir) $(INTERCON_DIR)/hardware/include 
 
+INCLUDE+=$(incdir) $(SPI_HW_DIR)/testbench/flashmodel/include
+VSRC+=$(wildcard $(SPI_HW_DIR)/testbench/flashmodel/*.v)
+
 #headers
 VHDR+=$(wildcard $(SPI_HW_INC_DIR)/*.vh)#Adapted
 VHDR+=$(wildcard $(LIB_DIR)/hardware/include/*.vh)
