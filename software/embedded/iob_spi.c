@@ -6,10 +6,8 @@
 #include "printf.h"
 
 static unsigned int base;
-//create another static variable for upper addresses
-
-static unsigned xipframestruct = 0;
-static unsigned commtypeReg = 0;
+unsigned xipframestruct = 0;
+unsigned commtypeReg = 0;
 
 //Xip functions
 int spiflash_XipEnable()

@@ -40,7 +40,6 @@ module spi_master_fl
 	input [3:0]                     dummy_cycles,
     input [9:0]                     frame_struct,
     input [1:0]                     xipbit_en,
-    input                           manualframe_en,
     input [1:0]                     spimode,
     input                           fourbyteaddr_on,
 	output reg                      tready,
@@ -72,7 +71,6 @@ module spi_master_fl
     reg                     r_validedge = 1'b0;
     reg [1:0]               r_spimode;
     reg                     r_dtr_en;
-    reg                     r_manualframe_en; 
 
 
     //
@@ -88,7 +86,7 @@ module spi_master_fl
 	reg		    hold_n_int;
     reg         r_endianness = 1'b0;// 0 for little-endian, on data read from flash
 
-	wire [71:0]	w_str2sendbuild;//Parameterize with max
+	wire [71:0]	w_str2sendbuild;
 	wire [7:0]	w_counterstop;
 	wire [6:0]	w_misoctrstop;
 	wire [8:0]	w_sclk_edges;
@@ -219,7 +217,6 @@ module spi_master_fl
 			r_dummy_cycles <= 4'd0;
             r_frame_struct <= 10'h0;
             r_xipbit_en <= 2'b00;
-            r_manualframe_en <= 1'b0;
             r_spimode <= 2'b00;
             r_4byteaddr_on <= 1'b0;
             r_dtr_en <= 1'b0;
@@ -234,7 +231,6 @@ module spi_master_fl
 				r_dummy_cycles <= dummy_cycles;
                 r_frame_struct <= frame_struct;
                 r_xipbit_en <= xipbit_en;
-                r_manualframe_en <= manualframe_en;
                 r_spimode <= spimode;
                 r_4byteaddr_on <= fourbyteaddr_on;
                 r_dtr_en <= dtr_en;

@@ -122,7 +122,6 @@ module spi_tb;
 		command=8'h6b;
 		address=24'h555555;
 		commtype = 3'b100;
-        //frame_struct = 10'b0101110111;
         frame_struct = 10'h260;
         xipbit_en = 2'b00;
 		nmiso_bits = 7'd32;
@@ -133,7 +132,6 @@ module spi_tb;
 		validflag=1'b1;
 		#20
 		validflag=1'b0;
-		//#370// Drive miso
 
 		#100 
         wait(tready);

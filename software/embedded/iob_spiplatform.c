@@ -57,8 +57,6 @@ inline unsigned spiflash_getREADY()
 void spiflash_init(int base_address)
 {
 	base = base_address;
-	spiflash_reset();
-	//spiflash_resetmem();
 }
 
 void spiflash_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout)

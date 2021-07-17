@@ -44,7 +44,7 @@ module iob_spi_master_fl
     `SIGNAL2OUT(rdata_cache, dataout_int) 
     `SIGNAL_OUT(cache_read_req_en, 1)
     `SIGNAL2OUT(cache_read_req_en, valid_cache & (~|wstrb_cache))
-    assign address_int = cache_read_req_en ? {{(32-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS;
+    assign address_int = cache_read_req_en ? {{(DATA_W-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS;
     `SIGNAL2OUT(valid_int, cache_read_req_en ? valid_cache : FL_VALIDFLG)
     
     //Cache Ready Output
@@ -87,7 +87,6 @@ module iob_spi_master_fl
 		.validflag(valid_int),
 		.commtype(FL_COMMANDTP[2:0]),
         .spimode(FL_COMMANDTP[31:30]),
-        .manualframe_en(FL_COMMANDTP[29]),
         .dtr_en(FL_COMMANDTP[20]),
         .fourbyteaddr_on(FL_COMMANDTP[21]),
 		.tready(readyflash_int),
