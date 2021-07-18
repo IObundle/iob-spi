@@ -335,8 +335,9 @@ unsigned int spiflash_readfastDualInOutput(unsigned address, unsigned activateXi
     unsigned frame_struct = 0x00000044;//uint8 later
 	unsigned dummy_cycles = 8;
     unsigned xipbit = 1;
-    
-    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)// 2-> Activate/keep active, 3-> terminate Xip, others ignore
+
+    // 2-> Activate/keep active, 3-> terminate Xip, others ignore
+    if (activateXip == ACTIVEXIP || activateXip == TERMINATEXIP)
     {    
         xipbit = activateXip;
         xipframestruct = (activateXip == ACTIVEXIP) ? frame_struct: 0;

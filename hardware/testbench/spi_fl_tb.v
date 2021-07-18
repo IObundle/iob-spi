@@ -23,8 +23,7 @@ module spi_tb;
     reg [9:0] frame_struct;
     reg [1:0] xipbit_en;
     reg [1:0] spimode;
-    reg manualframe_en;
-	reg validflag; //check later
+	reg validflag; 
 	wire tready;
 	reg tofrom_fl;
     reg fourbyteaddr_on;
@@ -59,7 +58,6 @@ module spi_tb;
             .dtr_en (dtr_en),
             .xipbit_en  (xipbit_en),
 			.dummy_cycles (dummy_cycles),
-            .manualframe_en (manualframe_en),
             .spimode (spimode),
             .fourbyteaddr_on (fourbyteaddr_on),
 			.validflag	(validflag),
@@ -90,7 +88,6 @@ module spi_tb;
 		#100
         fourbyteaddr_on = 1'b1;
 
-        manualframe_en = 0;
         spimode = 0;
 		data_in=32'haabbccdd;
 		command=8'h66;
