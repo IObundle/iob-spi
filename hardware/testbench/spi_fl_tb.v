@@ -181,6 +181,4 @@ module spi_tb;
 	always
 		#(clk_per/2) clk=~clk;
 	
-	//always
-		//#(clk_per/4) sclk=~sclk;
 endmodule

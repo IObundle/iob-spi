@@ -16,10 +16,10 @@ LIB_DIR:=$(SPI_DIR)/submodules/LIB
 TEX_DIR:=$(SPI_DIR)/submodules/TEX
 REMOTE_ROOT_DIR ?= sandbox/iob-soc/submodules/SPI
 
-#RUN_FLASH ?=0
-#ifeq ($(RUN_FLASH),1)
-#DEFINE+=$(defmacro)RUN_FLASH
-#endif
+RUN_FLASH ?=0
+ifeq ($(RUN_FLASH),1)
+DEFINE+=$(defmacro)RUN_FLASH
+endif
 
 #
 #SIMULATION
