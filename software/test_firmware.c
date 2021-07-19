@@ -1,7 +1,6 @@
 #include "system.h"
 #include "periphs.h"
 #include "iob-uart.h"
-//#include "iob_timer.h"
 #include "iob_spi.h"
 #include "iob_spiplatform.h"
 #include "iob_spidefs.h"
@@ -14,23 +13,12 @@ int main()
   	unsigned int word = 0xFAFAB0CA;
 	unsigned int address = 0x000100;
 	unsigned int read_mem = 0xF0F0F0F0;
- 	//init timer and uart
-	//timer_init(TIMER_BASE);
    	uart_init(UART_BASE, FREQ/BAUD);
 
 	//init spi flash controller
 	spiflash_init(SPI_BASE);
 
 	printf("\nTesting SPI flash controller\n");
-	
-    /*printf("\nResetting flash memory\n");
-    unsigned frame_reset = 0x00000100;
-	//execute RESET ENABLE
-	spiflash_executecommand(COMM, 0, 0, (frame_reset << 20)|RESET_ENABLE, NULL);
-	//execute RESET MEM
-	spiflash_executecommand(COMM, 0, 0, (frame_reset << 20)|RESET_MEM, NULL);
-*/
-	uart_txwait();
 	
     //printf("\nApplying Recover Sequence\n");
     //spiflash_RecoverSequence();
@@ -41,38 +29,13 @@ int main()
 
 	printf("\nParameter Values (address (%x)):(%x)\n",addressparam,wordparam);
 */
-    unsigned addressdtr = 0x0;
-    read_mem = 0x0;
-    printf("Fast Read DTR in simple mode\n");
-    read_mem = spiflash_readfastQuadIODTR(addressdtr);
-    printf("Address: %x, Read: %x\n",addressdtr, read_mem);
-    printf("DONE\n");
-    uart_finish();
-    exit(0);
 	//printf("\nResetting flash memory\n");
-
-	//uart_txwait();
-
 	//spiflash_resetmem();
 	
-	//Write(Program) to flash memory
+    //Reading Status Reg
 	unsigned reg = 0x00;
 	spiflash_readStatusReg(&reg);
 	printf("\nStatus reg (%x)\n", reg);
-	//uart_sleep(10);
-	//printf("\nWriting word: (%x) to flash\n", word);
-	//spiflash_writemem(word, address);
-	//uart_txwait();
-	
-	//reg = 0xff;
-	//unsigned reg1 = 0;
-	//spiflash_readStatusReg(&reg);
-
-	//reg1 = IO_GET(SPI_BASE, FL_DATAOUT);
-
-	//printf("\nStatus (%x)\n", reg);
-	//printf("\nStatus1 (%x)\n", reg1);
-
 
     //Testing Fast Read in single, dual, quad
 	unsigned bytes = 4, readid = 0;
@@ -103,7 +66,6 @@ int main()
 	//Read from flash memory
 	printf("\nReading from flash (address: (%x))\n", address);
 	read_mem = spiflash_readmem(address);
-	//uart_txwait();
 
 	if(word == read_mem){
 		printf("\nMemory Read (%x) got same word as Programmed(%x)\nSuccess\n", read_mem, word);
@@ -111,14 +73,6 @@ int main()
 	else{
 		printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)\n", read_mem, word);
 	}
-    addressdtr = 0x0;
-    read_mem = 0x0;
-    printf("Fast Read DTR in simple mode\n");
-    read_mem = spiflash_readfastQuadIODTR(addressdtr);
-    printf("Address: %x, Read: %x\n",addressdtr, read_mem);
-    printf("DONE\n");
-    uart_finish();
-    exit(0);
 
     address = 0x0;
     read_mem = 1;
@@ -157,37 +111,6 @@ int main()
 	spiflash_executecommand(COMMANS, 0, 0, (frame<<20)|((bytes*8)<<8)|command_aux, &enhancedReg);
 	printf("\nEnhanced volatile Register (8 bits):(%x)\n", enhancedReg);	
 
-/*
-    printf("\n================================");
-    printf("\nTesting entering dual and quad modes plus DTR\n");
-    //enter default mode, pedantic
-    printf("Entering simple mode\n");
-    enterSPImode(SIMPLEMODE);
-    
-    printf("Fast Read DTR in simple mode\n");
-    read_mem = spiflash_readfastQuadIODTR(address);
-    printf("Read: %x\n", read_mem);
-
-    printf("Entering Dual mode");
-    enterSPImode(DUALMODE);
-    printf("Fast Read DTR in DUAL mode\n");
-    read_mem = spiflash_readfastQuadIODTR(address);
-    printf("Read: %x\n", read_mem);
-
-    printf("Entering Quad mode");
-    enterSPImode(QUADMODE);
-    printf("Fast Read DTR in QUAD mode\n");
-    read_mem = spiflash_readfastQuadIODTR(address);
-    printf("Read: %x\n", read_mem);
-
-    printf("Returning to SIMPLE mode");
-    enterSPImode(SIMPLEMODE);
-    printf("Fast Read DTR in simple mode\n");
-    read_mem = spiflash_readfastQuadIODTR(address);
-    printf("Read: %x\n", read_mem);
-    
-    printf("\n================================");
-    */
     //Write enhanced reg
     /*
     command_aux = 0x61;
@@ -203,7 +126,8 @@ int main()
 	spiflash_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &enhancedReg);
 	printf("\nEnhanced volatile Register after write (8 bits):(%x)\n", enhancedReg);	
     */
-    //uart_txwait();
+    
+
     //Testing memory program
     /*unsigned int program_address = 0x200;
     unsigned int program_word = 0;
@@ -256,7 +180,6 @@ int main()
     volconfigReg = 0;
     spiflash_readVolConfigReg(&volconfigReg);
 	printf("\nAfter xip termination sequence, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
-    //uart_txwait();
     
     /*read_mem = 1;
     printf("\nTesting dual output fast read with xip confirmation bit 0\n");
@@ -275,15 +198,8 @@ int main()
         read_mem = 1;
         read_mem = spiflash_readMemXip(address+1, TERMINATEXIP);
         printf("\nRead from memory address (%x) the word: (%x)\n", address+1, read_mem);
-        //uart_txwait();
-        
-        volconfigReg = 0;
-        spiflash_readVolConfigReg(&volconfigReg);
-        printf("\nAfter xip termination xip bit 1, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
-        //uart_txwait();
     }
 
-    printf("\nDONE\n");
     /*printf("\nAssuming Xip active, read from memory, confirmation bit 1\n");
     read_mem = 1;
     read_mem = spiflash_readMemXip(address+1, TERMINATEXIP);
@@ -318,8 +234,7 @@ int main()
     printf("\nAfter program, Quad input output fast read 0xeb\n");
     read_mem = spiflash_readfastQuadInOutput(address, 0);
     printf("\nRead after program from memory address (%x) the word: (%x)\n", address, read_mem);
-    uart_txwait();*/
-    //return 0;
+*/
     uart_finish();
-    //exit(0);
+    exit(0);
 }

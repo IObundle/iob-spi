@@ -5,7 +5,7 @@
 
 `ifdef FLASH_ADDR_W
     `define FLASH_CACHE_ADDR_W `FLASH_ADDR_W
-`elsif
+`else
     `define FLASH_CACHE_ADDR_W 24
 `endif
 
