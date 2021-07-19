@@ -30,7 +30,7 @@ module configdecoder
     output          dualalt,
     output          quadalt,
 
-	output reg [71:0]	r_str2sendbuild,//Parameterize with max
+	output reg [71:0]	r_str2sendbuild,
     output reg [9:0] txcntmarks [2:0],
 	output reg		r_build_done,
 	output reg		r_counters_done,
@@ -43,13 +43,13 @@ module configdecoder
     wire [6:0] w_misocycles;
     wire [3:0] w_commdcycles;
     wire [6:0] w_addrcycles;
-    wire [3:0] w_altcycles;//TODO
+    wire [3:0] w_altcycles;
     wire [6:0] w_datatxcycles;
 
     assign w_misocycles = dualrx ? {{1'b0, nmisobits[6:1]} + (|nmisobits[0])}: 
                             quadrx ? {{2'b00, nmisobits[6:2]} + (|nmisobits[1:0])}: 
                                 nmisobits;
-    assign w_commdcycles = dualcommd ? 4'd4: //Parameterize with reg later, param, now fixed at max 8bits
+    assign w_commdcycles = dualcommd ? 4'd4:
                             quadcommd ? {4'd2}:
                                 4'd8;
     assign w_addrcycles = dualaddr ? (fourbyteaddr_on ? 7'd16: 7'd12):
@@ -96,7 +96,7 @@ module configdecoder
     assign w_revertedbytes = {datain[7:0], datain[15:8], datain[23:16], datain[31:24]};//not general
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
-			r_str2sendbuild <= 72'h0;//not accounting for alt mode
+			r_str2sendbuild <= 72'h0;
 			r_build_done <= 1'b0;
 		end else begin
 			r_build_done <= 1'b0;
@@ -132,14 +132,14 @@ module configdecoder
 					r_counters_done <= 1'b1;
 					case(commandtype)
 						3'b000:	begin//Only command
-								r_counterstop <= 8'd8;//Parameterize with regs
+								r_counterstop <= 8'd8;
 								r_sclk_edges <= {w_commdcycles, 1'b0};
                                 txcntmarks[0] <= {frame_struct[9:8], 8'd8}; //command_size
-                                txcntmarks[1] <= 0; //command_size
-                                txcntmarks[2] <= 0; //command_size
+                                txcntmarks[1] <= 0; 
+                                txcntmarks[2] <= 0;
 							end
 						3'b001: begin//command + answer
-								r_counterstop <= 8'd8;//Parameterize
+								r_counterstop <= 8'd8;
 								r_misoctrstop <= nmisobits;
 								r_sclk_edges <= {w_commdcycles + w_misocycles, 1'b0};
                                 txcntmarks[0] <= {frame_struct[9:8], 8'd8}; //command_size
@@ -161,9 +161,9 @@ module configdecoder
                                 txcntmarks[1] <= {frame_struct[5:4], 8'd8 + ndatatxbits}; //command + data_in 
                                 txcntmarks[2] <= 0;
 							end
-						3'b100: begin//command + address + data_in (+dummy cycles ?) 
+						3'b100: begin//command + address + data_in 
 								r_counterstop <= 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24) + ndatatxbits;
-								r_sclk_edges <= {w_commdcycles + w_addrcycles + w_datatxcycles,1'b0};//(+r_dummycycles)
+								r_sclk_edges <= {w_commdcycles + w_addrcycles + w_datatxcycles,1'b0};
                                 txcntmarks[0] <= {frame_struct[9:8], 8'd8};
                                 txcntmarks[1] <= {frame_struct[7:6], 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24)}; //command + data_in 
                                 txcntmarks[2] <= {frame_struct[5:4], 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24) + ndatatxbits}; //command + data_in 
@@ -171,7 +171,7 @@ module configdecoder
 						3'b101: begin//command+address
 								r_counterstop <= 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24);
 								r_sclk_edges <= {w_commdcycles + w_addrcycles,1'b0};
-                                txcntmarks[0] <= {frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[0] <= {frame_struct[9:8], 8'd8}; 
                                 txcntmarks[1] <= {frame_struct[7:6], (fourbyteaddr_on ? 8'd32:8'd24)}; //command + address 
                                 txcntmarks[2] <= 0;
 							end
@@ -192,7 +192,6 @@ module configdecoder
                             end
 					default:	begin
 								r_counterstop <= 8'd8;
-								//TODO other control signals default
 								r_sclk_edges <= {w_commdcycles, 1'b0};
                                 txcntmarks[0] <= 0;
                                 txcntmarks[1] <= 0; 

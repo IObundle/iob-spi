@@ -2,8 +2,12 @@
 `include "iob_lib.vh"
 `include "interconnect.vh"
 `include "iob_spi_fl.vh"
-//check later
-`define FLASH_CACHE_ADDR_W 24
+
+`ifdef FLASH_ADDR_W
+    `define FLASH_CACHE_ADDR_W `FLASH_ADDR_W
+`elsif
+    `define FLASH_CACHE_ADDR_W 24
+`endif
 
 module iob_spi_master_fl
 #(

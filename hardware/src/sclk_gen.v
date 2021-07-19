@@ -75,7 +75,7 @@ module sclk_gen
 		end
 	end
     
-    // Generate clk edge for DTR mode
+    // Generate clk edges for DTR mode
     always @(posedge clk, posedge rst) begin
         if (rst) begin
             dtr_edge0 <= 0;

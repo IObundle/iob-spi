@@ -1,6 +1,7 @@
 include $(SPI_DIR)/core.mk
 
 #define
+DEFINE+=RUN_FLASH
 
 #include
 INCLUDE+=$(incdir) $(SPI_HW_INC_DIR)

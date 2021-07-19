@@ -6,7 +6,7 @@
 #include "stdint.h"
 
 static unsigned int base;
-//create another static variable for upper addresses
+
 //SET
 void spiflash_reset()
 {

@@ -165,7 +165,7 @@ module spi_master_fl
     assign data_tx = (recoverseq) ? dqvalues:
                         (dualtx_state) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
                             (quadtx_state) ? w_mosi[3:0]:
-                                {hold_n_int, wp_n_int, w_mosi[1] ,w_mosi[0]};//check w_mosi[1] later
+                                {hold_n_int, wp_n_int, w_mosi[1] ,w_mosi[0]};
     
     
     always @(posedge clk, posedge rst) begin
@@ -196,7 +196,6 @@ module spi_master_fl
         if (rst) oe <= 4'b1111;
         else begin
             oe <= 4'b1111;
-            //if (w_mosifinish) oe <= 1'b0;
             if (w_mosifinish) begin
                 if (r_xipbit_en[1] && xipbit_phase) oe <= 4'b0001; 
                 else if (oe_latchout) oe <= 4'b0000;

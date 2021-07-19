@@ -3,9 +3,6 @@
 unsigned int spiflash_readStatusReg(unsigned *reg);
 unsigned int spiflash_readVolConfigReg(unsigned *regvalue);
 
-//void enter4byteAddrMode();
-//void exit4byteAddrMode();
-
 void spiflash_RecoverSequence();
 
 void enterSPImode(int);
@@ -18,10 +15,9 @@ unsigned int spiflash_readMemXip(unsigned address, unsigned activateXip);
 //Reset
 void spiflash_resetmem();
 void spiflash_writemem(unsigned int word, unsigned int address);
-unsigned int spiflash_readmem(unsigned int address);//extend for more than 4 bytes
+unsigned int spiflash_readmem(unsigned int address);
 
 // Erase memory functions
-//extend for other erase type, ex bulk
 void spiflash_erase_subsector(unsigned int subsector_address);
 void spiflash_erase_sector(unsigned int sector_address);
 
@@ -47,6 +43,3 @@ void spiflash_programfastDualInput(unsigned int word, unsigned address);
 void spiflash_programfastDualInputExt(unsigned int word, unsigned address);
 void spiflash_programfastQuadInput(unsigned int word, unsigned address);
 void spiflash_programfastQuadInputExt(unsigned int word, unsigned address);
-//wear-leveling
-//set DIV
-//set num bytes in and out, aligned, padded?
