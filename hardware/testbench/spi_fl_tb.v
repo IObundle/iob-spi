@@ -23,12 +23,11 @@ module spi_tb;
     reg [9:0] frame_struct;
     reg [1:0] xipbit_en;
     reg [1:0] spimode;
-    reg manualframe_en;
-	reg validflag; //check later
-	wire validflag_out; //check
+	reg validflag; 
 	wire tready;
 	reg tofrom_fl;
     reg fourbyteaddr_on;
+    reg dtr_en;
 
 	integer i;
 	reg [31:0]	mem;
@@ -56,13 +55,12 @@ module spi_tb;
 			.commtype	(commtype),
 			.ndata_bits	(nmiso_bits),
             .frame_struct (frame_struct),
+            .dtr_en (dtr_en),
             .xipbit_en  (xipbit_en),
 			.dummy_cycles (dummy_cycles),
-            .manualframe_en (manualframe_en),
             .spimode (spimode),
             .fourbyteaddr_on (fourbyteaddr_on),
 			.validflag	(validflag),
-			.validflag_out	(validflag_out),
 			.tready		(tready)
 			);
 			
@@ -90,12 +88,12 @@ module spi_tb;
 		#100
         fourbyteaddr_on = 1'b1;
 
-        manualframe_en = 0;
         spimode = 0;
 		data_in=32'haabbccdd;
 		command=8'h66;
 		address=32'haa5a5a11;
 		commtype = 3'b001;
+        dtr_en = 0;
 		nmiso_bits = 7'd16;
         frame_struct = 10'h084;
         xipbit_en = 2'b00;
@@ -121,17 +119,16 @@ module spi_tb;
 		command=8'h6b;
 		address=24'h555555;
 		commtype = 3'b100;
-        //frame_struct = 10'b0101110111;
         frame_struct = 10'h260;
         xipbit_en = 2'b00;
 		nmiso_bits = 7'd32;
 		dummy_cycles = 4'd0;
+        dtr_en = 0;
 		mem	= 32'hA0A0A0A3;
 		#50
 		validflag=1'b1;
 		#20
 		validflag=1'b0;
-		//#370// Drive miso
 
 		#100 
         wait(tready);
@@ -146,12 +143,36 @@ module spi_tb;
         xipbit_en = 2'b01;
 		nmiso_bits = 7'd16;
 		dummy_cycles = 4'd10;
+        dtr_en = 0;
 		mem	= 32'hA0A0A0A3;
 		#50
 		validflag=1'b1;
 		#20
 		validflag=1'b0;
-        #500
+        //#500
+        #100
+        wait(tready);
+
+		//#100 
+        //wait(tready);
+        #120
+        //New command
+        spimode = 2'b00;
+        data_in=8'h5A;
+		command=8'h6D;
+		address=24'h555555;
+		commtype = 3'b010;
+        frame_struct = 10'h008;
+        xipbit_en = 2'b00;
+		nmiso_bits = 7'd16;
+        dtr_en = 1;
+		dummy_cycles = 4'd10;
+		mem	= 32'hA0A0A0A3;
+		#50
+		validflag=1'b1;
+		#20
+		validflag=1'b0;
+        #100
         wait(tready);
         #100 $finish;
 	end
@@ -160,6 +181,4 @@ module spi_tb;
 	always
 		#(clk_per/2) clk=~clk;
 	
-	//always
-		//#(clk_per/4) sclk=~sclk;
 endmodule

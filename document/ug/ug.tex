@@ -13,7 +13,7 @@
 \newtheorem*{ex*}{Example}
 
 
-\title{IObundle Example User Guide}
+\title{IObundle IOb SPI Flash Controller User Guide}
 \category{User Guide}
 
 %\getenv[\TEX]{TEX_DIR}
@@ -49,12 +49,32 @@
 
 \section{Interface Signals}
 
-\begin{table}[H]
+\begin{table}[t]
   \begin{center}
     \begin{tabular}{|l|l|p{8cm}|}
       \hline
       \rowcolor{iob-green}
       \textbf{Signal} & \textbf{Direction} & \textbf{Description} \\
+      clk & Input & system clock signal\\
+      rst & Input & system reset signal\\
+      valid & Input & 1-bit\\
+      address & Input & 4-bit select SW Register\\
+      wdata & Input & 32-bit data to write to SW Register\\
+      wstrb & Input & 4-bit byte to write\\
+      rdata & Output & 32-bit data to read\\
+      ready & Output & 1-bit idle state\\
+      valid\_cache & Input & 1-bit instructions i/f\\
+      address\_cache & Input & 24-bit instructions i/f flash address\\
+      wdata\_cache & Input & 32-bit instructions i/f UNUSED\\
+      wstrb\_cache & Input & 4-bit intructions i/f byte to write\\
+      rdata\_cache & Output & 2-bit intructions i/f data read\\
+      ready\_cache & Output & 1-bit instructions i/f\\
+      SS & Output & SPI i/f \\
+      SCLK & Output & SPI i/f serial clock\\
+      MOSI & Bidir & SPI i/f DQ0\\
+      MISO & Bidir & SPI i/f DQ1\\
+      WP\_N & Bidir & SPI i/f DQ2\\
+      HOLD\_N & Bidir & SPI i/f DQ3\\
       \hline
       \hline
 
@@ -78,6 +98,9 @@
 \end{figure}
 
 \section{Software Components}
+A set of SW accessible Registers interacting basic functions (platform functions) are provided.
+Higher level functions can be built on top of the platform functions, with several already provided
+which implement support for select flash commands.
 
 \section*{FPGA Resources}
 \input{../fpga}

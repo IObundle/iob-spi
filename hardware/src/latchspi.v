@@ -18,6 +18,8 @@ module latchspi
     input sclk_en,
     input latchin_en,
     input latchout_en,
+    input latchout_dtr_en,
+    input dtr_en,
     input setup_rst,
     input loadtxdata_en,
     input [7:0] mosistop_cnt,
@@ -47,6 +49,7 @@ module latchspi
     reg [7:0] r_mosicounter;
     reg r_mosifinish;
     reg r_sending_done;
+    reg r_extradummy;
     
     reg [71:0] r_str2sendbuild;
 
@@ -63,26 +66,41 @@ module latchspi
         end
     end
     
+    //enable dtr latchout
+    reg r_dtr_on;
+    always @(posedge clk, posedge rst) begin
+        if (rst) r_dtr_on <= 1'b0;
+        else begin
+           if (setup_rst) r_dtr_on <= 0; 
+           else if (command_done && latchout_en) r_dtr_on <= 1'b1; 
+        end
+    end
+
+    wire command_done;
+    assign command_done = r_mosicounter >= 'd8; 
+
     //assign to output
     assign data_tx = r_mosi;
     assign mosicounter = r_mosicounter;
     assign read_data = r_misodata;
-    assign mosifinish = r_mosifinish;
+    assign mosifinish = dtr_en ? r_sending_done : r_mosifinish;
     assign sending_done = r_sending_done;
+
+    wire latchout_tx_en;
+    assign latchout_tx_en = dtr_en ? (command_done ? (r_dtr_on ? latchout_dtr_en : 0) : latchout_en) : latchout_en; 
 
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
-			//mosi <= 1'b0;
             r_mosi <= 4'h0;
 			r_mosicounter <= 8'd0;
 			r_mosifinish <= 1'b0;
 			r_sending_done <= 1'b0;
             r_txindexer <= 8'd71;
+            r_extradummy <= 1'b0;
 		end else begin
-			//if(r_transfer_start) begin end
-			if (latchout_en && sclk_en && (~r_mosifinish)) begin
+			if (latchout_tx_en && sclk_en && (~r_mosifinish)) begin
                 if (quadtx_en) begin
-                    r_mosi[3:0] <= r_str2sendbuild[r_txindexer -: 4];//Check index constants
+                    r_mosi[3:0] <= r_str2sendbuild[r_txindexer -: 4];
                     r_txindexer <= r_txindexer - 3'h4;
                     r_mosicounter <= r_mosicounter + 3'h4;
                 end else if(dualtx_en) begin
@@ -98,12 +116,14 @@ module latchspi
             else if(xipbit_en[1] && w_xipbit_phase) begin//Drive xip confirmation bit
                 r_mosi[0] <= xipbit_en[0];
             end
+            r_extradummy <= 1'b0;
             if(r_mosicounter == mosistop_cnt) begin
                 r_mosicounter <= 8'd0;
                 r_txindexer <= 8'd71;
                 r_sending_done <= 1'b1;
+                r_extradummy <= 1'b1;
             end
-			if (r_sending_done && latchin_en) begin
+			if (r_sending_done && latchin_rx_en) begin
 				r_mosifinish <= 1'b1;
 			end
 			if (setup_rst) begin
@@ -119,8 +139,7 @@ module latchspi
     reg         r_xipbit_phase;
     wire        w_xipbit_phase;
     wire        dummy_count_en;
-    assign dummy_count_en = r_mosifinish && latchout_en && (~r_dummy_done);
-    //assign xipbit_phase = r_xipbit_phase;
+    assign dummy_count_en = (r_mosifinish && latchout_en || (dtr_en ? r_extradummy : 0)) && (~r_dummy_done);
     assign xipbit_phase = w_xipbit_phase;
 	assign w_xipbit_phase = dummy_count_en & (r_dummy_counter==dummy_cycles);
 
@@ -131,7 +150,7 @@ module latchspi
             r_xipbit_phase <= 1'b0;
 		end
 		else begin
-			if (setup_rst) begin //previously setup_start, same behaviour
+			if (setup_rst) begin
 				r_dummy_counter <= dummy_cycles;
 				r_dummy_done <= 1'b0;
                 r_xipbit_phase <= 1'b0;
@@ -141,12 +160,27 @@ module latchspi
                 r_xipbit_phase <= (r_dummy_counter==dummy_cycles);
 			end
 			else if (r_dummy_counter == 0 && latchin_en) begin
-				//must hold at 0 implicit r_q<=r_q
-				//or implement dummy_done as wire for less delay?
 				r_dummy_done <= 1'b1;
 			end
 		end
 	end
+
+    reg opaque_cycle;
+    reg dcnt;
+    always @(posedge clk, posedge rst) begin
+        if (rst) begin
+           opaque_cycle <= 1'b0;
+           dcnt <= 1'b0;
+        end else begin
+            opaque_cycle <= 1'b0;
+            if (setup_rst) begin
+                dcnt <= 1'b0;
+            end else if (r_dummy_done && dcnt == 1'b0) begin
+                opaque_cycle <= 1'b1;
+                dcnt <= dcnt + 1'b1;
+            end
+        end
+    end
 
     //Reverse endianness of misodata
     reg [31:0] w_misodatarev;
@@ -170,16 +204,17 @@ module latchspi
             default:
                 w_misodatarev = {r_misodata[7:0], r_misodata[15:8], r_misodata[23:16], r_misodata[31:24]};
         endcase
-    end
+    end    
 
 	//Drive miso
+    wire latchin_rx_en;
+    assign latchin_rx_en = dtr_en ? ((latchin_en || latchout_en) && ~opaque_cycle) : (latchin_en);
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
 			r_misodata <= 32'd0;
 			r_misocounter <= 7'd0;
 		end else begin
-			if(latchin_en && sclk_en && (r_mosifinish) && (r_dummy_done)) begin
-				//r_misodata[r_misocounter] <= miso;
+			if(latchin_rx_en && sclk_en && (r_mosifinish) && (r_dummy_done)) begin
                 if (quadrx) begin
                     r_misodata <= {r_misodata[27:0], {data_rx[3], data_rx[2], data_rx[1], data_rx[0]}};
 				    r_misocounter <= r_misocounter + 3'h4;
@@ -199,7 +234,6 @@ module latchspi
 	end
 
     // Control lanes to use when on req
-    //reg [9:0] txcntholder;
     wire [9:0] txcntholder = txcntmarks[nextcnt]; 
     reg [1:0] nextcnt;
     wire modeswitch_en = (`SINGLEMODEON && r_mosicounter == txcntholder[7:0] && r_mosicounter < mosistop_cnt); 
@@ -210,10 +244,6 @@ module latchspi
     assign dualtx_en = (`DUALMODEON) ? 1'b1 : (`QUADMODEON) ? 1'b0 : dual_en_test;
     assign quadtx_en = (`QUADMODEON) ? 1'b1 : (`DUALMODEON) ? 1'b0 : quad_en_test;
 
-    /*always @(nextcnt) begin
-        txcntholder = txcntmarks[nextcnt];
-    end
-    */
     always @(posedge clk, posedge rst) begin
         if (rst) begin
             nextcnt <= 2'h0;
@@ -225,5 +255,6 @@ module latchspi
                 nextcnt <= 0;
         end
     end
+
 
 endmodule

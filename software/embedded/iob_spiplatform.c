@@ -6,135 +6,115 @@
 #include "stdint.h"
 
 static unsigned int base;
-//create another static variable for upper addresses
+
 //SET
-void spifl_reset()
+void spiflash_reset()
 {
 	IO_SET(base, FL_RESET, 1);//soft reset
 	IO_SET(base, FL_RESET, 0);
 }
 
-void spifl_setDATAIN(unsigned int datain)
+void spiflash_setDATAIN(unsigned int datain)
 {
 	IO_SET(base, FL_DATAIN, datain);
 
 }
 
-void spifl_setADDRESS(unsigned int address)
+void spiflash_setADDRESS(unsigned int address)
 {
 	IO_SET(base, FL_ADDRESS, address);
 }
 
-void spifl_setCOMMAND(unsigned int command)
+void spiflash_setCOMMAND(unsigned int command)
 {
 	IO_SET(base, FL_COMMAND, command);
 }
 
-void spifl_setCOMMTYPE(unsigned int commtype)
+void spiflash_setCOMMTYPE(unsigned int commtype)
 {
 	IO_SET(base, FL_COMMANDTP, commtype);
 }
 
-void spifl_setVALIDIN(unsigned int validin)
+void spiflash_setVALIDIN(unsigned int validin)
 {
 	IO_SET(base, FL_VALIDFLG, validin);
 }
 
 //GET
-unsigned int spifl_getDATAOUT()
+unsigned int spiflash_getDATAOUT()
 {
 	unsigned int dataout;
 	dataout = (unsigned int) IO_GET(base, FL_DATAOUT);
 	return dataout;
 }
 
-inline unsigned spifl_getREADY()
+inline unsigned spiflash_getREADY()
 {
     return (unsigned int) IO_GET(base, FL_READY);
 }
 
-unsigned int spifl_getVALIDOUT()
-{
-	unsigned int validout;
-	validout = (unsigned int) IO_GET(base, FL_VALIDFLGOUT);
-	return validout;
-}
-
 //Higher functions
-void spifl_init(int base_address)
+void spiflash_init(int base_address)
 {
 	base = base_address;
-	spifl_reset();
-	//spifl_resetmem();
-}
-void spifl_waitvalidout()
-{
-	while(!IO_GET(base, FL_VALIDFLGOUT));//not using wrapper getter
 }
 
-void spifl_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout)
+void spiflash_executecommand(int typecode, unsigned int datain, unsigned int address, unsigned int command, unsigned *dataout)
 {
-	spifl_setCOMMAND(command);
-	spifl_setCOMMTYPE(typecode);
-    while((!spifl_getREADY()));
+	spiflash_setCOMMAND(command);
+	spiflash_setCOMMTYPE(typecode);
+    while((!spiflash_getREADY()));
 	
 	switch(typecode)
 	{
 		case COMM:
-				spifl_setVALIDIN(1);
-				//spifl_waitvalidout();
-				spifl_setVALIDIN(0);
-				//deassert valid?
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
 				break;
 		case COMMANS:
-				spifl_setVALIDIN(1);
-				spifl_setVALIDIN(0);
-				//spifl_waitvalidout();
-                while(!spifl_getREADY());
-				*dataout = spifl_getDATAOUT();
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
+                while(!spiflash_getREADY());
+				*dataout = spiflash_getDATAOUT();
 				break;
 		case COMMADDR_ANS:
-				spifl_setADDRESS(address);
-				spifl_setVALIDIN(1);
-				spifl_setVALIDIN(0);
-                while(!spifl_getREADY());
-				//spifl_waitvalidout();
-				*dataout = spifl_getDATAOUT();
+				spiflash_setADDRESS(address);
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
+                while(!spiflash_getREADY());
+				*dataout = spiflash_getDATAOUT();
 				break;
 		case COMM_DTIN:
-				spifl_setDATAIN(datain);
-				spifl_setVALIDIN(1);
-				//spifl_waitvalidout();
-				spifl_setVALIDIN(0);
+				spiflash_setDATAIN(datain);
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
 				break;
 		case COMMADDR_DTIN:
-				spifl_setADDRESS(address);
-				spifl_setDATAIN(datain);
-				spifl_setVALIDIN(1);
-				//spifl_waitvalidout();
-				spifl_setVALIDIN(0);
+				spiflash_setADDRESS(address);
+				spiflash_setDATAIN(datain);
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
 				break;
 		case COMMADDR:
-				spifl_setADDRESS(address);
-				spifl_setVALIDIN(1);
-				//spifl_waitvalidout();
-				spifl_setVALIDIN(0);
+				spiflash_setADDRESS(address);
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
 				break;
         case XIP_ADDRANS:
-				spifl_setADDRESS(address);
-				spifl_setVALIDIN(1);
-				spifl_setVALIDIN(0);
-                while(!spifl_getREADY());
-				*dataout = spifl_getDATAOUT();
+				spiflash_setADDRESS(address);
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
+                while(!spiflash_getREADY());
+				*dataout = spiflash_getDATAOUT();
                 break;
         case RECOVER_SEQ:
-				spifl_setDATAIN(datain);
-				spifl_setVALIDIN(1);
-				spifl_setVALIDIN(0);
+				spiflash_setDATAIN(datain);
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
                 break;
 		default:
-				spifl_setVALIDIN(1);
-				spifl_setVALIDIN(0);
+				spiflash_setVALIDIN(1);
+				spiflash_setVALIDIN(0);
 
 	}
 }

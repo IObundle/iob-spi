@@ -16,6 +16,11 @@ LIB_DIR:=$(SPI_DIR)/submodules/LIB
 TEX_DIR:=$(SPI_DIR)/submodules/TEX
 REMOTE_ROOT_DIR ?= sandbox/iob-soc/submodules/SPI
 
+RUN_FLASH ?=0
+ifeq ($(RUN_FLASH),1)
+DEFINE+=$(defmacro)RUN_FLASH
+endif
+
 #
 #SIMULATION
 #
@@ -56,8 +61,8 @@ endif
 #
 #DOCUMENT
 #
-DOC_TYPE:=pb
-#DOC_TYPE:=ug
+#DOC_TYPE:=pb
+DOC_TYPE:=ug
 INTEL ?=0
 XILINX ?=1
 

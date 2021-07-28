@@ -2,8 +2,12 @@
 `include "iob_lib.vh"
 `include "interconnect.vh"
 `include "iob_spi_fl.vh"
-//check later
-`define FLASH_CACHE_ADDR_W 24
+
+`ifdef FLASH_ADDR_W
+    `define FLASH_CACHE_ADDR_W `FLASH_ADDR_W
+`else
+    `define FLASH_CACHE_ADDR_W 24
+`endif
 
 module iob_spi_master_fl
 #(
@@ -31,7 +35,7 @@ module iob_spi_master_fl
 	`COMB rst_int = rst | FL_RESET;
 	
 	//Ready signal from flash controller
-	`SIGNAL(readyflash_int, 1)
+	`SIGNAL_OUT(readyflash_int, 1)
     
     `SIGNAL2OUT(FL_READY, readyflash_int)
 
@@ -44,11 +48,7 @@ module iob_spi_master_fl
     `SIGNAL2OUT(rdata_cache, dataout_int) 
     `SIGNAL_OUT(cache_read_req_en, 1)
     `SIGNAL2OUT(cache_read_req_en, valid_cache & (~|wstrb_cache))
-    //store cache address in reg for stability, delay problems, ready?
-    //2 consecutive address possible? while core not latch in
-    //`SIGNAL2OUT(address_int, cache_read_req_en ? {{(32-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS)
-    assign address_int = cache_read_req_en ? {{(32-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS;
-    //`SIGNAL2OUT(ready_cache, readyflash_int)
+    assign address_int = cache_read_req_en ? {{(DATA_W-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS;
     `SIGNAL2OUT(valid_int, cache_read_req_en ? valid_cache : FL_VALIDFLG)
     
     //Cache Ready Output
@@ -91,14 +91,13 @@ module iob_spi_master_fl
 		.validflag(valid_int),
 		.commtype(FL_COMMANDTP[2:0]),
         .spimode(FL_COMMANDTP[31:30]),
-        .manualframe_en(FL_COMMANDTP[29]),
-        .fourbyteaddr_on(FL_COMMAND[15]),
-		.validflag_out(FL_VALIDFLGOUT),
+        .dtr_en(FL_COMMANDTP[20]),
+        .fourbyteaddr_on(FL_COMMANDTP[21]),
 		.tready(readyflash_int),
         
 		.clk(clk),
 		.rst(rst_int),
-		//Not sw registers
+
         //Flash Memory interface
 		.sclk(SCLK),
 		.ss(SS),
