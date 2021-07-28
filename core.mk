@@ -5,16 +5,22 @@
 CORE_NAME=SPI
 IS_CORE=1
 USE_NETLIST ?=0
+TOP_MODULE:=iob_spi_master_fl
 
 #PATHS
 SPI_HW_DIR:=$(SPI_DIR)/hardware
-SPI_HW_INC_DIR:=$(SPI_HW_DIR)/include
+SPI_INC_DIR:=$(SPI_HW_DIR)/include
+SPI_SRC_DIR:=$(SPI_HW_DIR)/src
+SPI_TB_DIR:=$(SPI_HW_DIR)/testbench
+SPI_FPGA_DIR:=$(SPI_HW_DIR)/fpga
+SPI_SW_DIR:=$(SPI_DIR)/software
 SPI_DOC_DIR:=$(SPI_DIR)/document
 SPI_SUBMODULES_DIR:=$(SPI_DIR)/submodules
-INTERCON_DIR:=$(SPI_DIR)/submodules/INTERCON
-LIB_DIR:=$(SPI_DIR)/submodules/LIB
-TEX_DIR:=$(SPI_DIR)/submodules/TEX
-REMOTE_ROOT_DIR ?= sandbox/iob-soc/submodules/SPI
+REMOTE_ROOT_DIR ?=sandbox/iob-soc/submodules/SPI
+
+#SUBMODULES
+SPI_SUBMODULES:=INTERCON LIB TEX
+$(foreach p, $(SPI_SUBMODULES), $(eval $p_DIR ?=$(SPI_SUBMODULES_DIR)/$p))
 
 #
 #SIMULATION
@@ -23,10 +29,6 @@ SIMULATOR ?=icarus
 SIM_SERVER ?=localhost
 SIM_USER ?=$(USER)
 
-#SIMULATOR ?=ncsim
-#SIM_SERVER ?=micro7.lx.it.pt
-#SIM_USER ?=user19
-
 SIM_DIR ?=hardware/simulation/$(SIMULATOR)
 
 #
@@ -34,7 +36,6 @@ SIM_DIR ?=hardware/simulation/$(SIMULATOR)
 #
 #FPGA_FAMILY ?=CYCLONEV-GT
 FPGA_FAMILY ?=XCKU
-#FPGA_SERVER ?=localhost
 FPGA_SERVER ?=pudim-flan.iobundle.com
 FPGA_USER ?= $(USER)
 
@@ -52,6 +53,13 @@ ifeq ($(FPGA_COMP),vivado)
 else ifeq ($(FPGA_COMP),quartus)
 FPGA_LOG:=quartus.log
 endif
+
+#ASIC
+ASIC_NODE ?=umc130
+ASIC_SERVER ?=micro5.lx.it.pt
+ASIC_COMPILE_ROOT_DIR ?=$(ROOT_DIR)/sandbox/iob-cache
+ASIC_USER ?=user14
+ASIC_DIR ?=hardware/asic/$(ASIC_NODE)
 
 #
 #DOCUMENT

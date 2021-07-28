@@ -1,6 +1,6 @@
 SPI_DIR:=../../..
 include $(SPI_DIR)/hardware/hardware.mk
- 
+
 FPGA_VSRC=$(addprefix ../, $(VSRC) )
 FPGA_VHDR=$(addprefix ../, $(VHDR) )
 FPGA_INCLUDE=$(addprefix ../, $(INCLUDE) )
