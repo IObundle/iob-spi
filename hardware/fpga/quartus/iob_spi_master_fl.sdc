@@ -8,4 +8,5 @@
 #####################################################################
 
 create_clock -name "clk" -add -period 10.0 [get_ports clk]
+create_clock -name "sclk" -add -period 20.0 [get_ports SCLK]
 derive_clock_uncertainty

@@ -26,8 +26,6 @@ $(foreach p, $(SPI_SUBMODULES), $(eval $p_DIR ?=$(SPI_SUBMODULES_DIR)/$p))
 #SIMULATION
 #
 SIMULATOR ?=icarus
-SIM_SERVER ?=localhost
-SIM_USER ?=$(USER)
 
 SIM_DIR ?=hardware/simulation/$(SIMULATOR)
 
