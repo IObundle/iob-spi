@@ -1,8 +1,9 @@
+
 set TOP [lindex $argv 0]
-set VSRC [lindex $argv 1]
-set HW_INCLUDE [lindex $argv 2]
-set HW_DEFINE [lindex $argv 3]
-set PART [lindex $argv 4]
+set PART [lindex $argv 1]
+set VSRC [lindex $argv 2]
+set HW_INCLUDE [lindex $argv 3]
+set HW_DEFINE [lindex $argv 4]
 
 puts $VSRC
 
@@ -18,7 +19,7 @@ set_property part $PART [current_project]
 
 synth_design -include_dirs $HW_INCLUDE -verilog_define $HW_DEFINE -part $PART -top $TOP -mode out_of_context -flatten_hierarchy none -verbose
 
-read_xdc ../spi.xdc
+read_xdc ../$TOP.xdc
 
 opt_design
 place_design
