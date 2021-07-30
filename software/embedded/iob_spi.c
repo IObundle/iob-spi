@@ -115,16 +115,13 @@ int spiflash_memProgram(char* mem, int memsize, unsigned int address)
     //Main programming cycle
     int i=0, j=0, k=0;
     unsigned int address_aux = address, statusReg=0;
-    int l=0;
+    int numwrites=0;
     int numbytes_aux = numbytes;
-    for(i=0; i < memsize; i=i+numbytes_aux){
-        if (i==memblocks){
-            if (remainder_memblocks == 0) break;
-            else{ 
-                numbytes_aux = remainder_memblocks; 
-                command = 0;
-                command = (frame_struct << 20) | (numbytes_aux*8 << 8) | PROGRAMFAST_QUADINEXT;
-            }
+    for(i=0; i < memsize; i=i+numbytes_aux, numwrites++){
+        if (numwrites==memblocks && remainder_memblocks != 0){
+            numbytes_aux = remainder_memblocks; 
+            command = 0;
+            command = (frame_struct << 20) | (numbytes_aux*8 << 8) | PROGRAMFAST_QUADINEXT;
         }
         else numbytes_aux = numbytes;
         

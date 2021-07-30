@@ -22,10 +22,10 @@ REMOTE_ROOT_DIR ?=sandbox/iob-soc/submodules/SPI
 SPI_SUBMODULES:=INTERCON LIB TEX
 $(foreach p, $(SPI_SUBMODULES), $(eval $p_DIR ?=$(SPI_SUBMODULES_DIR)/$p))
 
-RUN_FLASH ?=0
-ifeq ($(RUN_FLASH),1)
-DEFINE+=$(defmacro)RUN_FLASH
-endif
+#RUN_FLASH ?=0
+#ifeq ($(RUN_FLASH),1)
+#DEFINE+=$(defmacro)RUN_FLASH
+#endif
 
 #
 #SIMULATION
