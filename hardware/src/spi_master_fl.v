@@ -162,12 +162,17 @@ module spi_master_fl
     wire [3:0] data_rx;
     reg dualtx_state;
     reg quadtx_state;
+    wire [3:0] w_mosi;
+    reg recoverseq;
+    reg [3:0] dqvalues;
     assign data_tx = (recoverseq) ? dqvalues:
                         (dualtx_state) ? {{hold_n_int, wp_n_int},w_mosi[1:0]}:
                             (quadtx_state) ? w_mosi[3:0]:
                                 {hold_n_int, wp_n_int, w_mosi[1] ,w_mosi[0]};
     
-    
+
+    wire dualtx_en;
+    wire quadtx_en;
     always @(posedge clk, posedge rst) begin
         if (rst) begin
             dualtx_state <= 1'b0;
@@ -182,6 +187,11 @@ module spi_master_fl
 
     //Configure inout tristate i/o
     reg [3:0] oe = 4'b1111;
+    wire quadcommd;
+    wire quadaddr;
+    wire quaddatatx;
+    wire quadalt;
+    wire quadrx;
     assign hold_n_dq3 = oe[3] ? data_tx[3] :(quadcommd || quadaddr || quaddatatx || quadalt || quadrx)? 1'hz:1'b1;
     assign wp_n_dq2 = oe[2] ? data_tx[2] :(quadcommd || quadaddr || quaddatatx || quadalt || quadrx)? 1'hz:1'b1;
     assign miso_dq1 = oe[1] ? data_tx[1] :1'hz;
@@ -191,6 +201,7 @@ module spi_master_fl
 
     //Drive oe
     wire oe_latchout;
+    wire w_mosifinish;
     assign oe_latchout = r_dtr_en ? `LATCHOUT_EDGE_DTR : `LATCHOUT_EDGE;
     always @(posedge clk, posedge rst) begin
         if (rst) oe <= 4'b1111;
@@ -253,11 +264,11 @@ module spi_master_fl
 		end
 	end
 
-    wire dualrx, quadrx;
-    wire dualcommd, quadcommd;
-    wire dualaddr, quadaddr;
-    wire dualdatatx, quaddatatx;
-    wire dualalt, quadalt;
+    wire dualrx;
+    wire dualcommd;
+    wire dualaddr;
+    wire dualdatatx;
+    wire dualalt;
 
     configdecoder configdecoder0
     (
@@ -298,12 +309,8 @@ module spi_master_fl
     );
 
 
-    wire dualtx_en;
-    wire quadtx_en;
 
-    wire [3:0] w_mosi;
     wire w_sending_done;
-    wire w_mosifinish;
     wire [7:0] mosicounter;
     wire [31:0] w_misodata;
     wire [31:0] w_misodatarev;
@@ -344,8 +351,6 @@ module spi_master_fl
     );
     
     //Detect recover sequence
-    reg [3:0] dqvalues;
-    reg recoverseq;
     always @* begin
        dqvalues = 4'h0; 
        recoverseq = 1'b0;
@@ -360,6 +365,7 @@ module spi_master_fl
 
 	
 	//Assert ss
+	reg r_ss_n;
 	assign ss = r_ss_n;
 	
 	//Master State Machine
@@ -367,7 +373,6 @@ module spi_master_fl
 	localparam IDLE = 3'h0;
 	localparam SETUP = 3'h1;
 	localparam TRANSFER = 3'h2;
-	reg	r_ss_n;
 	always @(posedge rst, posedge clk) begin
 		if (rst) begin
 			r_currstate <= IDLE;

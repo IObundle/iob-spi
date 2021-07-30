@@ -68,6 +68,7 @@ module latchspi
     
     //enable dtr latchout
     reg r_dtr_on;
+    wire command_done;
     always @(posedge clk, posedge rst) begin
         if (rst) r_dtr_on <= 1'b0;
         else begin
@@ -76,7 +77,6 @@ module latchspi
         end
     end
 
-    wire command_done;
     assign command_done = r_mosicounter >= 'd8; 
 
     //assign to output
@@ -89,6 +89,8 @@ module latchspi
     wire latchout_tx_en;
     assign latchout_tx_en = dtr_en ? (command_done ? (r_dtr_on ? latchout_dtr_en : 0) : latchout_en) : latchout_en; 
 
+    wire w_xipbit_phase;
+    wire latchin_rx_en;
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
             r_mosi <= 4'h0;
@@ -137,7 +139,6 @@ module latchspi
 	reg [3:0]		r_dummy_counter;
 	reg			r_dummy_done;
     reg         r_xipbit_phase;
-    wire        w_xipbit_phase;
     wire        dummy_count_en;
     assign dummy_count_en = (r_mosifinish && latchout_en || (dtr_en ? r_extradummy : 0)) && (~r_dummy_done);
     assign xipbit_phase = w_xipbit_phase;
@@ -207,7 +208,6 @@ module latchspi
     end    
 
 	//Drive miso
-    wire latchin_rx_en;
     assign latchin_rx_en = dtr_en ? ((latchin_en || latchout_en) && ~opaque_cycle) : (latchin_en);
 	always @(posedge clk, posedge rst) begin
 		if (rst) begin
