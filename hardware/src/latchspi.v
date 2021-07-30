@@ -234,11 +234,11 @@ module latchspi
 	end
 
     // Control lanes to use when on req
+    reg [1:0] nextcnt;
     wire [9:0] txcntholder = (nextcnt=='h0) ? txcntmarks[9:0] : 
                                 (nextcnt=='h1) ? txcntmarks[19:10] : 
                                     (nextcnt=='h2) ? txcntmarks[29:20] : 0;
 
-    reg [1:0] nextcnt;
     wire modeswitch_en = (`SINGLEMODEON && r_mosicounter == txcntholder[7:0] && r_mosicounter < mosistop_cnt); 
     wire [1:0] mode = txcntholder[9:8]; 
     wire quad_en_test = (mode == 2'b10) ? 1'b1 : 1'b0;
