@@ -31,7 +31,7 @@ module configdecoder
     output          quadalt,
 
 	output reg [71:0]	r_str2sendbuild,
-    output reg [9:0] txcntmarks [2:0],
+    output reg [29:0] txcntmarks,
 	output reg		r_build_done,
 	output reg		r_counters_done,
 	output reg [8:0]	r_sclk_edges,
@@ -123,9 +123,7 @@ module configdecoder
 			r_misoctrstop <= 7'd8;
 			r_sclk_edges <= 0;
 			r_counters_done <= 1'b0;
-            txcntmarks[0] <= 0;
-            txcntmarks[1] <= 0;
-            txcntmarks[2] <= 0;
+            txcntmarks <= 0;
 		end else begin
 			r_counters_done <= 1'b0;
 			if (setup_start) begin
@@ -134,68 +132,68 @@ module configdecoder
 						3'b000:	begin//Only command
 								r_counterstop <= 8'd8;
 								r_sclk_edges <= {w_commdcycles, 1'b0};
-                                txcntmarks[0] <= {frame_struct[9:8], 8'd8}; //command_size
-                                txcntmarks[1] <= 0; 
-                                txcntmarks[2] <= 0;
+                                txcntmarks[9:0] <= {frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[19:10] <= 0; 
+                                txcntmarks[29:20] <= 0;
 							end
 						3'b001: begin//command + answer
 								r_counterstop <= 8'd8;
 								r_misoctrstop <= nmisobits;
 								r_sclk_edges <= {w_commdcycles + w_misocycles, 1'b0};
-                                txcntmarks[0] <= {frame_struct[9:8], 8'd8}; //command_size
-                                txcntmarks[1] <= 0; 
-                                txcntmarks[2] <= 0;
+                                txcntmarks[9:0] <= {frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[19:10] <= 0; 
+                                txcntmarks[29:20] <= 0;
 							end
 						3'b010: begin//command + address + (+ dummy cycles +) + answer 
 								r_counterstop <= 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24);
 								r_misoctrstop <= nmisobits;
 								r_sclk_edges <= {w_commdcycles + (dtr_en ?  {1'b0,w_addrcycles[6:1]} : w_addrcycles) + dummy_cycles + (dtr_en ?  {1'b0,w_misocycles[6:1]} : w_misocycles), 1'b0} + (dtr_en ? 1'b1 : 0);
-                                txcntmarks[0] <= {frame_struct[9:8], 8'd8}; //command_size
-                                txcntmarks[1] <= {frame_struct[7:6], 8'd8 + (fourbyteaddr_on ? (8'd32):(8'd24))}; //command_size + address_size
-                                txcntmarks[2] <= 0; 
+                                txcntmarks[9:0] <= {frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[19:10] <= {frame_struct[7:6], 8'd8 + (fourbyteaddr_on ? (8'd32):(8'd24))}; //command_size + address_size
+                                txcntmarks[29:20] <= 0; 
 							end
 						3'b011:	begin//command + data_in
 								r_counterstop <= 8'd8 + ndatatxbits;
 								r_sclk_edges <= {w_commdcycles + w_datatxcycles,1'b0};
-                                txcntmarks[0] <= {frame_struct[9:8], 8'd8}; //command_size
-                                txcntmarks[1] <= {frame_struct[5:4], 8'd8 + ndatatxbits}; //command + data_in 
-                                txcntmarks[2] <= 0;
+                                txcntmarks[9:0] <= {frame_struct[9:8], 8'd8}; //command_size
+                                txcntmarks[19:10] <= {frame_struct[5:4], 8'd8 + ndatatxbits}; //command + data_in 
+                                txcntmarks[29:20] <= 0;
 							end
 						3'b100: begin//command + address + data_in 
 								r_counterstop <= 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24) + ndatatxbits;
 								r_sclk_edges <= {w_commdcycles + w_addrcycles + w_datatxcycles,1'b0};
-                                txcntmarks[0] <= {frame_struct[9:8], 8'd8};
-                                txcntmarks[1] <= {frame_struct[7:6], 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24)}; //command + data_in 
-                                txcntmarks[2] <= {frame_struct[5:4], 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24) + ndatatxbits}; //command + data_in 
+                                txcntmarks[9:0] <= {frame_struct[9:8], 8'd8};
+                                txcntmarks[19:10] <= {frame_struct[7:6], 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24)}; //command + data_in 
+                                txcntmarks[29:20] <= {frame_struct[5:4], 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24) + ndatatxbits}; //command + data_in 
 							end
 						3'b101: begin//command+address
 								r_counterstop <= 8'd8 + (fourbyteaddr_on ? 8'd32:8'd24);
 								r_sclk_edges <= {w_commdcycles + w_addrcycles,1'b0};
-                                txcntmarks[0] <= {frame_struct[9:8], 8'd8}; 
-                                txcntmarks[1] <= {frame_struct[7:6], (fourbyteaddr_on ? 8'd32:8'd24)}; //command + address 
-                                txcntmarks[2] <= 0;
+                                txcntmarks[9:0] <= {frame_struct[9:8], 8'd8}; 
+                                txcntmarks[19:10] <= {frame_struct[7:6], (fourbyteaddr_on ? 8'd32:8'd24)}; //command + address 
+                                txcntmarks[29:20] <= 0;
 							end
                         3'b110: begin//XIP mode, address + answer
                                 r_counterstop <= (fourbyteaddr_on ? 8'd32:8'd24);
 								r_misoctrstop <= nmisobits;
 								r_sclk_edges <= {w_addrcycles + dummy_cycles + w_misocycles, 1'b0};
-                                txcntmarks[0] <= {frame_struct[7:6], (fourbyteaddr_on ? 8'd32:8'd24)};
-                                txcntmarks[1] <= 0; 
-                                txcntmarks[2] <= 0;
+                                txcntmarks[9:0] <= {frame_struct[7:6], (fourbyteaddr_on ? 8'd32:8'd24)};
+                                txcntmarks[19:10] <= 0; 
+                                txcntmarks[29:20] <= 0;
                             end
                         3'b111: begin//reset sequences
 								r_counterstop <= ndatatxbits;
 								r_sclk_edges <= {w_datatxcycles,1'b0};                       
-                                txcntmarks[0] <= 0;
-                                txcntmarks[1] <= 0;
-                                txcntmarks[2] <= 0; 
+                                txcntmarks[9:0] <= 0;
+                                txcntmarks[19:10] <= 0;
+                                txcntmarks[29:20] <= 0; 
                             end
 					default:	begin
 								r_counterstop <= 8'd8;
 								r_sclk_edges <= {w_commdcycles, 1'b0};
-                                txcntmarks[0] <= 0;
-                                txcntmarks[1] <= 0; 
-                                txcntmarks[2] <= 0; 
+                                txcntmarks[9:0] <= 0;
+                                txcntmarks[19:10] <= 0; 
+                                txcntmarks[29:20] <= 0; 
 							end
 					endcase
 			end
