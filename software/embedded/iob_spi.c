@@ -3,7 +3,6 @@
 #include "iob_spiplatform.h"
 #include "iob_spidefs.h"
 #include "stdint.h"
-#include "printf.h"
 
 static unsigned int base;
 unsigned xipframestruct = 0;
@@ -112,33 +111,24 @@ int spiflash_memProgram(char* mem, int memsize, unsigned int address)
     
     int memblocks = memsize / numbytes;
     int remainder_memblocks = memsize % numbytes;
-    printf("Entering programming cycle %d\n", memblocks);
+    
     //Main programming cycle
     int i=0, j=0, k=0;
     unsigned int address_aux = address, statusReg=0;
-    int l=0;
+    int numwrites=0;
     int numbytes_aux = numbytes;
-    for(i=0; i < memsize; i=i+numbytes_aux){
-        if (i==memblocks){
-            if (remainder_memblocks == 0) break;
-            else{ 
-                numbytes_aux = remainder_memblocks; 
-                command = 0;
-                command = (frame_struct << 20) | (numbytes_aux*8 << 8) | PROGRAMFAST_QUADINEXT;
-            }
+    for(i=0; i < memsize; i=i+numbytes_aux, numwrites++){
+        if (numwrites==memblocks && remainder_memblocks != 0){
+            numbytes_aux = remainder_memblocks; 
+            command = 0;
+            command = (frame_struct << 20) | (numbytes_aux*8 << 8) | PROGRAMFAST_QUADINEXT;
         }
         else numbytes_aux = numbytes;
         
-        //printf("after numbytes\n");
-        //printf("%c\n", mem[i]);
         //concat bytes into strtoProgram
         for(j=0, strtoProgram=0; j < numbytes_aux; j++){
-            //printf("%c ,  %x\n", mem[i+j], (unsigned int)mem[i+j]);
             strtoProgram |= ((unsigned int)mem[i+j] & 0x0ff) << (j*8); 
         }
-        //printf("numbytes %d\n", numbytes_aux);
-        //printf("str: %x\n", strtoProgram);
-        //printf("after concat\n");
 	    
         statusReg = 0;
         //execute WRITE ENABLE
@@ -150,13 +140,9 @@ int spiflash_memProgram(char* mem, int memsize, unsigned int address)
         if(statusReg != 0){
             do{
                 spiflash_readStatusReg(&statusReg);
-                l++;
-            }while(statusReg != 0 && l<2);
+            }while(statusReg != 0);
         }
-        l=0;
 
-        //read_word = spiflash_readfastQuadOutput(address_aux, 0);
-       //printf("Programmed: %x, read: %x\n", strtoProgram, read_word); 
         address_aux += numbytes_aux;
 
     }
