@@ -86,13 +86,13 @@ module spi_master_fl
 	reg		    hold_n_int;
     reg         r_endianness = 1'b0;// 0 for little-endian, on data read from flash
 
-	wire [71:0]	w_str2sendbuild;
-	wire [7:0]	w_counterstop;
-	wire [6:0]	w_misoctrstop;
-	wire [8:0]	w_sclk_edges;
-    wire [9:0]   txcntmarks [2:0];
-	wire		w_counters_done;
-	wire		w_build_done;
+	wire [71:0]	    w_str2sendbuild;
+	wire [7:0]	    w_counterstop;
+	wire [6:0]	    w_misoctrstop;
+	wire [8:0]	    w_sclk_edges;
+    wire [29:0]     txcntmarks;
+	wire		    w_counters_done;
+	wire		    w_build_done;
     wire    xipbit_phase;
 	wire	tranfers_done;
 	wire	sclk_leade;

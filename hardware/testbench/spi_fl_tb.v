@@ -69,9 +69,6 @@ module spi_tb;
 	initial begin
 		$dumpfile("spi_fl_tb.vcd");
 		$dumpvars();
-		$dumpvars(0,spi_tb.spi_m.txcntmarks[0]);
-		$dumpvars(0,spi_tb.spi_m.txcntmarks[1]);
-		$dumpvars(0,spi_tb.spi_m.txcntmarks[2]);
 		
 		//Clks and reset
 		rst = 1;

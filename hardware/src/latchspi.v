@@ -31,7 +31,7 @@ module latchspi
     input [3:0] dummy_cycles,
     input [6:0] misostop_cnt,
     input [1:0] xipbit_en,
-    input [9:0] txcntmarks [2:0],
+    input [29:0] txcntmarks,
     input [1:0] spimode,
     input [6:0] numrxbits,
     output xipbit_phase,
@@ -234,7 +234,10 @@ module latchspi
 	end
 
     // Control lanes to use when on req
-    wire [9:0] txcntholder = txcntmarks[nextcnt]; 
+    wire [9:0] txcntholder = (nextcnt=='h0) ? txcntmarks[9:0] : 
+                                (nextcnt=='h1) ? txcntmarks[19:10] : 
+                                    (nextcnt=='h2) ? txcntmarks[29:20] : 0;
+
     reg [1:0] nextcnt;
     wire modeswitch_en = (`SINGLEMODEON && r_mosicounter == txcntholder[7:0] && r_mosicounter < mosistop_cnt); 
     wire [1:0] mode = txcntholder[9:8]; 
@@ -248,11 +251,12 @@ module latchspi
         if (rst) begin
             nextcnt <= 2'h0;
         end else begin
-            if (modeswitch_en) begin
-               nextcnt <= nextcnt + 1'b1;
+            if (setup_rst) nextcnt <= 0;
+            else begin
+                if (modeswitch_en) begin
+                   nextcnt <= nextcnt + 1'b1;
+                end
             end
-            if (setup_rst)
-                nextcnt <= 0;
         end
     end
 
