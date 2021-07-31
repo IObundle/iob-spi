@@ -22,10 +22,10 @@ REMOTE_ROOT_DIR ?=sandbox/iob-soc/submodules/SPI
 SPI_SUBMODULES:=INTERCON LIB TEX
 $(foreach p, $(SPI_SUBMODULES), $(eval $p_DIR ?=$(SPI_SUBMODULES_DIR)/$p))
 
-RUN_FLASH ?=1
-ifeq ($(RUN_FLASH),1)
-DEFINE+=$(defmacro)RUN_FLASH
-endif
+#RUN_FLASH ?=1
+#ifeq ($(RUN_FLASH),1)
+#DEFINE+=$(defmacro)RUN_FLASH
+#endif
 
 #
 #SIMULATION
@@ -37,8 +37,8 @@ SIM_DIR ?=hardware/simulation/$(SIMULATOR)
 #
 #FPGA
 #
-FPGA_FAMILY ?=CYCLONEV-GT
-#FPGA_FAMILY ?=XCKU
+#FPGA_FAMILY ?=CYCLONEV-GT
+FPGA_FAMILY ?=XCKU
 FPGA_SERVER ?=pudim-flan.iobundle.com
 FPGA_USER ?= $(USER)
 
@@ -67,9 +67,9 @@ ASIC_DIR ?=hardware/asic/$(ASIC_NODE)
 #
 #DOCUMENT
 #
-#DOC_TYPE:=pb
-DOC_TYPE:=ug
-INTEL ?=0
+DOC_TYPE:=pb
+#DOC_TYPE:=ug
+INTEL ?=1
 XILINX ?=1
 
 VLINE:="V$(VERSION)"
