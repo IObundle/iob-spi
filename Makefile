@@ -123,7 +123,7 @@ doc-pdfclean-all:
 	make -C document/pb pdfclean
 	make -C document/ug pdfclean
 
-clean: sim-clean fpga-clean doc-clean-all doc-pdfclean-all
+clean: sim-clean fpga-clean asic-clean doc-clean-all
 
 .PHONY: sim sim-waves sim-clean \
 	fpga fpga_clean \
