@@ -1,7 +1,7 @@
-	       //CPU native interface
-               `INPUT(valid_cache,   1),  //Native CPU interface valid signal
-	       `INPUT(address_cache, `FLASH_CACHE_ADDR_W),  //Native CPU interface address signal
-               `INPUT(wdata_cache,   WDATA_W), //Native CPU interface data write signal
-	       `INPUT(wstrb_cache,   DATA_W/8),  //Native CPU interface write strobe signal
-	       `OUTPUT(rdata_cache,  DATA_W), //Native CPU interface read data signal
-	       `OUTPUT(ready_cache,  1),  //Native CPU interface ready signal
+        //CPU native interface
+        input                           valid_cache,  //Native CPU interface valid signal
+        input [`FLASH_CACHE_ADDR_W-1:0] address_cache,  //Native CPU interface address signal
+        input [WDATA_W-1:0]             wdata_cache, //Native CPU interface data write signal
+        input [DATA_W/8-1:0]            wstrb_cache,  //Native CPU interface write strobe signal
+        output [DATA_W-1:0]             rdata_cache, //Native CPU interface read data signal
+        output                          ready_cache,  //Native CPU interface ready signal

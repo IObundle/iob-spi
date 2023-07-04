@@ -1,10 +1,10 @@
 //SW_REG
 //soft reset register FLC_RESET
-`SWREG_W(FL_RESET,			1,	0)//FL soft reset
-`SWREG_W(FL_DATAIN,			32,	0)//FL data_in
-`SWREG_W(FL_ADDRESS,		32,	0)//FL address
-`SWREG_W(FL_COMMAND,		32,	0)//FL command
-`SWREG_W(FL_COMMANDTP,		32,	0)//FL command type
-`SWREG_W(FL_VALIDFLG,		1,	0)//FL valigflag
-`SWREG_R(FL_READY,           1,  0)//FL ready flag
-`SWREG_R(FL_DATAOUT,		32,	0)//FL data_out
+reg           FL_RESET;//FL soft reset
+reg [32-1:0]  FL_DATAIN;//FL data_in
+reg [32-1:0]  FL_ADDRESS;//FL address
+reg [32-1:0]  FL_COMMAND;//FL command
+reg [32-1:0]  FL_COMMANDTP;//FL command type
+reg           FL_VALIDFLG;//FL valigflag
+wire          FL_READY;//FL ready flag
+wire [32-1:0] FL_DATAOUT;//FL data_out

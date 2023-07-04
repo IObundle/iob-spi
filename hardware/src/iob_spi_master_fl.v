@@ -29,29 +29,31 @@ module iob_spi_master_fl #(
   `include "SPIsw_reg_gen.v"
 
   //Hard or Soft Reset
-  `SIGNAL(rst_int, 1)
-  `COMB rst_int = rst | FL_RESET;
+  reg rst_int;
+  always @* begin
+    rst_int = rst | FL_RESET;
+  end
 
   //Ready signal from flash controller
-  `SIGNAL_OUT(readyflash_int, 1)
+  wire readyflash_int;
 
-  `SIGNAL2OUT(FL_READY, readyflash_int)
+  assign FL_READY = readyflash_int;
 
   //Cache interface connection
-  `SIGNAL_OUT(dataout_int, DATA_W)
-  `SIGNAL2OUT(FL_DATAOUT, dataout_int)
-  `SIGNAL_OUT(address_int, 32)
-  `SIGNAL_OUT(valid_int, 1)
+  wire [DATA_W-1:0] dataout_int;
+  assign FL_DATAOUT = dataout_int;
+  wire [32-1:0] address_int;
+  wire valid_int;
 `ifdef RUN_FLASH
-  `SIGNAL2OUT(rdata_cache, dataout_int)
-  `SIGNAL_OUT(cache_read_req_en, 1)
-  `SIGNAL2OUT(cache_read_req_en, valid_cache & (~|wstrb_cache))
+  assign rdata_cache = dataout_int;
+  wire cache_read_req_en;
+  assign cache_read_req_en = valid_cache&(~|wstrb_cache);
   assign address_int = cache_read_req_en ? {{(DATA_W-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS;
-  `SIGNAL2OUT(valid_int, cache_read_req_en ? valid_cache : FL_VALIDFLG)
+  assign valid_int = cache_read_req_en?valid_cache:FL_VALIDFLG;
 
   //Cache Ready Output
-  `SIGNAL(cache_ready_en, 1)
-  `SIGNAL2OUT(ready_cache, cache_ready_en ? readyflash_int : 1'b0)
+  reg cache_ready_en;
+  assign ready_cache = cache_ready_en?readyflash_int:1'b0;
   always @(posedge clk, posedge rst) begin
     if (rst) cache_ready_en <= 1'b0;
     else begin
@@ -67,8 +69,8 @@ module iob_spi_master_fl #(
     end
   end
 `else
-  `SIGNAL2OUT(address_int, FL_ADDRESS)
-  `SIGNAL2OUT(valid_int, FL_VALIDFLG)
+  assign address_int = FL_ADDRESS;
+  assign valid_int = FL_VALIDFLG;
 `endif
 
   //Instantiate core
