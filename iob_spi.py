@@ -16,9 +16,9 @@ from iob_reg_e import iob_reg_e
 
 
 class iob_spi(iob_module):
-    name = "iob_spi_master"
+    name = "iob_spi"
     version = "V0.10"
-    flows = "sim emb doc"
+    flows = "sim emb doc fpga"
     setup_dir = os.path.dirname(__file__)
 
     @classmethod

@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
-`include "iob_lib.vh"
-`include "interconnect.vh"
-`include "iob_spi_fl.vh"
+
+`include "iob_spi_conf.vh"
+`include "iob_spi_swreg_def.vh"
 
 `ifdef FLASH_ADDR_W
 `define FLASH_CACHE_ADDR_W `FLASH_ADDR_W
@@ -10,16 +10,22 @@
 `endif
 
 module iob_spi_master #(
-    `include "iob_spi_master_params.vs"
+    `include "iob_spi_params.vs"
 ) (
 `ifdef RUN_FLASH
-    `include "cpu_nat_s_cache_if.vs"
+        //CPU native interface
+        input                           valid_cache,  //Native CPU interface valid signal
+        input [`FLASH_CACHE_ADDR_W-1:0] address_cache,  //Native CPU interface address signal
+        input [WDATA_W-1:0]             wdata_cache, //Native CPU interface data write signal
+        input [DATA_W/8-1:0]            wstrb_cache,  //Native CPU interface write strobe signal
+        output [DATA_W-1:0]             rdata_cache, //Native CPU interface read data signal
+        output                          ready_cache,  //Native CPU interface ready signal
 `endif
-    `include "iob_spi_master_io.vs"
+    `include "iob_spi_io.vs"
 );
 
   //Software Accessible Registers
-  `include "iob_spi_master_swreg_inst.vs"
+  `include "iob_spi_swreg_inst.vs"
 
   //Hard or Soft Reset
   reg rst_int;
