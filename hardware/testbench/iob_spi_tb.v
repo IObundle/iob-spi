@@ -68,7 +68,7 @@ module iob_spi_tb;
 
   //Process
   initial begin
-    $dumpfile("spi_fl_tb.vcd");
+    $dumpfile("iob_spi_tb.vcd");
     $dumpvars();
 
     //Clks and reset

@@ -9,7 +9,7 @@
 `define FLASH_CACHE_ADDR_W 24
 `endif
 
-module iob_spi_master_fl #(
+module iob_spi_master #(
     parameter ADDR_W  = `FL_ADDR_W,
     parameter DATA_W  = `DATA_W,
     parameter WDATA_W = `FL_WDATA_W
