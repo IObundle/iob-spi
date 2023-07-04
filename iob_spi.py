@@ -64,7 +64,7 @@ class iob_spi(iob_module):
                 {
                     "name": "ADDR_W",
                     "type": "P",
-                    "val": "`IOB_SPI_MASTER_SWREG_ADDR_W",
+                    "val": "`IOB_SPI_SWREG_ADDR_W",
                     "min": "NA",
                     "max": "NA",
                     "descr": "Address bus width",
@@ -72,7 +72,7 @@ class iob_spi(iob_module):
                 {
                     "name": "FL_ADDR_W",
                     "type": "P",
-                    "val": "4",
+                    "val": "`IOB_SPI_SWREG_ADDR_W",
                     "min": "NA",
                     "max": "NA",
                     "descr": "",
