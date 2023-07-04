@@ -85,6 +85,14 @@ class iob_spi(iob_module):
                     "max": "NA",
                     "descr": "",
                 },
+                {
+                    "name": "RUN_FLASH",
+                    "type": "M",
+                    "val": False,
+                    "min": "NA",
+                    "max": "NA",
+                    "descr": "",
+                },
             ]
         )
 
@@ -92,6 +100,55 @@ class iob_spi(iob_module):
     def _setup_ios(cls):
         cls.ios += [
             {"name": "iob_s_port", "descr": "CPU native interface", "ports": []},
+            {
+                "name": "iob_s_cache",
+                "descr": "Cache interface.",
+                "if_defined": "RUN_FLASH",
+                "ports": [
+                    {
+                        "name": "avalid_cache",
+                        "type": "I",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "address_cache",
+                        "type": "I",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "wdata_cache",
+                        "type": "I",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "wstrb_cache",
+                        "type": "I",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "rdata_cache",
+                        "type": "O",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "rvalid_cache",
+                        "type": "O",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "ready_cache",
+                        "type": "O",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                ],
+            },
             {
                 "name": "general",
                 "descr": "GENERAL INTERFACE SIGNALS",

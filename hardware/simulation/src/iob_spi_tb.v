@@ -85,7 +85,8 @@ module iob_spi_tb;
   initial begin
     #100 fourbyteaddr_on = 1'b1;
 
-    spimode = 0;
+    $display("Test command 0.");
+    spimode = 2'b00;
     data_in=32'haabbccdd;
     command=8'h66;
     address=32'haa5a5a11;
@@ -107,8 +108,7 @@ module iob_spi_tb;
     //#3000
 
     wait (tready);
-    #120
-    //New command
+    #120 $display("Test command 1.");
     spimode = 2'b11;
     data_in=32'haabbccdd;
     command=8'h6b;
@@ -124,8 +124,7 @@ module iob_spi_tb;
     #20 validflag = 1'b0;
 
     #100 wait (tready);
-    #120
-    //New command
+    #120 $display("Test command 2.");
     spimode = 2'b10;
     data_in=8'h5A;
     command=8'h0b;
@@ -144,8 +143,7 @@ module iob_spi_tb;
 
     //#100
     //wait(tready);
-    #120
-    //New command
+    #120 $display("Test command 3.");
     spimode = 2'b00;
     data_in=8'h5A;
     command=8'h6D;
@@ -160,6 +158,8 @@ module iob_spi_tb;
     #50 validflag = 1'b1;
     #20 validflag = 1'b0;
     #100 wait (tready);
+
+
     #100 $display("Test PASSED");
 
     fd = $fopen("test.log", "w");
