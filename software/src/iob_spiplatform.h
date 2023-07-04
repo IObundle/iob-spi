@@ -1,5 +1,7 @@
 #pragma once
 
+#include "iob_spi_master_swreg.h"
+
 //Functions
 
 void spiflash_reset();

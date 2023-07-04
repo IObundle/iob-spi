@@ -10,23 +10,16 @@
 `endif
 
 module iob_spi_master #(
-    parameter ADDR_W  = `FL_ADDR_W,
-    parameter DATA_W  = `DATA_W,
-    parameter WDATA_W = `FL_WDATA_W
+    `include "iob_spi_master_params.vs"
 ) (
-
-    `include "cpu_nat_s_if.v"
 `ifdef RUN_FLASH
-    `include "cpu_nat_s_cache_if.v"
+    `include "cpu_nat_s_cache_if.vs"
 `endif
-    `include "flash_if.v"
-    `include "gen_if.v"
+    `include "iob_spi_master_io.vs"
 );
 
-
   //Software Accessible Registers
-  `include "SPIsw_reg.v"
-  `include "SPIsw_reg_gen.v"
+  `include "iob_spi_master_swreg_inst.vs"
 
   //Hard or Soft Reset
   reg rst_int;

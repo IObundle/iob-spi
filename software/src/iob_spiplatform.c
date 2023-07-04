@@ -1,56 +1,52 @@
 #include <stddef.h>
 #include "iob_spiplatform.h"
-#include "SPIsw_reg.h"
-#include "interconnect.h"
 #include "iob_spidefs.h"
-#include "stdint.h"
-
-static unsigned int base;
+#include <stdint.h>
 
 //SET
 void spiflash_reset()
 {
-    IO_SET(base, FL_RESET, 1);//soft reset
-    IO_SET(base, FL_RESET, 0);
+    IOB_SPI_MASTER_SET_FL_RESET(1);//soft reset
+    IOB_SPI_MASTER_SET_FL_RESET(0);
 }
 
 void spiflash_setDATAIN(unsigned int datain)
 {
-    IO_SET(base, FL_DATAIN, datain);
+    IOB_SPI_MASTER_SET_FL_DATAIN(datain);
 
 }
 
 void spiflash_setADDRESS(unsigned int address)
 {
-    IO_SET(base, FL_ADDRESS, address);
+    IOB_SPI_MASTER_SET_FL_ADDRESS(address);
 }
 
 void spiflash_setCOMMAND(unsigned int command)
 {
-    IO_SET(base, FL_COMMAND, command);
+    IOB_SPI_MASTER_SET_FL_COMMAND(command);
 }
 
 void spiflash_setCOMMTYPE(unsigned int commtype)
 {
-    IO_SET(base, FL_COMMANDTP, commtype);
+    IOB_SPI_MASTER_SET_FL_COMMANDTP(commtype);
 }
 
 void spiflash_setVALIDIN(unsigned int validin)
 {
-    IO_SET(base, FL_VALIDFLG, validin);
+    IOB_SPI_MASTER_SET_FL_VALIDFLG(validin);
 }
 
 //GET
 unsigned int spiflash_getDATAOUT()
 {
     unsigned int dataout;
-    dataout = (unsigned int) IO_GET(base, FL_DATAOUT);
+    dataout = (unsigned int) IOB_SPI_MASTER_GET_FL_DATAOUT();
     return dataout;
 }
 
 inline unsigned spiflash_getREADY()
 {
-    return (unsigned int) IO_GET(base, FL_READY);
+    return (unsigned int) IOB_SPI_MASTER_GET_FL_READY();
 }
 
 //Higher functions

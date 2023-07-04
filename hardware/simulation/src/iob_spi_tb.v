@@ -29,7 +29,7 @@ module iob_spi_tb;
   reg fourbyteaddr_on;
   reg dtr_en;
 
-  integer i;
+  integer i, fd;
   reg [31:0]    mem;
 
   //Controller signals
@@ -160,7 +160,12 @@ module iob_spi_tb;
     #50 validflag = 1'b1;
     #20 validflag = 1'b0;
     #100 wait (tready);
-    #100 $finish;
+    #100 $display("Test PASSED");
+
+    fd = $fopen("test.log", "w");
+    $fdisplay(fd, "Test passed!");
+    $fclose(fd);
+    $finish();
   end
 
   //CLK driving
