@@ -9,48 +9,48 @@
 
 int main()
 {
-	
-  	unsigned int word = 0xFAFAB0CA;
-	unsigned int address = 0x000100;
-	unsigned int read_mem = 0xF0F0F0F0;
-   	uart_init(UART_BASE, FREQ/BAUD);
+    
+    unsigned int word = 0xFAFAB0CA;
+    unsigned int address = 0x000100;
+    unsigned int read_mem = 0xF0F0F0F0;
+    uart_init(UART_BASE, FREQ/BAUD);
 
-	//init spi flash controller
-	spiflash_init(SPI_BASE);
+    //init spi flash controller
+    spiflash_init(SPI_BASE);
 
-	printf("\nTesting SPI flash controller\n");
-	
+    printf("\nTesting SPI flash controller\n");
+    
     //printf("\nApplying Recover Sequence\n");
     //spiflash_RecoverSequence();
 
-	/*printf("\nReading flash parameters: command 0x5a\n");
-	unsigned int addressparam = 0x30, wordparam=0;
-	wordparam = spiflash_readFlashParam(addressparam);
+    /*printf("\nReading flash parameters: command 0x5a\n");
+    unsigned int addressparam = 0x30, wordparam=0;
+    wordparam = spiflash_readFlashParam(addressparam);
 
-	printf("\nParameter Values (address (%x)):(%x)\n",addressparam,wordparam);
+    printf("\nParameter Values (address (%x)):(%x)\n",addressparam,wordparam);
 */
-	//printf("\nResetting flash memory\n");
-	//spiflash_resetmem();
-	
+    //printf("\nResetting flash memory\n");
+    //spiflash_resetmem();
+    
     //Reading Status Reg
-	unsigned reg = 0x00;
-	spiflash_readStatusReg(&reg);
-	printf("\nStatus reg (%x)\n", reg);
+    unsigned reg = 0x00;
+    spiflash_readStatusReg(&reg);
+    printf("\nStatus reg (%x)\n", reg);
 
     //Testing Fast Read in single, dual, quad
-	unsigned bytes = 4, readid = 0;
+    unsigned bytes = 4, readid = 0;
     unsigned frame = 0x00000000;
     unsigned commFastRead = 0x0b;
     unsigned fastReadmem0 = 0, fastReadmem1 = 0, fastReadmem2 =0;
     unsigned dummycycles = 8;
     /*
     //single
-	spiflash_executecommand(COMMADDR_ANS, 0, 0, (frame<<20)|(dummycycles<<16)|((bytes*8)<<8)|commFastRead, &fastReadmem0);
-	//dual
+    spiflash_executecommand(COMMADDR_ANS, 0, 0, (frame<<20)|(dummycycles<<16)|((bytes*8)<<8)|commFastRead, &fastReadmem0);
+    //dual
     frame = 0x00000177;
     dummycycles = 8;
     spiflash_executecommand(COMMADDR_ANS, 0, 0, (frame<<20)|(dummycycles<<16)|((bytes*8)<<8)|commFastRead, &fastReadmem1);
-	//quad
+    //quad
     frame = 0x000002bb;
     dummycycles = 10;
     spiflash_executecommand(COMMADDR_ANS, 0, 0, (frame<<20)|(dummycycles<<16)|((bytes*8)<<8)|commFastRead, &fastReadmem2);
@@ -60,19 +60,19 @@ int main()
     //Read ID
     bytes = 4;
     readid = 0;
-	spiflash_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|READ_ID, &readid);
+    spiflash_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|READ_ID, &readid);
 
-	printf("\nREAD_ID: (%x)\n", readid);
-	//Read from flash memory
-	printf("\nReading from flash (address: (%x))\n", address);
-	read_mem = spiflash_readmem(address);
+    printf("\nREAD_ID: (%x)\n", readid);
+    //Read from flash memory
+    printf("\nReading from flash (address: (%x))\n", address);
+    read_mem = spiflash_readmem(address);
 
-	if(word == read_mem){
-		printf("\nMemory Read (%x) got same word as Programmed(%x)\nSuccess\n", read_mem, word);
-	}
-	else{
-		printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)\n", read_mem, word);
-	}
+    if(word == read_mem){
+        printf("\nMemory Read (%x) got same word as Programmed(%x)\nSuccess\n", read_mem, word);
+    }
+    else{
+        printf("\nDifferent word from memory\nRead: (%x), Programmed: (%x)\n", read_mem, word);
+    }
 
     address = 0x0;
     read_mem = 1;
@@ -97,19 +97,19 @@ int main()
 
     printf("\nRead Non volatile Register\n");
     unsigned nonVolatileReg = 0;
-	bytes = 2;
+    bytes = 2;
     unsigned command_aux = 0xb5;
-	spiflash_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &nonVolatileReg);
-	printf("\nNon volatile Register (16 bits):(%x)\n", nonVolatileReg);	
+    spiflash_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &nonVolatileReg);
+    printf("\nNon volatile Register (16 bits):(%x)\n", nonVolatileReg);    
     //uart_txwait();
     
     printf("\nRead enhanced volatile Register\n");
     unsigned enhancedReg = 0;
-	bytes = 1;
+    bytes = 1;
     command_aux = 0x65;
     frame = 0x00000000;
-	spiflash_executecommand(COMMANS, 0, 0, (frame<<20)|((bytes*8)<<8)|command_aux, &enhancedReg);
-	printf("\nEnhanced volatile Register (8 bits):(%x)\n", enhancedReg);	
+    spiflash_executecommand(COMMANS, 0, 0, (frame<<20)|((bytes*8)<<8)|command_aux, &enhancedReg);
+    printf("\nEnhanced volatile Register (8 bits):(%x)\n", enhancedReg);    
 
     //Write enhanced reg
     /*
@@ -118,13 +118,13 @@ int main()
     bytes = 1;
     frame = 0x000001df;
     printf("\nWrite enhanced reg\n");
-	spiflash_executecommand(COMM_DTIN, dtin, 0, (frame<<20)|((bytes*8)<<8)|command_aux, NULL);
+    spiflash_executecommand(COMM_DTIN, dtin, 0, (frame<<20)|((bytes*8)<<8)|command_aux, NULL);
     printf("\nRead enhanced volatile Register\n");
     
     command_aux = 0x65;
     enhancedReg = 4;
-	spiflash_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &enhancedReg);
-	printf("\nEnhanced volatile Register after write (8 bits):(%x)\n", enhancedReg);	
+    spiflash_executecommand(COMMANS, 0, 0, ((bytes*8)<<8)|command_aux, &enhancedReg);
+    printf("\nEnhanced volatile Register after write (8 bits):(%x)\n", enhancedReg);    
     */
     
 
@@ -152,20 +152,20 @@ int main()
     printf("\n===================\n");
     */
     //Testing xip bit enabling and xip termination sequence
-	printf("\nTesting xip enabling through volatile bit and termination by sequence\n");	
+    printf("\nTesting xip enabling through volatile bit and termination by sequence\n");    
     unsigned volconfigReg = 0;
 
     printf("\nResetting flash registers...\n");
     spiflash_resetmem();
 
     spiflash_readVolConfigReg(&volconfigReg);
-	printf("\nVolatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
+    printf("\nVolatile Configuration Register (8 bits):(%x)\n", volconfigReg);    
     
     spiflash_XipEnable();
     
     volconfigReg = 0;
     spiflash_readVolConfigReg(&volconfigReg);
-	printf("\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
+    printf("\nAfter xip bit write, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);    
     //uart_txwait();
     
     //Confirmation bit 0
@@ -179,7 +179,7 @@ int main()
     printf("\nAfter xip termination sequence: %d\n", xipEnabled);
     volconfigReg = 0;
     spiflash_readVolConfigReg(&volconfigReg);
-	printf("\nAfter xip termination sequence, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
+    printf("\nAfter xip termination sequence, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);    
     
     /*read_mem = 1;
     printf("\nTesting dual output fast read with xip confirmation bit 0\n");
@@ -208,7 +208,7 @@ int main()
     
     volconfigReg = 0;
     spiflash_readVolConfigReg(&volconfigReg);
-	printf("\nAfter xip termination with confirmation bit 1, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);	
+    printf("\nAfter xip termination with confirmation bit 1, Volatile Configuration Register (8 bits):(%x)\n", volconfigReg);    
     uart_txwait();*/
 
     //Testing programming functions

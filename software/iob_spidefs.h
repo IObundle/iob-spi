@@ -1,12 +1,12 @@
 
 //TYPECODES identify type of operation to be executed by flash controller
 
-#define COMM			0
-#define COMMANS			1
-#define COMMADDR_ANS	2
-#define COMM_DTIN		3
-#define COMMADDR_DTIN	4
-#define COMMADDR		5
+#define COMM            0
+#define COMMANS            1
+#define COMMADDR_ANS    2
+#define COMM_DTIN        3
+#define COMMADDR_DTIN    4
+#define COMMADDR        5
 #define XIP_ADDRANS     6
 #define RECOVER_SEQ     7
 
@@ -20,17 +20,17 @@
 #define QUADMODE 2
 
 //FLASH MEM internal command codes
-#define RESET_ENABLE		0x66
-#define	RESET_MEM			0x99
-#define READ				0x03
-#define WRITE_ENABLE		0x06
+#define RESET_ENABLE        0x66
+#define RESET_MEM            0x99
+#define READ                0x03
+#define WRITE_ENABLE        0x06
 #define WRITE_VOLCFGREG     0x81
-#define PAGE_PROGRAM		0x02
-#define SUB_ERASE			0x20
-#define SEC_ERASE			0xD8
+#define PAGE_PROGRAM        0x02
+#define SUB_ERASE            0x20
+#define SEC_ERASE            0xD8
 #define READ_STATUSREG      0x05
 #define READ_VOLCFGREG      0x85
-#define READ_ID				0x9f
+#define READ_ID                0x9f
 #define READ_FLPARAMS       0x5A
 
 #define READENHANCEDREG      0x65
