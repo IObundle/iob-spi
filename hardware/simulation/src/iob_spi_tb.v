@@ -8,8 +8,10 @@ module iob_spi_tb;
   reg rst;
   reg clk;
 
-  reg miso;
+  wire miso;
   wire mosi;
+  wire hold_n;
+  wire wp_n;
   wire ss;
   reg sclk;
 
@@ -47,6 +49,8 @@ module iob_spi_tb;
       .mosi_dq0(mosi),
       .sclk    (sclk),
       .miso_dq1(miso),
+      .hold_n_dq3(),
+      .wp_n_dq2(),
 
       //Controller
       .data_in        (data_in),
