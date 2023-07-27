@@ -15,14 +15,16 @@ module iob_spi_master #(
     `include "iob_spi_io.vs"
 );
 
-   // This mapping is required because "iob_uart_swreg_inst.vh" uses "iob_s_portmap.vh" (This would not be needed if mkregs used "iob_s_s_portmap.vh" instead)
-  wire [           0:0] iob_avalid;  //Request valid.
+  // This mapping is required because "iob_uart_swreg_inst.vh" uses "iob_s_portmap.vh" (This would not be needed if mkregs used "iob_s_s_portmap.vh" instead)
+  wire                  iob_avalid;  //Request valid.
   wire [    ADDR_W-1:0] iob_addr;  //Address.
   wire [    DATA_W-1:0] iob_wdata;  //Write data.
   wire [(DATA_W/8)-1:0] iob_wstrb;  //Write strobe.
-  wire [           0:0] iob_rvalid;
+  wire                  iob_rvalid;
   wire [    DATA_W-1:0] iob_rdata;
-  wire [           0:0] iob_ready;
+  wire                  iob_ready;
+  wire                  iob_ready_nxt_o;
+  wire                  iob_rvalid_nxt_o;
 
   wire avalid_int;
   wire [32-1:0] address_int;
