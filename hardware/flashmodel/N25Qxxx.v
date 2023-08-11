@@ -58,10 +58,10 @@
 
 
 
-`include "UserData.h"
+`include "UserData.vh"
 
 module paramConfig();
-`include "DevParam.h"
+`include "DevParam.vh"
 
 endmodule
 
@@ -86,7 +86,7 @@ endmodule
     `endif
 `endif
 
-`include "DevParam.h"
+`include "DevParam.vh"
  parameter [1:0] rdeasystacken = 0;
  parameter [1:0] rdeasystacken2 = 0;
  parameter [15:0] NVConfigReg_default = `NVCR_DEFAULT_VALUE;
@@ -343,7 +343,7 @@ assign W_int = Vpp_W_DQ2;
 // CUI decoders istantiation
 //----------------------------
 
-`include "Decoders.h"
+`include "Decoders.vh"
 
 
 
@@ -488,7 +488,7 @@ ProtectionManagementRegister PMReg(); // instantiated the protection management 
 OTP_memory      OTP (); 
 
 
-`include "PLRSDetectors.h"
+`include "PLRSDetectors.vh"
 
 DebugModule Debug ();
 
@@ -2579,7 +2579,7 @@ endmodule //N25Qxxx
 module CUIdecoder (cmdAllowed);
 
 
-    `include "DevParam.h" 
+    `include "DevParam.vh" 
 
     input cmdAllowed;
 
@@ -2703,7 +2703,7 @@ endmodule //CUIdecoder
 `ifdef MEDT_MSE
 //CUIdecoderEFI captures 
 module CUIdecoderEFI_MSE (cmdAllowed);
-    `include "DevParam.h" 
+    `include "DevParam.vh" 
 
     input cmdAllowed;
 
@@ -3383,7 +3383,7 @@ endmodule //CUIdecoderEFI_MSE
 
 `ifdef MEDT_TDP
 module CUIdecoder_TDP (cmdAllowed);
-    `include "DevParam.h" 
+    `include "DevParam.vh" 
 
     input cmdAllowed;
 
@@ -3781,7 +3781,7 @@ module Memory(mem_file);
 
     
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
 
     input [40*8:1] mem_file;
@@ -4186,7 +4186,7 @@ endmodule
 
 module UtilFunctions;
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     integer i;
 
@@ -4469,7 +4469,7 @@ module Program;
 
     
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     
 
@@ -6159,7 +6159,7 @@ endmodule
 module StatusRegister;
 
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
 
 
@@ -6177,7 +6177,7 @@ module StatusRegister;
 
     initial begin
         
-        //see alias in DevParam.h
+        //see alias in DevParam.vh
         
         SR[2] = 0; // BP0 - block protect bit 0 
         SR[3] = 0; // BP1 - block protect bit 1
@@ -6338,7 +6338,7 @@ endmodule
 module FlagStatusRegister;
 
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
 
 
@@ -6522,7 +6522,7 @@ endmodule
 
 module ProtectionManagementRegister;
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     parameter [7:0] ProcManReg_default = 'b11111111;
    
@@ -6594,7 +6594,7 @@ module ProtectionManagementRegister;
 
 module NonVolatileConfigurationRegister(NVConfigReg);
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     // parameter [15:0] NVConfigReg_default = 'b1111111111111110;
     // parameter [15:0] NVConfigReg_default = 'b1111111111111111;
@@ -6700,7 +6700,7 @@ endmodule
 
 module VolatileConfigurationRegister;
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     parameter [7:0] VConfigReg_default = 'b11111011;
    
@@ -6793,7 +6793,7 @@ endmodule
 
 module VolatileEnhancedConfigurationRegister;
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     `ifdef MEDITERANEO
     parameter [7:0] VEConfigReg_default = 'b11111111;
@@ -6939,7 +6939,7 @@ endmodule
 
 module PasswordRegister();
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     reg [(8*8)-1:0] PSWORD = 64'hFFFF_FFFF_FFFF_FFFF;
     //reg [(8*8)-1:0] PSWORD = 'h0011_2233_44cc_ddee;
@@ -7040,7 +7040,7 @@ endmodule
 module Read;
 
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
     
    
    
@@ -7549,7 +7549,7 @@ endmodule
 
 module FlashDiscoveryParameter(sfdp_file);
 
-`include "DevParam.h"
+`include "DevParam.vh"
 
 
   //input [2048*8:1] sfdp_file ;
@@ -7641,7 +7641,7 @@ endmodule
 module LockManager;
 
 
-`include "DevParam.h"
+`include "DevParam.vh"
 
 
 
@@ -7940,7 +7940,7 @@ endmodule
 module LockManager4KB;
 
 
-`include "DevParam.h"
+`include "DevParam.vh"
 
 //---------------------------------------------------
 // Data structures for protection status modelling
@@ -8231,7 +8231,7 @@ endmodule // LockManager4KB
 `else
   module DualQuadOps (S, C, ck_count, DoubleTransferRate, DQ0, DQ1, Vpp_W_DQ2, RESET_DQ3);
 `endif
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     input S;
     input C;
@@ -9215,7 +9215,7 @@ endmodule
 module OTP_memory;
 
     
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
 
     reg [dataDim-1:0] mem [0:OTP_dim-1];
@@ -9373,7 +9373,7 @@ endmodule
   module TimingCheck (S, C, D, Q, W, R);
 `endif
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     input S, C, D, Q;
     `ifdef HOLD_pin
@@ -9765,7 +9765,7 @@ endmodule
 module ExtendedAddressRegister;
 
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     parameter [7:0] ExtendAddrReg_default = 'b00000000;
 
@@ -9885,7 +9885,7 @@ endmodule  // ExtendedAddressRegister
     module N25QxxxTop (S, C, RESET_DQ3, DQ0, DQ1, Vcc, Vpp_W_DQ2);
   `endif
 
-  `include "DevParam.h"
+  `include "DevParam.vh"
   
   // parameter [15:0] NVConfigReg_default = 'b1111111111111110;
 
@@ -9907,7 +9907,7 @@ endmodule  // ExtendedAddressRegister
   inout Vpp_W_DQ2; //input Vpp_W, inout DQ2 (VPPH not implemented)
 
   parameter [1:0] deviceStack = 0;
-  `include "include/StackDecoder.h"
+  `include "StackDecoder.vh"
   
   
     reg [1:0] current_die_sel = 0;
@@ -10163,7 +10163,7 @@ endmodule  // ExtendedAddressRegister
         `endif
     `endif // Feature_8
 
-`include "DevParam.h"
+`include "DevParam.vh"
 
   input S;
   input C;
@@ -10198,7 +10198,7 @@ endmodule  // ExtendedAddressRegister
     wire [3:0] current_die_busy ;
     wire [3:0] current_die_active ;
 
-`include "include/StackDecoder.h"
+`include "StackDecoder.vh"
 
     assign any_die_busy = MT25Q_die0.busy || MT25Q_die1.busy  ;
     assign current_die_busy ={ MT25Q_die1.busy , MT25Q_die0.busy} ;
@@ -10432,7 +10432,7 @@ endmodule // MT25QxxxTop
         `endif
     `endif // Feature_8
 
-`include "DevParam.h"
+`include "DevParam.vh"
 
   input S;
   input C;
@@ -10467,7 +10467,7 @@ endmodule // MT25QxxxTop
     wire [3:0] current_die_busy ;
     wire [3:0] current_die_active ;
 
-`include "include/StackDecoder.h"
+`include "StackDecoder.vh"
 
     assign any_die_busy = MT25Q_die0.busy || MT25Q_die1.busy || MT25Q_die2.busy || MT25Q_die3.busy  ;
     assign current_die_busy ={ MT25Q_die3.busy, MT25Q_die2.busy, MT25Q_die1.busy , MT25Q_die0.busy} ;
@@ -10944,7 +10944,7 @@ endmodule // PLRSpart2Detect module
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 module GeneralPurposeRegister;
 
-//    `include "DevParam.h"
+//    `include "DevParam.vh"
 
     parameter [(64*8)-1:0] GPRR_default = 512'b0;
    
@@ -11000,7 +11000,7 @@ endmodule
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 `ifdef MEDT_PPB //Non-volatile block lock
 module PPBManager();
-    `include "DevParam.h"
+    `include "DevParam.vh"
     reg [nSector-1:0] PPBReg;
     reg enable_PPBReg_read;
     integer i;
@@ -11222,7 +11222,7 @@ endmodule
 
 module PPBLockBitRegister;
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     parameter [7:0] PLBReg_default = 'b00000001;
    
@@ -11292,7 +11292,7 @@ end
 
 module ASPRegister();
 
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
     reg [15:0] ASP = 'hFFFF;
 
@@ -11344,7 +11344,7 @@ endmodule // MEDT_ADVANCED_SECTOR
 
 
 module DebugModule ();
-    `include "DevParam.h"
+    `include "DevParam.vh"
 
 event x0;
 event x1;
