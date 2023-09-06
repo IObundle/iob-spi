@@ -29,9 +29,7 @@ module iob_spi_master #(
   //Software Accessible Registers
   `include "iob_spi_master_swreg_inst.vs"
 
-  always @* begin
-    rst_int = arst_i | FL_RESET;
-  end
+  assign rst_int = arst_i | FL_RESET;
 
   assign FL_READY = readyflash_int;
 
