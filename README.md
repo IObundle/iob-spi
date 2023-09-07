@@ -1,18 +1,14 @@
-# README #
+# IOB-SPI #
+IOb-SPI hosts a SPI flash memory controller core. This core is used on a SoC to act as an SPI master and communicate with the flash memory.
 
-## What is this repository for? ##
-
-* IOb-SPI hosts a SPI flash memory controller core 
+## Setup
+`nix-shell --run "make setup"`
 
 ## Simulate
+`nix-shell --run "make -C ../iob_spi_* sim-test"`
 
-make sim
+## Clean
+`nix-shell --run "make clean"`
 
-## Implementation
-
-make fpga
-
-## How do I use the core in software
-
-Refer the software/test_firmware.c file for example driver usage
-
+## How do I use the core in software  
+Refer the "[test_firmware.c](./software/src/test_firmware.c)" file for example driver usage.
