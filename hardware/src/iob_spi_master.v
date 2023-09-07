@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
-`include "iob_spi_conf.vh"
-`include "iob_spi_swreg_def.vh"
+`include "iob_spi_master_conf.vh"
+`include "iob_spi_master_swreg_def.vh"
 
 `ifdef FLASH_ADDR_W
 `define FLASH_CACHE_ADDR_W `FLASH_ADDR_W
@@ -10,19 +10,11 @@
 `endif
 
 module iob_spi_master #(
-    `include "iob_spi_params.vs"
+    `include "iob_spi_master_params.vs"
 ) (
-    `include "iob_spi_io.vs"
+    `include "iob_spi_master_io.vs"
 );
 
-  // This mapping is required because "iob_uart_swreg_inst.vh" uses "iob_s_portmap.vh" (This would not be needed if mkregs used "iob_s_s_portmap.vh" instead)
-  wire                  iob_avalid;  //Request valid.
-  wire [    ADDR_W-1:0] iob_addr;  //Address.
-  wire [    DATA_W-1:0] iob_wdata;  //Write data.
-  wire [(DATA_W/8)-1:0] iob_wstrb;  //Write strobe.
-  wire                  iob_rvalid;
-  wire [    DATA_W-1:0] iob_rdata;
-  wire                  iob_ready;
   wire                  iob_ready_nxt_o;
   wire                  iob_rvalid_nxt_o;
 
@@ -35,24 +27,15 @@ module iob_spi_master #(
   reg rst_int;
 
   //Software Accessible Registers
-  `include "iob_spi_swreg_inst.vs"
+  `include "iob_spi_master_swreg_inst.vs"
 
-  always @* begin
-    rst_int = arst_i | FL_RESET;
-  end
+  assign rst_int = arst_i | FL_RESET;
 
   assign FL_READY = readyflash_int;
 
   //Cache interface connection
   assign FL_DATAOUT = dataout_int;
 
-  assign iob_avalid = iob_avalid_i;  //Request valid.
-  assign iob_addr = iob_addr_i;  //Address.
-  assign iob_wdata = iob_wdata_i;  //Write data.
-  assign iob_wstrb = iob_wstrb_i;  //Write strobe.
-  assign iob_rdata_o = iob_rdata;  //Read data.
-  assign iob_rvalid_o = iob_rvalid;  //Read data valid.
-  assign iob_ready_o = iob_ready;  //Interface ready.
 
 `ifdef RUN_FLASH
   wire cache_read_req_en;

@@ -4348,7 +4348,7 @@ parameter dummyDim = 15;
 //----------------------------
 
 
-`include "TimingData.h"
+`include "TimingData.vh"
 
 
 
