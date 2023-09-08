@@ -3,7 +3,7 @@ import os
 from iob_module import iob_module
 
 
-class iob_merge(iob_module):
+class N25Qxxx(iob_module):
     name = "N25Qxxx"
     version = "V0.10"
     flows = "sim"
