@@ -15,8 +15,9 @@ module iob_spi_master #(
     `include "iob_spi_master_io.vs"
 );
 
-  wire                  iob_ready_nxt_o;
-  wire                  iob_rvalid_nxt_o;
+  `include "iob_wire.vs"
+  wire              iob_ready_nxt_o;
+  wire              iob_rvalid_nxt_o;
 
   wire              avalid_int;
   wire [    32-1:0] address_int;
@@ -45,6 +46,13 @@ module iob_spi_master #(
   //Cache interface connection
   assign FL_DATAOUT = dataout_int;
 
+  assign iob_avalid = iob_avalid_i;
+  assign iob_addr = iob_addr_i;
+  assign iob_wdata = iob_wdata_i;
+  assign iob_wstrb = iob_wstrb_i;
+  assign iob_rvalid_o = iob_rvalid;
+  assign iob_rdata_o = iob_rdata;
+  assign iob_ready_o = iob_ready;
 
 `ifdef RUN_FLASH
   wire cache_read_req_en;
