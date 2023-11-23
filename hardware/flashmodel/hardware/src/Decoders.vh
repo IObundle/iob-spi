@@ -64,7 +64,7 @@
 //  (this file must be included in "Core.v"
 //   file)
 //
-`include "UserData.h"
+`include "UserData.vh"
 
 CUIdecoder   
 

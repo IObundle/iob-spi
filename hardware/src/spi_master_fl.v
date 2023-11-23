@@ -1,7 +1,5 @@
 `timescale 1ns / 1ps
 
-`include "iob_spi_swreg_def.vh"
-
 `define SPI_DATA_W 32
 `define SPI_COM_W 8
 `define SPI_CTYP_W 3

@@ -10,8 +10,8 @@ from iob_reg import iob_reg
 from iob_reg_e import iob_reg_e
 
 
-class iob_spi(iob_module):
-    name = "iob_spi"
+class iob_spi_master(iob_module):
+    name = "iob_spi_master"
     version = "V0.10"
     flows = "sim emb doc fpga"
     setup_dir = os.path.dirname(__file__)
@@ -49,7 +49,7 @@ class iob_spi(iob_module):
                 {
                     "name": "ADDR_W",
                     "type": "P",
-                    "val": "`IOB_SPI_SWREG_ADDR_W",
+                    "val": "`IOB_SPI_MASTER_SWREG_ADDR_W",
                     "min": "NA",
                     "max": "NA",
                     "descr": "Address bus width",
@@ -57,7 +57,7 @@ class iob_spi(iob_module):
                 {
                     "name": "FL_ADDR_W",
                     "type": "P",
-                    "val": "`IOB_SPI_SWREG_ADDR_W",
+                    "val": "`IOB_SPI_MASTER_SWREG_ADDR_W",
                     "min": "NA",
                     "max": "NA",
                     "descr": "",
