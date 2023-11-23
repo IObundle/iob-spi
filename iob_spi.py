@@ -21,6 +21,7 @@ class iob_spi(iob_module):
         """Create submodules list with dependencies of this module"""
         super()._create_submodules_list(
             [
+                {"interface": "iob_wire"},
                 {"interface": "iob_s_port"},
                 {"interface": "iob_s_portmap"},
                 {"interface": "clk_en_rst_s_s_portmap"},
@@ -214,9 +215,8 @@ class iob_spi(iob_module):
                         "type": "W",
                         "n_bits": 1,
                         "rst_val": 0,
-                        "addr": -1,
                         "log2n_items": 0,
-                        "autologic": True,
+                        "autoreg": True,
                         "descr": "FL soft reset",
                     },
                     {
@@ -224,9 +224,8 @@ class iob_spi(iob_module):
                         "type": "W",
                         "n_bits": 32,
                         "rst_val": 0,
-                        "addr": -1,
                         "log2n_items": 0,
-                        "autologic": True,
+                        "autoreg": True,
                         "descr": "FL data_in",
                     },
                     {
@@ -234,9 +233,8 @@ class iob_spi(iob_module):
                         "type": "W",
                         "n_bits": 32,
                         "rst_val": 0,
-                        "addr": -1,
                         "log2n_items": 0,
-                        "autologic": True,
+                        "autoreg": True,
                         "descr": "FL address",
                     },
                     {
@@ -244,9 +242,8 @@ class iob_spi(iob_module):
                         "type": "W",
                         "n_bits": 32,
                         "rst_val": 0,
-                        "addr": -1,
                         "log2n_items": 0,
-                        "autologic": True,
+                        "autoreg": True,
                         "descr": "FL command",
                     },
                     {
@@ -254,9 +251,8 @@ class iob_spi(iob_module):
                         "type": "W",
                         "n_bits": 32,
                         "rst_val": 0,
-                        "addr": -1,
                         "log2n_items": 0,
-                        "autologic": True,
+                        "autoreg": True,
                         "descr": "FL command type",
                     },
                     {
@@ -264,9 +260,8 @@ class iob_spi(iob_module):
                         "type": "W",
                         "n_bits": 1,
                         "rst_val": 0,
-                        "addr": -1,
                         "log2n_items": 0,
-                        "autologic": True,
+                        "autoreg": True,
                         "descr": "FL valigflag",
                     },
                     {
@@ -274,9 +269,8 @@ class iob_spi(iob_module):
                         "type": "R",
                         "n_bits": 1,
                         "rst_val": 0,
-                        "addr": -1,
                         "log2n_items": 0,
-                        "autologic": True,
+                        "autoreg": True,
                         "descr": "FL ready flag",
                     },
                     {
@@ -284,9 +278,8 @@ class iob_spi(iob_module):
                         "type": "R",
                         "n_bits": 32,
                         "rst_val": 0,
-                        "addr": -1,
                         "log2n_items": 0,
-                        "autologic": True,
+                        "autoreg": True,
                         "descr": "FL data_out",
                     },
                 ],
