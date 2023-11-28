@@ -1,1 +1,1 @@
-submodules/IOB-SOC/submodules/LIB/default.nix
+../IOBSOC/submodules/LIB/default.nix
