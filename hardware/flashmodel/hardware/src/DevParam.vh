@@ -59,7 +59,7 @@
 //-----------------------------
 //  Customization Parameters
 //-----------------------------
-`include "UserData.h"
+`include "UserData.vh"
 `define timingChecks
 
 
