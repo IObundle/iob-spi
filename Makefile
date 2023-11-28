@@ -4,7 +4,7 @@ DISABLE_LINT:=1
 
 all: test
 
-LIB_DIR ?= ../IOB-SOC/submodules/LIB
+LIB_DIR ?= ../IOBSOC/submodules/LIB
 PROJECT_ROOT=.
 
 include $(LIB_DIR)/setup.mk
