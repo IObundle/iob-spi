@@ -2040,7 +2040,7 @@ always @(sendToBus) begin
 
 
       dtr_dout_started = 1'b1;
-      force DQ1 = 1'bX;
+      // force DQ1 = 1'bX;
       if(N25Qxxx.DoubleTransferRate == 1) force DQ0 = 1'bX;
       if((cmdRecName == "Read Fast") || 
         (cmdRecName == "Dual Command Fast Read") || 
