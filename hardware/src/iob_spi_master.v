@@ -37,7 +37,7 @@ module iob_spi_master #(
   //Cache interface connection
   assign FL_DATAOUT_rd = dataout_int;
 
-  assign iob_avalid = iob_avalid_i;
+  assign iob_valid = iob_valid_i;
   assign iob_addr = iob_addr_i;
   assign iob_wdata = iob_wdata_i;
   assign iob_wstrb = iob_wstrb_i;
