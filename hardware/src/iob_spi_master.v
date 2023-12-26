@@ -27,24 +27,15 @@ module iob_spi_master #(
   //Hard or Soft Reset
   reg               rst_int;
 
-  wire              FL_RESET;
-  wire [      31:0] FL_DATAIN;
-  wire [      31:0] FL_ADDRESS;
-  wire [      31:0] FL_COMMAND;
-  wire [      31:0] FL_COMMANDTP;
-  wire              FL_VALIDFLG;
-  wire              FL_READY;
-  wire [      31:0] FL_DATAOUT;
-
   //Software Accessible Registers
   `include "iob_spi_master_swreg_inst.vs"
 
-  assign rst_int = arst_i | FL_RESET;
+  assign rst_int = arst_i | FL_RESET_wr;
 
-  assign FL_READY = readyflash_int;
+  assign FL_READY_rd = readyflash_int;
 
   //Cache interface connection
-  assign FL_DATAOUT = dataout_int;
+  assign FL_DATAOUT_rd = dataout_int;
 
   assign iob_avalid = iob_avalid_i;
   assign iob_addr = iob_addr_i;
@@ -61,8 +52,8 @@ module iob_spi_master #(
 
   assign rdata_cache = dataout_int;
   assign cache_read_req_en = valid_cache & (~|wstrb_cache);
-  assign address_int = cache_read_req_en ? {{(DATA_W-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS;
-  assign avalid_int = cache_read_req_en ? valid_cache : FL_VALIDFLG;
+  assign address_int = cache_read_req_en ? {{(DATA_W-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS_wr;
+  assign avalid_int = cache_read_req_en ? valid_cache : FL_VALIDFLG_wr;
 
   assign ready_cache = cache_ready_en ? readyflash_int : 1'b0;
   always @(posedge clk_i, posedge arst_i) begin
@@ -80,27 +71,27 @@ module iob_spi_master #(
     end
   end
 `else
-  assign address_int = FL_ADDRESS;
-  assign avalid_int  = FL_VALIDFLG;
+  assign address_int = FL_ADDRESS_wr;
+  assign avalid_int  = FL_VALIDFLG_wr;
 `endif
 
   //Instantiate core
   spi_master_fl #(
       .CLKS_PER_HALF_SCLK(2)
   ) fl_spi0 (
-      .data_in(FL_DATAIN),
+      .data_in(FL_DATAIN_wr),
       .data_out(dataout_int),
       .address(address_int),
-      .command(FL_COMMAND[7:0]),
-      .ndata_bits(FL_COMMAND[14:8]),
-      .dummy_cycles(FL_COMMAND[19:16]),
-      .frame_struct(FL_COMMAND[29:20]),
-      .xipbit_en(FL_COMMAND[31:30]),
+      .command(FL_COMMAND_wr[7:0]),
+      .ndata_bits(FL_COMMAND_wr[14:8]),
+      .dummy_cycles(FL_COMMAND_wr[19:16]),
+      .frame_struct(FL_COMMAND_wr[29:20]),
+      .xipbit_en(FL_COMMAND_wr[31:30]),
       .validflag(avalid_int),
-      .commtype(FL_COMMANDTP[2:0]),
-      .spimode(FL_COMMANDTP[31:30]),
-      .dtr_en(FL_COMMANDTP[20]),
-      .fourbyteaddr_on(FL_COMMANDTP[21]),
+      .commtype(FL_COMMANDTP_wr[2:0]),
+      .spimode(FL_COMMANDTP_wr[31:30]),
+      .dtr_en(FL_COMMANDTP_wr[20]),
+      .fourbyteaddr_on(FL_COMMANDTP_wr[21]),
       .tready(readyflash_int),
 
       .clk(clk_i),
