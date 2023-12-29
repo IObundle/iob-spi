@@ -19,7 +19,7 @@ module iob_spi_master #(
   wire              iob_ready_nxt_o;
   wire              iob_rvalid_nxt_o;
 
-  wire              avalid_int;
+  wire              valid_int;
   wire [    32-1:0] address_int;
   wire [DATA_W-1:0] dataout_int;
   //Ready signal from flash controller
