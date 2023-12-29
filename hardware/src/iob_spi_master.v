@@ -53,7 +53,7 @@ module iob_spi_master #(
   assign rdata_cache = dataout_int;
   assign cache_read_req_en = valid_cache & (~|wstrb_cache);
   assign address_int = cache_read_req_en ? {{(DATA_W-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : FL_ADDRESS_wr;
-  assign avalid_int = cache_read_req_en ? valid_cache : FL_VALIDFLG_wr;
+  assign valid_int = cache_read_req_en ? valid_cache : FL_VALIDFLG_wr;
 
   assign ready_cache = cache_ready_en ? readyflash_int : 1'b0;
   always @(posedge clk_i, posedge arst_i) begin
@@ -72,7 +72,7 @@ module iob_spi_master #(
   end
 `else
   assign address_int = FL_ADDRESS_wr;
-  assign avalid_int  = FL_VALIDFLG_wr;
+  assign valid_int  = FL_VALIDFLG_wr;
 `endif
 
   //Instantiate core
@@ -87,7 +87,7 @@ module iob_spi_master #(
       .dummy_cycles(FL_COMMAND_wr[19:16]),
       .frame_struct(FL_COMMAND_wr[29:20]),
       .xipbit_en(FL_COMMAND_wr[31:30]),
-      .validflag(avalid_int),
+      .validflag(valid_int),
       .commtype(FL_COMMANDTP_wr[2:0]),
       .spimode(FL_COMMANDTP_wr[31:30]),
       .dtr_en(FL_COMMANDTP_wr[20]),
