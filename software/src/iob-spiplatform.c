@@ -1,5 +1,5 @@
-#include "iob_spiplatform.h"
-#include "iob_spidefs.h"
+#include "iob-spiplatform.h"
+#include "iob-spidefs.h"
 #include <stddef.h>
 #include <stdint.h>
 

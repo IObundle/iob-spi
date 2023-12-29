@@ -1,6 +1,6 @@
-#include "iob_spi.h"
-#include "iob_spidefs.h"
-#include "iob_spiplatform.h"
+#include "iob-spi.h"
+#include "iob-spidefs.h"
+#include "iob-spiplatform.h"
 #include "stdint.h"
 #include <stddef.h>
 

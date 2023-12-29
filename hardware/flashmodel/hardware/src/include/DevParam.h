@@ -59,7 +59,7 @@
 //-----------------------------
 //  Customization Parameters
 //-----------------------------
-`include "UserData.vh"
+`include "include/UserData.h"
 `define timingChecks
 
 
@@ -4348,7 +4348,7 @@ parameter dummyDim = 15;
 //----------------------------
 
 
-`include "TimingData.vh"
+`include "include/TimingData.h"
 
 
 
