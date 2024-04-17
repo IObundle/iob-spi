@@ -92,7 +92,7 @@ module spi_master_fl #(
   wire                   w_counters_done;
   wire                   w_build_done;
   wire                   xipbit_phase;
-  wire                   tranfers_done;
+  wire                   transfers_done;
   wire                   sclk_leade;
   wire                   sclk_traile;
   wire                   sclk_int;
@@ -116,7 +116,7 @@ module spi_master_fl #(
       .sclk_edges(w_sclk_edges),
       .sclk_en(r_sclk_out_en),
       .op_start(r_transfer_start),
-      .op_done(tranfers_done),
+      .op_done(transfers_done),
       .dtr_edge0(dtr_edge0),
       .dtr_edge1(dtr_edge1),
       .sclk_leadedge(sclk_leade),
@@ -409,7 +409,7 @@ module spi_master_fl #(
           r_ss_n <= 1'b0;
           r_sclk_out_en <= 1'b1;
           tready <= 1'b0;
-          if (tranfers_done) begin
+          if (transfers_done) begin
             r_ss_n <= 1'b1;
             r_sclk_out_en <= 1'b0;
             data_out <= (r_endianness) ? w_misodata : w_misodatarev;

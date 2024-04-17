@@ -32,6 +32,7 @@ module iob_spi_tb;
   reg dtr_en;
 
   integer i, fd;
+  integer failed = 0;
   reg [31:0]    mem;
 
   //Controller signals
@@ -49,8 +50,8 @@ module iob_spi_tb;
       .mosi_dq0(mosi),
       .sclk    (sclk),
       .miso_dq1(miso),
-      .hold_n_dq3(),
-      .wp_n_dq2(),
+      .hold_n_dq3(hold_n),
+      .wp_n_dq2(wp_n),
 
       //Controller
       .data_in        (data_in),
@@ -69,6 +70,33 @@ module iob_spi_tb;
       .tready         (tready)
   );
 
+  reg sipo_arst;
+  wire [64-1:0] sipo_1_out;
+  wire [4*64-1:0] sipo_4_out;
+
+  // Track SPI output
+  sipo_nbits #(
+        .SERIAL_W(1),
+        .PARALLEL_W(64)
+  ) sipo_1bit (
+        .clk(sclk),
+        .arst(sipo_arst),
+        .en(~ss),
+        .serial_in(mosi),
+        .parallel_out(sipo_1_out)
+  );
+
+  sipo_nbits #(
+        .SERIAL_W(4),
+        .PARALLEL_W(64*4)
+  ) sipo_4bit (
+        .clk(sclk),
+        .arst(sipo_arst),
+        .en(~ss),
+        .serial_in({hold_n, wp_n, miso, mosi}),
+        .parallel_out(sipo_4_out)
+  );
+
 
   //Process
   initial begin
@@ -79,6 +107,7 @@ module iob_spi_tb;
     rst = 1;
     clk = 1;
     //sclk = 1;
+    sipo_arst = 1;
 
     //Deassert rst
     #(4 * clk_per + 1) rst = 0;
@@ -102,6 +131,8 @@ module iob_spi_tb;
     dummy_cycles = 4'd0;
     mem    = 32'hA0A0A0A3;
 
+    sipo_arst = 0;
+
     #50 validflag = 1'b1;
     #20 validflag = 1'b0;
     #370  // Drive miso
@@ -112,6 +143,17 @@ module iob_spi_tb;
     //#3000
 
     wait (tready);
+
+    // check SPI output
+    if (sipo_1_out[16-1-:8] != command) begin
+        $display("\tTest failed: expected command : %x\tgot %x", command, sipo_1_out[16-1-:8]);
+        failed = 1;
+    end else begin
+        $display("\tTest passed");
+    end
+
+    sipo_arst = 1;
+
     #120 $display("Test command 1.");
     spimode = 2'b11;
     data_in=32'haabbccdd;
@@ -124,10 +166,25 @@ module iob_spi_tb;
     dummy_cycles = 4'd0;
     dtr_en = 0;
     mem    = 32'hA0A0A0A3;
+
+    sipo_arst = 0;
+
     #50 validflag = 1'b1;
     #20 validflag = 1'b0;
 
     #100 wait (tready);
+
+    // check SPI output
+    $display("\tTODO: check SPI output");
+    // if (sipo_1_out[26-1-:8] != command) begin
+    //     $display("\tTest failed: expected: %x\tgot %x", command, sipo_1_out[16-1-:8]);
+    //     failed = 1;
+    // end else begin
+    //     $display("\tTest passed");
+    // end
+
+    sipo_arst = 1;
+
     #120 $display("Test command 2.");
     spimode = 2'b10;
     data_in=8'h5A;
@@ -140,13 +197,24 @@ module iob_spi_tb;
     dummy_cycles = 4'd10;
     dtr_en = 0;
     mem    = 32'hA0A0A0A3;
+
+    sipo_arst = 0;
+
     #50 validflag = 1'b1;
     #20 validflag = 1'b0;
     //#500
     #100 wait (tready);
 
-    //#100
-    //wait(tready);
+    // check SPI output
+    if (sipo_4_out[(nmiso_bits+4*dummy_cycles+32)-1-:32] != address) begin
+        $display("\tTest failed: expected address: %x\tgot %x", address, sipo_4_out[(nmiso_bits+4*dummy_cycles+32)-1-:32]);
+        failed = 1;
+    end else begin
+        $display("\tTest passed");
+    end
+
+    sipo_arst = 1;
+
     #120 $display("Test command 3.");
     spimode = 2'b00;
     data_in=8'h5A;
@@ -159,20 +227,72 @@ module iob_spi_tb;
     dtr_en = 1;
     dummy_cycles = 4'd10;
     mem    = 32'hA0A0A0A3;
+
+    sipo_arst = 0;
+
     #50 validflag = 1'b1;
     #20 validflag = 1'b0;
     #100 wait (tready);
 
-
-    #100 $display("Test PASSED");
+    // check SPI output
+    // SPI Cycles = 8 (command)
+    //          + 32/2 (address in DTR)
+    //          + 10 (dummy cycles)
+    //          + 16/4/2 (nmiso_bits in QUADOUT mode in DTR)
+    if (sipo_1_out[(8+dummy_cycles+32/2+((nmiso_bits/4)/2))-1-:8] != command) begin
+        $display("\tTest failed: expected command: %x\tgot %x", command, sipo_1_out[(36)-1-:8]);
+        failed = 1;
+    end else begin
+        $display("\tTest passed");
+    end
+    // TODO: check address in DTR
 
     fd = $fopen("test.log", "w");
-    $fdisplay(fd, "Test passed!");
+    if (failed == 1) begin
+        $display("TEST FAILED!");
+        $fdisplay(fd, "Test failed!");
+    end else begin
+        $display("TEST PASSED!");
+        $fdisplay(fd, "Test passed!");
+    end
     $fclose(fd);
     $finish();
   end
 
   //CLK driving
   always #(clk_per / 2) clk = ~clk;
+
+endmodule
+
+module sipo_nbits #(
+    parameter SERIAL_W= 1,
+    parameter PARALLEL_W = 32
+) (
+    input clk,
+    input arst,
+    input en,
+    input [SERIAL_W-1:0] serial_in,
+    output [PARALLEL_W-1:0] parallel_out
+);
+
+    reg [PARALLEL_W-1:0] parallel_out_reg;
+    wire [SERIAL_W-1:0] serial_in_int;
+
+    assign serial_in_int = (serial_in === {SERIAL_W{1'bz}}) ? {SERIAL_W{1'b0}} : serial_in;
+
+    // CPOL = 0, CPHA = 0
+    // CPOL = 1, CPHA = 1
+    // both cases sample data on rising edge
+    always @(posedge clk, posedge arst) begin
+        if (arst) begin
+            parallel_out_reg <= 0;
+        end else begin
+            if (en) begin
+                parallel_out_reg <= {parallel_out_reg[PARALLEL_W-SERIAL_W-1:0], serial_in_int};
+            end
+        end
+    end
+
+    assign parallel_out = parallel_out_reg;
 
 endmodule
