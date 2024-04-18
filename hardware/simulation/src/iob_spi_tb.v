@@ -27,15 +27,11 @@ module iob_spi_tb;
   reg [1:0] spimode;
   reg validflag;
   wire tready;
-  reg tofrom_fl;
   reg fourbyteaddr_on;
   reg dtr_en;
 
   integer i, fd;
   integer failed = 0;
-  reg [31:0]    mem;
-
-  //Controller signals
 
   // UUT Instantiation
   spi_master_fl #(
@@ -70,16 +66,18 @@ module iob_spi_tb;
       .tready         (tready)
   );
 
+  // Track SPI output
   reg sipo_arst;
   wire [64-1:0] sipo_1_out;
+  wire [2*64-1:0] sipo_1dtr_out;
   wire [4*64-1:0] sipo_4_out;
 
-  // Track SPI output
   sipo_nbits #(
         .SERIAL_W(1),
         .PARALLEL_W(64)
   ) sipo_1bit (
-        .clk(sclk),
+        .clk(clk),
+        .sclk(sclk),
         .arst(sipo_arst),
         .en(~ss),
         .serial_in(mosi),
@@ -87,10 +85,24 @@ module iob_spi_tb;
   );
 
   sipo_nbits #(
+        .SERIAL_W(1),
+        .PARALLEL_W(2*64),
+        .DTR(1)
+  ) sipo_1bit_dtr (
+        .clk(clk),
+        .sclk(sclk),
+        .arst(sipo_arst),
+        .en(~ss),
+        .serial_in(mosi),
+        .parallel_out(sipo_1dtr_out)
+  );
+
+  sipo_nbits #(
         .SERIAL_W(4),
         .PARALLEL_W(64*4)
   ) sipo_4bit (
-        .clk(sclk),
+        .clk(clk),
+        .sclk(sclk),
         .arst(sipo_arst),
         .en(~ss),
         .serial_in({hold_n, wp_n, miso, mosi}),
@@ -106,7 +118,6 @@ module iob_spi_tb;
     //Clks and reset
     rst = 1;
     clk = 1;
-    //sclk = 1;
     sipo_arst = 1;
 
     //Deassert rst
@@ -123,33 +134,27 @@ module iob_spi_tb;
     data_in=32'haabbccdd;
     command=8'h66;
     address=32'haa5a5a11;
-    commtype = 3'b001;
+    commtype = 3'b000;
     dtr_en = 0;
     nmiso_bits = 7'd16;
     frame_struct = 10'h084;
     xipbit_en = 2'b00;
     dummy_cycles = 4'd0;
-    mem    = 32'hA0A0A0A3;
 
     sipo_arst = 0;
 
     #50 validflag = 1'b1;
     #20 validflag = 1'b0;
-    #370  // Drive miso
-    for (i = 15; i >= 0; i = i - 1) begin
-      #40;
-      //miso <= mem[i];
-    end
-    //#3000
 
     wait (tready);
 
     // check SPI output
-    if (sipo_1_out[16-1-:8] != command) begin
-        $display("\tTest failed: expected command : %x\tgot %x", command, sipo_1_out[16-1-:8]);
+    // SPI Cycles = 8 (command)
+    if (sipo_1_out[8-1-:8] != command) begin
+        $display("\tTest failed: expected command : %x\tgot %x", command, sipo_1_out[8-1-:8]);
         failed = 1;
     end else begin
-        $display("\tTest passed");
+        $display("\tCheck passed");
     end
 
     sipo_arst = 1;
@@ -157,15 +162,14 @@ module iob_spi_tb;
     #120 $display("Test command 1.");
     spimode = 2'b11;
     data_in=32'haabbccdd;
-    command=8'h6b;
+    command=8'h6b; // Quad Ouput Fast Read
     address=24'h555555;
-    commtype = 3'b100;
-    frame_struct = 10'h260;
+    commtype = 3'b010; // command + address + data_out
+    frame_struct = 10'h008; // comm simple, addr simple, datarx quad
     xipbit_en = 2'b00;
     nmiso_bits = 7'd32;
     dummy_cycles = 4'd0;
     dtr_en = 0;
-    mem    = 32'hA0A0A0A3;
 
     sipo_arst = 0;
 
@@ -175,13 +179,21 @@ module iob_spi_tb;
     #100 wait (tready);
 
     // check SPI output
-    $display("\tTODO: check SPI output");
-    // if (sipo_1_out[26-1-:8] != command) begin
-    //     $display("\tTest failed: expected: %x\tgot %x", command, sipo_1_out[16-1-:8]);
-    //     failed = 1;
-    // end else begin
-    //     $display("\tTest passed");
-    // end
+    // SPI Cycles = 8 (command)
+    //          + 32 (address)
+    //          + 32/4 (nmiso_bits in QUAD mode)
+    if (sipo_1_out[(8+32+32/4)-1-:8] != command) begin
+        $display("\tTest failed: expected command : %x\tgot %x", command, sipo_1_out[(8+32+32/4)-1-:8]);
+        failed = 1;
+    end else begin
+        $display("\tCheck passed");
+    end
+    if (sipo_1_out[(32+32/4)-1-:32] != address) begin
+        $display("\tTest failed: expected address : %x\tgot %x", address, sipo_1_out[(32+32/4)-1-:32]);
+        failed = 1;
+    end else begin
+        $display("\tCheck passed");
+    end
 
     sipo_arst = 1;
 
@@ -196,21 +208,22 @@ module iob_spi_tb;
     nmiso_bits = 7'd16;
     dummy_cycles = 4'd10;
     dtr_en = 0;
-    mem    = 32'hA0A0A0A3;
 
     sipo_arst = 0;
 
     #50 validflag = 1'b1;
     #20 validflag = 1'b0;
-    //#500
     #100 wait (tready);
 
     // check SPI output
-    if (sipo_4_out[(nmiso_bits+4*dummy_cycles+32)-1-:32] != address) begin
-        $display("\tTest failed: expected address: %x\tgot %x", address, sipo_4_out[(nmiso_bits+4*dummy_cycles+32)-1-:32]);
+    // SPI Cycles = 32 (address)
+    //          + 10*4 (dummy cycles x4 Quad bits registered per cycle)
+    //          + 16 (nmiso_bits)
+    if (sipo_4_out[(32+4*dummy_cycles+nmiso_bits)-1-:32] != address) begin
+        $display("\tTest failed: expected address: %x\tgot %x", address, sipo_4_out[((32+4*dummy_cycles+nmiso_bits))-1-:32]);
         failed = 1;
     end else begin
-        $display("\tTest passed");
+        $display("\tCheck passed");
     end
 
     sipo_arst = 1;
@@ -226,7 +239,6 @@ module iob_spi_tb;
     nmiso_bits = 7'd16;
     dtr_en = 1;
     dummy_cycles = 4'd10;
-    mem    = 32'hA0A0A0A3;
 
     sipo_arst = 0;
 
@@ -243,9 +255,18 @@ module iob_spi_tb;
         $display("\tTest failed: expected command: %x\tgot %x", command, sipo_1_out[(36)-1-:8]);
         failed = 1;
     end else begin
-        $display("\tTest passed");
+        $display("\tCheck passed");
     end
-    // TODO: check address in DTR
+    // SPI Cycles (DTR) = 8*2 (command)
+    //                  + 32 (address)
+    //                  + 10*2 (dummy cycles)
+    //                  + 16/4 (nmiso_bits in QUADOUT mode)
+    if (sipo_1dtr_out[(32+10*2+(16/4))-1-:32] != address) begin
+        $display("\tTest failed: expected address: %x\tgot %x", address, sipo_1dtr_out[(32+10*2+(16/4))-1-:32]);
+        failed = 1;
+    end else begin
+        $display("\tCheck passed");
+    end
 
     fd = $fopen("test.log", "w");
     if (failed == 1) begin
@@ -266,9 +287,11 @@ endmodule
 
 module sipo_nbits #(
     parameter SERIAL_W= 1,
-    parameter PARALLEL_W = 32
+    parameter PARALLEL_W = 32,
+    parameter DTR = 0
 ) (
     input clk,
+    input sclk,
     input arst,
     input en,
     input [SERIAL_W-1:0] serial_in,
@@ -277,7 +300,25 @@ module sipo_nbits #(
 
     reg [PARALLEL_W-1:0] parallel_out_reg;
     wire [SERIAL_W-1:0] serial_in_int;
+    reg sclk_r;
+    wire sclk_edge;
+    wire en_int;
 
+    always @(posedge clk, posedge arst) begin
+        if (arst) begin
+            sclk_r <= 0;
+        end else begin
+            sclk_r <= sclk;
+        end
+    end
+
+    if (DTR == 1) begin
+        assign sclk_edge = sclk ^ sclk_r; // trigger on both sclk edges
+    end else begin
+        assign sclk_edge = sclk & (~sclk_r); // trigger on sclk rising edge
+    end
+
+    assign en_int = en & sclk_edge;
     assign serial_in_int = (serial_in === {SERIAL_W{1'bz}}) ? {SERIAL_W{1'b0}} : serial_in;
 
     // CPOL = 0, CPHA = 0
@@ -287,7 +328,7 @@ module sipo_nbits #(
         if (arst) begin
             parallel_out_reg <= 0;
         end else begin
-            if (en) begin
+            if (en_int) begin
                 parallel_out_reg <= {parallel_out_reg[PARALLEL_W-SERIAL_W-1:0], serial_in_int};
             end
         end
