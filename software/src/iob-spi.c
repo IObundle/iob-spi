@@ -127,10 +127,10 @@ int spiflash_memProgram(char *mem, int memsize, unsigned int address) {
   unsigned read_word = 0;
   // Command Config
   unsigned frame_struct =
-      0x00 | (QUADMODE << FSTRUCT_ADDR) | (QUADMODE << FSTRUCT_TX);
+      0x00 | (SIMPLEMODE << FSTRUCT_ADDR) | (SIMPLEMODE << FSTRUCT_TX);
   unsigned numbytes = 4; // max 4
   unsigned command = (frame_struct << CMD_FRAME_STRUCT) |
-                     ((numbytes * 8) << CMD_NDATA_BITS) | PROGRAMFAST_QUADINEXT;
+                     ((numbytes * 8) << CMD_NDATA_BITS) | PAGE_PROGRAM;
 
   unsigned int strtoProgram = 0; // must be at least 32 bits
 
@@ -145,15 +145,14 @@ int spiflash_memProgram(char *mem, int memsize, unsigned int address) {
   for (i = 0; i < memsize; i = i + numbytes_aux, numwrites++) {
     if (numwrites == memblocks && remainder_memblocks != 0) {
       numbytes_aux = remainder_memblocks;
-      command = 0;
-      command = (frame_struct << CMD_FRAME_STRUCT) |
-                ((numbytes_aux * 8) << CMD_NDATA_BITS) | PROGRAMFAST_QUADINEXT;
+      command = 0x00 | (frame_struct << CMD_FRAME_STRUCT) |
+                ((numbytes_aux * 8) << CMD_NDATA_BITS) | PAGE_PROGRAM;
     } else
       numbytes_aux = numbytes;
 
     // concat bytes into strtoProgram
     for (j = 0, strtoProgram = 0; j < numbytes_aux; j++) {
-      strtoProgram |= ((unsigned int)mem[i + j] & 0x0ff) << (j * 8);
+      strtoProgram |= ((unsigned int)mem[i + j]) << (j * 8);
     }
 
     statusReg = 0;
@@ -161,14 +160,10 @@ int spiflash_memProgram(char *mem, int memsize, unsigned int address) {
     spiflash_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
     spiflash_executecommand(COMMADDR_DTIN, strtoProgram, address_aux, command,
                             NULL);
-    // check if str programming completed
-
-    spiflash_readStatusReg(&statusReg);
-    if (statusReg != 0) {
-      do {
-        spiflash_readStatusReg(&statusReg);
-      } while (statusReg != 0);
-    }
+    // wait for write in progress ready: statusReg[0] == 0: ready; 1: busy
+    do {
+      spiflash_readStatusReg(&statusReg);
+    } while ((statusReg & 0x01));
 
     address_aux += numbytes_aux;
   }
