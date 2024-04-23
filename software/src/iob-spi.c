@@ -12,13 +12,15 @@ unsigned commtypeReg = 0;
 int spiflash_XipEnable() {
   // write to bit 3 of volatile configuration
   // register to enable xip
-  unsigned int writebyte = 0x000000f3;
   unsigned int bits = 8;
+  unsigned int volative_config = 0x0;
 
-  // execute WRITE ENABLE
-  spiflash_executecommand(commtypeReg | COMM, 0, 0, WRITE_ENABLE, NULL);
+  spiflash_readVolConfigReg(&volative_config);
 
-  spiflash_executecommand(commtypeReg | COMM_DTIN, writebyte, 0,
+  // set to bit volatile configuration XIP bit to 0
+  volative_config &= ~(1 << VOLCFG_XIP);
+
+  spiflash_executecommand(commtypeReg | COMM_DTIN, volative_config, 0,
                           (bits << CMD_NDATA_BITS) | WRITE_VOLCFGREG, NULL);
   return 1;
 }
