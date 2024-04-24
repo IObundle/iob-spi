@@ -244,7 +244,7 @@ class iob_spi_master(iob_module):
                         "rst_val": 0,
                         "log2n_items": 0,
                         "autoreg": True,
-                        "descr": "FL command",
+                        "descr": "FL command: [31:30]xipbit_en|[29:20]frame_struct|[19:16]dummy_cycles|[14:8]ndata_bits|[7:0]command",
                     },
                     {
                         "name": "FL_COMMANDTP",
@@ -253,7 +253,7 @@ class iob_spi_master(iob_module):
                         "rst_val": 0,
                         "log2n_items": 0,
                         "autoreg": True,
-                        "descr": "FL command type",
+                        "descr": "FL command type: [31:30]spimode|[29:22]N/A|[21]fourbyteaddr|[20]dtr|[19:3]N/A|[2:0]commtype",
                     },
                     {
                         "name": "FL_VALIDFLG",
