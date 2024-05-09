@@ -1,6 +1,8 @@
 // Higher level functions
 
 unsigned int spiflash_readStatusReg(unsigned *reg);
+unsigned int spiflash_readFlagReg(unsigned *reg);
+unsigned int spiflash_readLockReg(unsigned *reg);
 unsigned int spiflash_readVolConfigReg(unsigned *regvalue);
 
 void spiflash_RecoverSequence();

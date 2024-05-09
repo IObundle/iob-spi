@@ -115,10 +115,33 @@ void enterSPImode(int spimode) {
 
 // Reset commands
 void spiflash_resetmem() {
+  int i = 0;
+  unsigned int statusReg = 0;
+  // wait until no WRTIE, PROGRAM or ERASE operation in progress
+  // statusReg[0] == 0: ready; 1: busy
+  do {
+    spiflash_readStatusReg(&statusReg);
+  } while ((statusReg & 0x01));
+
   // execute RESET ENABLE
   spiflash_executecommand(commtypeReg | COMM, 0, 0, RESET_ENABLE, NULL);
+
+  // wait t_SHSL2 > 50 ns between Reset Enable and Reset Memory
+  // assume cpu clock freq < 10 GHZ and 1 CPI
+  // t_SHSL2 * f_cpu = 50 * 10^-9 * 1 * 10^9 = 50
+  for(i = 0; i < 50; i++){
+    spiflash_getREADY();
+  }
+
   // execute RESET MEM
   spiflash_executecommand(commtypeReg | COMM, 0, 0, RESET_MEM, NULL);
+
+  // wait t_SHSL3 > 90 ns between Reset Enable and Reset Memory
+  // assume cpu clock freq < 10 GHZ and 1 CPI
+  // t_SHSL3 * f_cpu = 90 * 10^-9 * 1 * 10^9 = 90
+  for(i = 0; i < 90; i++){
+    spiflash_getREADY();
+  }
 }
 
 // Program/Write Memory commands
@@ -158,6 +181,12 @@ int spiflash_memProgram(char *mem, int memsize, unsigned int address) {
     statusReg = 0;
     // execute WRITE ENABLE
     spiflash_executecommand(COMM, 0, 0, WRITE_ENABLE, NULL);
+
+    // wait for write enable latch bit to be set
+    do {
+      spiflash_readStatusReg(&statusReg);
+    } while ((statusReg & 0x02) == 0);
+
     spiflash_executecommand(COMMADDR_DTIN, strtoProgram, address_aux, command,
                             NULL);
     // wait for write in progress ready: statusReg[0] == 0: ready; 1: busy
@@ -191,6 +220,27 @@ unsigned int spiflash_readStatusReg(unsigned *regstatus) {
                           regstatus);
   return 1;
 }
+
+// Read Flag Register
+unsigned int spiflash_readFlagReg(unsigned *regstatus) {
+  unsigned int bytes = 1;
+  spiflash_executecommand(commtypeReg | COMMANS, 0, 0,
+                          ((bytes * 8) << CMD_NDATA_BITS) | READ_FLAGREG,
+                          regstatus);
+  return 1;
+}
+
+// Read Lock Register
+unsigned int spiflash_readLockReg(unsigned *regstatus) {
+  unsigned int bytes = 1;
+  spiflash_executecommand(commtypeReg | COMMADDR_ANS, 0, 0,
+                          ((bytes * 8) << CMD_NDATA_BITS) | READ_LOCKREG,
+                          regstatus);
+  return 1;
+}
+
+
+
 
 // Read Volatile Configuration Register
 unsigned int spiflash_readVolConfigReg(unsigned *regvalue) {
