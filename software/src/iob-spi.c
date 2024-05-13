@@ -129,7 +129,7 @@ void spiflash_resetmem() {
   // wait t_SHSL2 > 50 ns between Reset Enable and Reset Memory
   // assume cpu clock freq < 10 GHZ and 1 CPI
   // t_SHSL2 * f_cpu = 50 * 10^-9 * 1 * 10^9 = 50
-  for(i = 0; i < 50; i++){
+  for (i = 0; i < 50; i++) {
     spiflash_getREADY();
   }
 
@@ -139,7 +139,7 @@ void spiflash_resetmem() {
   // wait t_SHSL3 > 90 ns between Reset Enable and Reset Memory
   // assume cpu clock freq < 10 GHZ and 1 CPI
   // t_SHSL3 * f_cpu = 90 * 10^-9 * 1 * 10^9 = 90
-  for(i = 0; i < 90; i++){
+  for (i = 0; i < 90; i++) {
     spiflash_getREADY();
   }
 }
@@ -247,6 +247,33 @@ unsigned int spiflash_readVolConfigReg(unsigned *regvalue) {
   unsigned int numbits = 8;
   spiflash_executecommand(commtypeReg | COMMANS, 0, 0,
                           (numbits << CMD_NDATA_BITS) | READ_VOLCFGREG,
+                          regvalue);
+  return 1;
+}
+
+// Read NonVolatile Configuration Register
+unsigned int spiflash_readNonVolConfigReg(unsigned *regvalue) {
+  unsigned int numbits = 8;
+  spiflash_executecommand(commtypeReg | COMMANS, 0, 0,
+                          (numbits << CMD_NDATA_BITS) | READ_NONVOLCFGREG,
+                          regvalue);
+  return 1;
+}
+
+// Read Enhanced Volatile Configuration Register
+unsigned int spiflash_readEnhancedVolConfigReg(unsigned *regvalue) {
+  unsigned int numbits = 8;
+  spiflash_executecommand(commtypeReg | COMMANS, 0, 0,
+                          (numbits << CMD_NDATA_BITS) | READENHANCEDREG,
+                          regvalue);
+  return 1;
+}
+
+// Read Extended Address Register
+unsigned int spiflash_readExtendedAddrReg(unsigned *regvalue) {
+  unsigned int numbits = 8;
+  spiflash_executecommand(commtypeReg | COMMANS, 0, 0,
+                          (numbits << CMD_NDATA_BITS) | READ_EXTADDRREG,
                           regvalue);
   return 1;
 }
