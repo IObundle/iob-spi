@@ -63,35 +63,90 @@ module iob_spi_master #(
   assign valid_int  = FL_VALIDFLG_wr;
 `endif
 
+  //
+  // Tristate buffers
+  //
+  wire dq0_tri_in;
+  wire dq0_tri_en;
+  wire dq0_tri_out;
+  iob_iobuf dq0_buf (
+      .i_i(dq0_tri_in),
+      .t_i(dq0_tri_en),
+      .n_i(1'b0),
+      .o_o(dq0_tri_out),
+      .io(MOSI)
+  );
+  wire dq1_tri_in;
+  wire dq1_tri_en;
+  wire dq1_tri_out;
+  iob_iobuf dq1_buf (
+      .i_i(dq1_tri_in),
+      .t_i(dq1_tri_en),
+      .n_i(1'b0),
+      .o_o(dq1_tri_out),
+      .io(MISO)
+  );
+  wire dq2_tri_in;
+  wire dq2_tri_en;
+  wire dq2_tri_out;
+  iob_iobuf dq2_buf (
+      .i_i(dq2_tri_in),
+      .t_i(dq2_tri_en),
+      .n_i(1'b0),
+      .o_o(dq2_tri_out),
+      .io(WP_N)
+  );
+  wire dq3_tri_in;
+  wire dq3_tri_en;
+  wire dq3_tri_out;
+  iob_iobuf dq3_buf (
+      .i_i(dq3_tri_in),
+      .t_i(dq3_tri_en),
+      .n_i(1'b0),
+      .o_o(dq3_tri_out),
+      .io(HOLD_N)
+  );
+
   //Instantiate core
   spi_master_fl #(
       .CLKS_PER_HALF_SCLK(2)
   ) fl_spi0 (
-      .data_in(FL_DATAIN_wr),
-      .data_out(dataout_int),
-      .address(address_int),
-      .command(FL_COMMAND_wr[7:0]),
-      .ndata_bits(FL_COMMAND_wr[14:8]),
-      .dummy_cycles(FL_COMMAND_wr[19:16]),
-      .frame_struct(FL_COMMAND_wr[29:20]),
-      .xipbit_en(FL_COMMAND_wr[31:30]),
-      .validflag(valid_int),
-      .commtype(FL_COMMANDTP_wr[2:0]),
-      .spimode(FL_COMMANDTP_wr[31:30]),
-      .dtr_en(FL_COMMANDTP_wr[20]),
-      .fourbyteaddr_on(FL_COMMANDTP_wr[21]),
-      .tready(readyflash_int),
+      .clk_i(clk_i),
+      .rst_i(rst_int),
 
-      .clk(clk_i),
-      .rst(rst_int),
+      .data_in_i(FL_DATAIN_wr),
+      .data_out_o(dataout_int),
+      .address_i(address_int),
+      .command_i(FL_COMMAND_wr[7:0]),
+      .ndata_bits_i(FL_COMMAND_wr[14:8]),
+      .dummy_cycles_i(FL_COMMAND_wr[19:16]),
+      .frame_struct_i(FL_COMMAND_wr[29:20]),
+      .xipbit_en_i(FL_COMMAND_wr[31:30]),
+      .commtype_i(FL_COMMANDTP_wr[2:0]),
+      .dtr_en_i(FL_COMMANDTP_wr[20]),
+      .fourbyteaddr_on_i(FL_COMMANDTP_wr[21]),
+      .spimode_i(FL_COMMANDTP_wr[31:30]),
+      .validflag_i(valid_int),
+      .tready_o(readyflash_int),
 
       //Flash Memory interface
-      .sclk(SCLK),
-      .ss(SS),
-      .mosi_dq0(MOSI),
-      .wp_n_dq2(WP_N),
-      .hold_n_dq3(HOLD_N),
-      .miso_dq1(MISO)
+      .sclk_o(SCLK),
+      .ss_o(SS),
+
+      .mosi_dq0_i(dq0_tri_out),
+      .miso_dq1_i(dq1_tri_out),
+      .wp_n_dq2_i(dq2_tri_out),
+      .hold_n_dq3_i(dq3_tri_out),
+
+      .mosi_dq0_t_o(dq0_tri_en),
+      .miso_dq1_t_o(dq1_tri_en),
+      .wp_n_dq2_t_o(dq2_tri_en),
+      .hold_n_dq3_t_o(dq3_tri_en),
+
+      .mosi_dq0_o(dq0_tri_in),
+      .miso_dq1_o(dq1_tri_in),
+      .wp_n_dq2_o(dq2_tri_in),
+      .hold_n_dq3_o(dq3_tri_in)
 
   );
 

@@ -33,37 +33,94 @@ module iob_spi_tb;
   integer i, fd;
   integer failed = 0;
 
+  //
+  // Tristate buffers
+  //
+  wire dq0_tri_in;
+  wire dq0_tri_en;
+  wire dq0_tri_out;
+  iob_iobuf dq0_buf (
+      .i_i(dq0_tri_in),
+      .t_i(dq0_tri_en),
+      .n_i(1'b0),
+      .o_o(dq0_tri_out),
+      .io(mosi)
+  );
+  wire dq1_tri_in;
+  wire dq1_tri_en;
+  wire dq1_tri_out;
+  iob_iobuf dq1_buf (
+      .i_i(dq1_tri_in),
+      .t_i(dq1_tri_en),
+      .n_i(1'b0),
+      .o_o(dq1_tri_out),
+      .io(miso)
+  );
+  wire dq2_tri_in;
+  wire dq2_tri_en;
+  wire dq2_tri_out;
+  iob_iobuf dq2_buf (
+      .i_i(dq2_tri_in),
+      .t_i(dq2_tri_en),
+      .n_i(1'b0),
+      .o_o(dq2_tri_out),
+      .io(wp_n)
+  );
+  wire dq3_tri_in;
+  wire dq3_tri_en;
+  wire dq3_tri_out;
+  iob_iobuf dq3_buf (
+      .i_i(dq3_tri_in),
+      .t_i(dq3_tri_en),
+      .n_i(1'b0),
+      .o_o(dq3_tri_out),
+      .io(hold_n)
+  );
+
   // UUT Instantiation
   spi_master_fl #(
       .CPOL(1),
       .CPHA(1)
   ) spi_m (
-      .clk(clk),
-      .rst(rst),
+      .clk_i(clk),
+      .rst_i(rst),
 
       //SPI
-      .ss      (ss),
-      .mosi_dq0(mosi),
-      .sclk    (sclk),
-      .miso_dq1(miso),
-      .hold_n_dq3(hold_n),
-      .wp_n_dq2(wp_n),
+      .ss_o      (ss),
+      .sclk_o    (sclk),
+
+      // TODO
+
+      .mosi_dq0_i(dq0_tri_out),
+      .miso_dq1_i(dq1_tri_out),
+      .wp_n_dq2_i(dq2_tri_out),
+      .hold_n_dq3_i(dq3_tri_out),
+
+      .mosi_dq0_t_o(dq0_tri_en),
+      .miso_dq1_t_o(dq1_tri_en),
+      .wp_n_dq2_t_o(dq2_tri_en),
+      .hold_n_dq3_t_o(dq3_tri_en),
+
+      .mosi_dq0_o(dq0_tri_in),
+      .miso_dq1_o(dq1_tri_in),
+      .wp_n_dq2_o(dq2_tri_in),
+      .hold_n_dq3_o(dq3_tri_in),
 
       //Controller
-      .data_in        (data_in),
-      .data_out       (data_out),
-      .address        (address),
-      .command        (command),
-      .commtype       (commtype),
-      .ndata_bits     (nmiso_bits),
-      .frame_struct   (frame_struct),
-      .dtr_en         (dtr_en),
-      .xipbit_en      (xipbit_en),
-      .dummy_cycles   (dummy_cycles),
-      .spimode        (spimode),
-      .fourbyteaddr_on(fourbyteaddr_on),
-      .validflag      (validflag),
-      .tready         (tready)
+      .data_in_i        (data_in),
+      .data_out_o       (data_out),
+      .address_i        (address),
+      .command_i        (command),
+      .commtype_i       (commtype),
+      .ndata_bits_i     (nmiso_bits),
+      .frame_struct_i   (frame_struct),
+      .dtr_en_i         (dtr_en),
+      .xipbit_en_i      (xipbit_en),
+      .dummy_cycles_i   (dummy_cycles),
+      .spimode_i        (spimode),
+      .fourbyteaddr_on_i(fourbyteaddr_on),
+      .validflag_i      (validflag),
+      .tready_o         (tready)
   );
 
   // Track SPI output

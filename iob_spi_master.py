@@ -8,6 +8,7 @@ from iob_module import iob_module
 from iob_utils import iob_utils
 from iob_reg import iob_reg
 from iob_reg_e import iob_reg_e
+from iob_iobuf import iob_iobuf
 
 
 class iob_spi_master(iob_module):
@@ -29,6 +30,7 @@ class iob_spi_master(iob_module):
                 iob_utils,
                 iob_reg,
                 iob_reg_e,
+                iob_iobuf,
             ]
         )
 
