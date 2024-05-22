@@ -81,6 +81,7 @@ module spi_master_fl #(
   reg  [            1:0] r_spimode;
   reg                    r_dtr_en;
 
+  reg                    tready_int;
 
   //
   // BEHAVIOUR REGS
@@ -113,6 +114,23 @@ module spi_master_fl #(
   wire                   w_CPOL;
   wire                   w_CPHA;
 
+  // STATUS MACHINE
+  reg [2:0] r_currstate;
+  localparam IDLE = 3'h0;
+  localparam SETUP = 3'h1;
+  localparam TRANSFER = 3'h2;
+
+  wire w_validedge;
+
+  always @(posedge clk_i, posedge rst_i) begin
+      if (rst_i) begin
+          tready_o <= 1'b1;
+      end else if ((r_currstate == IDLE) && (w_validedge || r_validedge)) begin
+          tready_o <= 1'b0;
+      end else begin 
+          tready_o <= tready_int;
+      end
+  end
   assign w_CPOL = (CPOL == 1);
   assign w_CPHA = (CPHA == 1);
 
@@ -135,10 +153,21 @@ module spi_master_fl #(
       .sclk_int(sclk_int)
   );
 
+  reg sclk_int_r;
+
+  // delay sclk_int_r by one clock cycle to match dq_out_r and ss_o
+  always @(posedge clk_i, posedge rst_i) begin
+      if (rst_i) begin
+          sclk_int_r <= w_CPOL;
+      end else begin
+          sclk_int_r <= sclk_int;
+      end
+  end
+
   // Assign output
   always @(posedge rst_i, posedge clk_i) begin
     if (rst_i) sclk_o <= w_CPOL;  //default
-    else sclk_o <= sclk_int;
+    else sclk_o <= sclk_int_r;
   end
 
   //Drive wp_n and hold_n
@@ -163,7 +192,11 @@ module spi_master_fl #(
     end
   end
 
+  reg [3:0] oe;
   wire [3:0] data_tx;
+  reg [3:0] dq_out_r;
+  wire dq2_out;
+  wire dq3_out;
   wire [3:0] data_rx;
   reg dualtx_state;
   reg quadtx_state;
@@ -175,6 +208,15 @@ module spi_master_fl #(
                             (quadtx_state) ? w_mosi[3:0]:
                                 {hold_n_int, wp_n_int, w_mosi[1] ,w_mosi[0]};
 
+  assign dq2_out = oe[2] ? data_tx[2] : 1'b1;
+  assign dq3_out = oe[3] ? data_tx[3] : 1'b1;
+  always @(posedge clk_i, posedge rst_i) begin
+      if (rst_i) begin
+          dq_out_r <= 4'd0;
+      end else begin
+          dq_out_r <= {dq3_out, dq2_out, data_tx[1:0]};
+      end
+  end
 
   wire dualtx_en;
   wire quadtx_en;
@@ -191,23 +233,38 @@ module spi_master_fl #(
   end
 
   //Configure inout tristate i/o
-  reg [3:0] oe = 4'b1111;
   wire quadcommd;
   wire quadaddr;
   wire quaddatatx;
   wire quadalt;
   wire quadrx;
 
-  // Tristate control: 0: IO = core output, 1: core input = IO
-  assign mosi_dq0_t_o   = ~oe[0];
-  assign miso_dq1_t_o   = ~oe[1];
-  assign wp_n_dq2_t_o   = ~oe[2] & (quadcommd || quadaddr || quaddatatx || quadalt || quadrx);
-  assign hold_n_dq3_t_o = ~oe[3] & (quadcommd || quadaddr || quaddatatx || quadalt || quadrx);
 
-  assign mosi_dq0_o   = data_tx[0];
-  assign miso_dq1_o   = data_tx[1];
-  assign wp_n_dq2_o   = oe[2] ? data_tx[2] : 1'b1;
-  assign hold_n_dq3_o = oe[3] ? data_tx[3] : 1'b1;
+  reg [3:0] dq_tri_r;
+  wire dq2_tri;
+  wire dq3_tri;
+
+  assign dq2_tri = ~oe[2] & (quadcommd || quadaddr || quaddatatx || quadalt || quadrx);
+  assign dq3_tri = ~oe[3] & (quadcommd || quadaddr || quaddatatx || quadalt || quadrx);
+
+  always @(posedge clk_i, posedge rst_i) begin
+      if (rst_i) begin
+          dq_tri_r <= 4'd0;
+      end else begin
+          dq_tri_r <= {dq3_tri, dq2_tri, ~oe[1], ~oe[0]};
+      end
+  end
+
+  // Tristate control: 0: IO = core output, 1: core input = IO
+  assign mosi_dq0_t_o   = dq_tri_r[0];
+  assign miso_dq1_t_o   = dq_tri_r[1];
+  assign wp_n_dq2_t_o   = dq_tri_r[2];
+  assign hold_n_dq3_t_o = dq_tri_r[3];
+
+  assign mosi_dq0_o   = dq_out_r[0];
+  assign miso_dq1_o   = dq_out_r[1];
+  assign wp_n_dq2_o   = dq_out_r[2];
+  assign hold_n_dq3_o = dq_out_r[3];
 
   assign data_rx = {hold_n_dq3_i, wp_n_dq2_i, miso_dq1_i, mosi_dq0_i};
 
@@ -227,7 +284,7 @@ module spi_master_fl #(
     end
   end
 
-  // Register inputs on (validflag_i && tready_o)
+  // Register inputs on (validflag_i && tready_int)
   always @(posedge clk_i, posedge rst_i) begin
     if (rst_i) begin
       r_datain <= `SPI_DATA_W'b0;
@@ -243,7 +300,7 @@ module spi_master_fl #(
       r_4byteaddr_on <= 1'b0;
       r_dtr_en <= 1'b0;
     end else begin
-      if (validflag_i && tready_o) begin
+      if (validflag_i && tready_int) begin
         r_datain <= data_in_i;
         r_address <= address_i;
         r_command <= command_i;
@@ -261,13 +318,12 @@ module spi_master_fl #(
   end
 
   // Register inputs
-  wire w_validedge;
-  assign w_validedge = validflag_i && tready_o;
+  assign w_validedge = validflag_i && tready_int;
   always @(posedge rst_i, posedge clk_i) begin
     if (rst_i) begin
       r_validedge <= 1'b0;
     end else begin
-      if (validflag_i && tready_o) begin
+      if (validflag_i && tready_int) begin
         r_validedge <= 1'b1;
       end else begin
         r_validedge <= 1'b0;
@@ -375,13 +431,19 @@ module spi_master_fl #(
 
   //Assert ss
   reg r_ss_n;
-  assign ss_o = r_ss_n;
+  reg r_ss_n_r;
+  assign ss_o = r_ss_n_r;
+
+  // delay ss_n by one clock cycle to match dq_out_r
+  always @(posedge clk_i, posedge rst_i) begin
+      if (rst_i) begin
+          r_ss_n_r <= 1'd1;
+      end else begin
+          r_ss_n_r <= r_ss_n;
+      end
+  end
 
   //Master State Machine
-  reg [2:0] r_currstate;
-  localparam IDLE = 3'h0;
-  localparam SETUP = 3'h1;
-  localparam TRANSFER = 3'h2;
   always @(posedge rst_i, posedge clk_i) begin
     if (rst_i) begin
       r_currstate <= IDLE;
@@ -390,22 +452,22 @@ module spi_master_fl #(
       r_transfer_start <= 1'b0;
       r_setup_start <= 1'b0;
       r_setup_rst <= 1'b0;
-      tready_o <= 1'b1;
+      tready_int <= 1'b1;
       data_out_o <= 0;
     end else begin
       case (r_currstate)
         IDLE: begin
           //default
-          tready_o <= 1'b1;
+          tready_int <= 1'b1;
           r_sclk_out_en <= 1'b0;
           r_ss_n <= 1'b1;
           r_transfer_start <= 1'b0;
-          if (w_validedge) tready_o <= 1'b0;
+          if (w_validedge) tready_int <= 1'b0;
           if (r_validedge) begin
             r_setup_rst <= 1'b1;
             r_setup_start <= 1'b1;
             data_out_o <= 0;
-            tready_o <= 1'b0;
+            tready_int <= 1'b0;
             r_currstate <= SETUP;
           end
         end
@@ -414,7 +476,7 @@ module spi_master_fl #(
           r_setup_rst <= 1'b0;
           r_transfer_start <= 1'b0;
           r_setup_start <= 1'b0;
-          tready_o <= 1'b0;
+          tready_int <= 1'b0;
           if (w_build_done && w_counters_done) begin
             r_transfer_start <= 1'b1;
             r_ss_n <= 1'b0;
@@ -426,12 +488,12 @@ module spi_master_fl #(
         TRANSFER: begin
           r_ss_n <= 1'b0;
           r_sclk_out_en <= 1'b1;
-          tready_o <= 1'b0;
+          tready_int <= 1'b0;
           if (transfers_done) begin
             r_ss_n <= 1'b1;
             r_sclk_out_en <= 1'b0;
             data_out_o <= (r_endianness) ? w_misodata : w_misodatarev;
-            tready_o <= 1'b1;
+            tready_int <= 1'b1;
             r_currstate <= IDLE;
           end
         end
@@ -439,7 +501,7 @@ module spi_master_fl #(
         default: begin
           r_sclk_out_en <= 1'b0;
           r_ss_n <= 1'b1;
-          tready_o <= 1'b1;
+          tready_int <= 1'b1;
           data_out_o <= 0;
           r_currstate <= IDLE;
         end

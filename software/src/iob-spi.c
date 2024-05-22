@@ -239,9 +239,6 @@ unsigned int spiflash_readLockReg(unsigned *regstatus) {
   return 1;
 }
 
-
-
-
 // Read Volatile Configuration Register
 unsigned int spiflash_readVolConfigReg(unsigned *regvalue) {
   unsigned int numbits = 8;
