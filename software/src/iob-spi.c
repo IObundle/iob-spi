@@ -189,6 +189,7 @@ int spiflash_memProgram(char *mem, int memsize, unsigned int address) {
 
     spiflash_executecommand(COMMADDR_DTIN, strtoProgram, address_aux, command,
                             NULL);
+
     // wait for write in progress ready: statusReg[0] == 0: ready; 1: busy
     do {
       spiflash_readStatusReg(&statusReg);
@@ -440,17 +441,70 @@ unsigned int spiflash_readFlashParam(unsigned address) {
 
 // Erase Memory commands
 void spiflash_erase_subsector(unsigned int subsector_address) {
+  unsigned int statusReg = 0;
   // write enable
   spiflash_executecommand(commtypeReg | COMM, 0, 0, WRITE_ENABLE, NULL);
+
+  // wait for write enable latch bit to be set
+  do {
+    spiflash_readStatusReg(&statusReg);
+  } while ((statusReg & 0x02) == 0);
+
   // execute ERASE
   spiflash_executecommand(commtypeReg | COMMADDR, 0, subsector_address,
                           SUB_ERASE, NULL);
+
+  // wait for write in progress ready: statusReg[0] == 0: ready; 1: busy
+  do {
+    spiflash_readStatusReg(&statusReg);
+  } while ((statusReg & 0x01));
+
 }
 
 void spiflash_erase_sector(unsigned int sector_address) {
+  unsigned int statusReg = 0;
   // Write Enable
   spiflash_executecommand(commtypeReg | COMM, 0, 0, WRITE_ENABLE, NULL);
+
+  // wait for write enable latch bit to be set
+  do {
+    spiflash_readStatusReg(&statusReg);
+  } while ((statusReg & 0x02) == 0);
+
   // execute ERASE
   spiflash_executecommand(commtypeReg | COMMADDR, 0, sector_address, SEC_ERASE,
                           NULL);
+
+  // wait for write in progress ready: statusReg[0] == 0: ready; 1: busy
+  do {
+    spiflash_readStatusReg(&statusReg);
+  } while ((statusReg & 0x01));
+
+}
+
+void spiflash_erase_address_range(unsigned int start, unsigned int size){
+    unsigned int end_addr = start + size - 1;
+    unsigned int full_sector_first = (start / SECTOR_SIZE) + 1;
+    unsigned int full_sector_last = (end_addr / SECTOR_SIZE);
+    unsigned int pre_subsector_first = (start / SUBSECTOR_SIZE);
+    unsigned int pre_subsector_last = (full_sector_first * SUBSECTOR_PER_SECTOR) - 1;
+    unsigned int post_subsector_first = (full_sector_last+1) * SUBSECTOR_PER_SECTOR;
+    unsigned int post_subsector_last = (end_addr / SUBSECTOR_SIZE);
+    int sector = 0, subsector = 0;
+
+    // erase subsectors at address range start
+    for(subsector=pre_subsector_first;subsector<=pre_subsector_last;subsector++){
+        spiflash_erase_subsector(subsector*SUBSECTOR_SIZE);
+    }
+
+    // erase complete sectors in address range
+    for(sector=full_sector_first; sector<full_sector_last;sector++){
+        spiflash_erase_sector(sector*SECTOR_SIZE);
+    }
+    
+    // erase subsectors at address range end
+    for(subsector=post_subsector_first;subsector<=post_subsector_last;subsector++){
+        spiflash_erase_subsector(subsector*SUBSECTOR_SIZE);
+    }
+
 }

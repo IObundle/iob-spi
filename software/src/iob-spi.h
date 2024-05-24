@@ -25,6 +25,7 @@ unsigned int spiflash_readmem(unsigned int address);
 // Erase memory functions
 void spiflash_erase_subsector(unsigned int subsector_address);
 void spiflash_erase_sector(unsigned int sector_address);
+void spiflash_erase_address_range(unsigned int start, unsigned int size);
 
 // Fast Read functions
 unsigned int spiflash_readFlashParam(unsigned address);
