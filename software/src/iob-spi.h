@@ -1,7 +1,12 @@
 // Higher level functions
 
 unsigned int spiflash_readStatusReg(unsigned *reg);
+unsigned int spiflash_readFlagReg(unsigned *reg);
+unsigned int spiflash_readLockReg(unsigned *reg);
 unsigned int spiflash_readVolConfigReg(unsigned *regvalue);
+unsigned int spiflash_readNonVolConfigReg(unsigned *regvalue);
+unsigned int spiflash_readEnhancedVolConfigReg(unsigned *regvalue);
+unsigned int spiflash_readExtendedAddrReg(unsigned *regvalue);
 
 void spiflash_RecoverSequence();
 
@@ -20,6 +25,7 @@ unsigned int spiflash_readmem(unsigned int address);
 // Erase memory functions
 void spiflash_erase_subsector(unsigned int subsector_address);
 void spiflash_erase_sector(unsigned int sector_address);
+void spiflash_erase_address_range(unsigned int start, unsigned int size);
 
 // Fast Read functions
 unsigned int spiflash_readFlashParam(unsigned address);
