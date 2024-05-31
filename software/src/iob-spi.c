@@ -484,13 +484,26 @@ void spiflash_erase_sector(unsigned int sector_address) {
 
 void spiflash_erase_address_range(unsigned int start, unsigned int size){
     unsigned int end_addr = start + size - 1;
-    unsigned int full_sector_first = (start / SECTOR_SIZE) + 1;
-    unsigned int full_sector_last = (end_addr / SECTOR_SIZE);
-    unsigned int pre_subsector_first = (start / SUBSECTOR_SIZE);
-    unsigned int pre_subsector_last = (full_sector_first * SUBSECTOR_PER_SECTOR) - 1;
-    unsigned int post_subsector_first = (full_sector_last+1) * SUBSECTOR_PER_SECTOR;
-    unsigned int post_subsector_last = (end_addr / SUBSECTOR_SIZE);
+    int full_sector_first = ((start + SECTOR_SIZE - 1) / SECTOR_SIZE);
+    int full_sector_last = ((end_addr + 1) / SECTOR_SIZE) - 1;
+    int pre_subsector_first = start / SUBSECTOR_SIZE;
+    int pre_subsector_last =
+        ((full_sector_first * SECTOR_SIZE) - 1) / SUBSECTOR_SIZE;
+    int post_subsector_first =
+        ((full_sector_last + 1) * SECTOR_SIZE) / SUBSECTOR_SIZE;
+    int post_subsector_last = end_addr / SUBSECTOR_SIZE;
     int sector = 0, subsector = 0;
+
+    int min_subsector = start / SUBSECTOR_SIZE;
+    int max_subsector = end_addr / SUBSECTOR_SIZE;
+
+    // limit for cases without sector erase
+    if (pre_subsector_last > max_subsector) {
+      pre_subsector_last = max_subsector;
+    }
+    if (post_subsector_first < min_subsector) {
+      post_subsector_first = min_subsector;
+    }
 
     // erase subsectors at address range start
     for(subsector=pre_subsector_first;subsector<=pre_subsector_last;subsector++){
@@ -498,7 +511,7 @@ void spiflash_erase_address_range(unsigned int start, unsigned int size){
     }
 
     // erase complete sectors in address range
-    for(sector=full_sector_first; sector<full_sector_last;sector++){
+    for(sector=full_sector_first; sector<=full_sector_last;sector++){
         spiflash_erase_sector(sector*SECTOR_SIZE);
     }
     
@@ -506,5 +519,4 @@ void spiflash_erase_address_range(unsigned int start, unsigned int size){
     for(subsector=post_subsector_first;subsector<=post_subsector_last;subsector++){
         spiflash_erase_subsector(subsector*SUBSECTOR_SIZE);
     }
-
 }
