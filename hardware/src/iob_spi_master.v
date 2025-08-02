@@ -40,18 +40,23 @@ module iob_spi_master #(
    //Cache Ready Output
    reg  cache_ready_en;
 
-   assign rdata_cache = dataout_int;
-   assign cache_read_req_en = valid_cache & (~|wstrb_cache);
-   assign address_int = cache_read_req_en ? {{(DATA_W-`FLASH_CACHE_ADDR_W){1'b0}},address_cache} : fl_address_wr;
-   assign valid_int = cache_read_req_en ? valid_cache : fl_validflg_wr;
 
-   assign ready_cache = cache_ready_en ? readyflash_int : 1'b0;
+   // Unused ports:
+   //cache_wdata_i,
+   assign cache_rvalid_o = 1'b1;
+
+   assign cache_rdata_o = dataout_int;
+   assign cache_read_req_en = cache_valid_i & (~|cache_wstrb_i);
+   assign address_int = cache_read_req_en ? {{(DATA_W-`FLASH_CACHE_ADDR_W){1'b0}},cache_addr_i} : fl_address_wr;
+   assign valid_int = cache_read_req_en ? cache_valid_i : fl_validflg_wr;
+
+   assign cache_ready_o = cache_ready_en ? readyflash_int : 1'b0;
    always @(posedge clk_i, posedge arst_i) begin
       if (arst_i) cache_ready_en <= 1'b0;
       else begin
          case (cache_ready_en)
             1'b0: begin
-               if (valid_cache) cache_ready_en <= 1'b1;
+               if (cache_valid_i) cache_ready_en <= 1'b1;
             end
             1'b1: begin
                if (readyflash_int) cache_ready_en <= 1'b0;
@@ -76,7 +81,7 @@ module iob_spi_master #(
       .t_i(dq0_tri_en),
       .n_i(1'b0),
       .o_o(dq0_tri_out),
-      .io (MOSI)
+      .io (mosi_io)
    );
    wire dq1_tri_in;
    wire dq1_tri_en;
@@ -86,7 +91,7 @@ module iob_spi_master #(
       .t_i(dq1_tri_en),
       .n_i(1'b0),
       .o_o(dq1_tri_out),
-      .io (MISO)
+      .io (miso_io)
    );
    wire dq2_tri_in;
    wire dq2_tri_en;
@@ -96,7 +101,7 @@ module iob_spi_master #(
       .t_i(dq2_tri_en),
       .n_i(1'b0),
       .o_o(dq2_tri_out),
-      .io (WP_N)
+      .io (wp_n_io)
    );
    wire dq3_tri_in;
    wire dq3_tri_en;
@@ -106,7 +111,7 @@ module iob_spi_master #(
       .t_i(dq3_tri_en),
       .n_i(1'b0),
       .o_o(dq3_tri_out),
-      .io (HOLD_N)
+      .io (hold_n_io)
    );
 
    //Instantiate core
@@ -132,8 +137,8 @@ module iob_spi_master #(
       .tready_o         (readyflash_int),
 
       //Flash Memory interface
-      .sclk_o(SCLK),
-      .ss_o  (SS),
+      .sclk_o(sclk_o),
+      .ss_o  (ss_o),
 
       .mosi_dq0_i  (dq0_tri_out),
       .miso_dq1_i  (dq1_tri_out),
