@@ -28,7 +28,7 @@ def setup(py_params_dict):
                 "name": "ADDR_W",
                 "descr": "Address bus width",
                 "type": "P",
-                "val": "`IOB_SPI_MASTER_CSRS_ADDR_W",
+                "val": "`IOB_SPI_MASTER_CSRS_CSRS_ADDR_W",
                 "min": "NA",
                 "max": "NA",
             },
@@ -36,7 +36,7 @@ def setup(py_params_dict):
                 "name": "FL_ADDR_W",
                 "descr": "",
                 "type": "P",
-                "val": "`IOB_SPI_MASTER_CSRS_ADDR_W",
+                "val": "`IOB_SPI_MASTER_CSRS_CSRS_ADDR_W",
                 "min": "NA",
                 "max": "NA",
             },
@@ -64,48 +64,48 @@ def setup(py_params_dict):
                     "type": "iob",
                 },
             },
-            {
-                "name": "cache_iob_s",
-                "descr": "Cache interface.",
-                "if_defined": "RUN_FLASH",
-                "signals": {
-                    "type": "iob",
-                    "prefix": "cache_",
-                },
-            },
+            # { FIXME: Find alternative for 'if_defined'
+            #     "name": "cache_iob_s",
+            #     "descr": "Cache interface.",
+            #     "if_defined": "RUN_FLASH",
+            #     "signals": {
+            #         "type": "iob",
+            #         "prefix": "cache_",
+            #     },
+            # },
             {
                 "name": "flash_io",
                 "descr": "Flash memory interface signals",
                 "signals": [
-                    # {'name':'interrupt_o', 'n_bits':'1', 'descr':'be done'},
+                    # {'name':'interrupt_o', 'width':'1', 'descr':'be done'},
                     {
                         "name": "ss_o",
-                        "n_bits": "1",
+                        "width": "1",
                         "descr": "",
                     },
                     {
                         "name": "sclk_o",
-                        "n_bits": "1",
+                        "width": "1",
                         "descr": "",
                     },
                     {
                         "name": "miso_io",
-                        "n_bits": "1",
+                        "width": "1",
                         "descr": "",
                     },
                     {
                         "name": "mosi_io",
-                        "n_bits": "1",
+                        "width": "1",
                         "descr": "",
                     },
                     {
                         "name": "wp_n_io",
-                        "n_bits": "1",
+                        "width": "1",
                         "descr": "",
                     },
                     {
                         "name": "hold_n_io",
-                        "n_bits": "1",
+                        "width": "1",
                         "descr": "",
                     },
                 ],
@@ -183,7 +183,6 @@ def setup(py_params_dict):
                         "n_bits": 1,
                         "rst_val": 0,
                         "log2n_items": 0,
-                        "autoreg": True,
                     },
                     {
                         "name": "fl_datain",
@@ -192,7 +191,6 @@ def setup(py_params_dict):
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
-                        "autoreg": True,
                     },
                     {
                         "name": "fl_address",
@@ -201,7 +199,6 @@ def setup(py_params_dict):
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
-                        "autoreg": True,
                     },
                     {
                         "name": "fl_command",
@@ -210,7 +207,6 @@ def setup(py_params_dict):
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
-                        "autoreg": True,
                     },
                     {
                         "name": "fl_commandtp",
@@ -219,7 +215,6 @@ def setup(py_params_dict):
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
-                        "autoreg": True,
                     },
                     {
                         "name": "fl_validflg",
@@ -228,7 +223,6 @@ def setup(py_params_dict):
                         "n_bits": 1,
                         "rst_val": 0,
                         "log2n_items": 0,
-                        "autoreg": True,
                     },
                     {
                         "name": "fl_ready",
@@ -237,7 +231,6 @@ def setup(py_params_dict):
                         "n_bits": 1,
                         "rst_val": 0,
                         "log2n_items": 0,
-                        "autoreg": True,
                     },
                     {
                         "name": "fl_dataout",
@@ -246,7 +239,6 @@ def setup(py_params_dict):
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
-                        "autoreg": True,
                     },
                 ],
                 "csr_if": "iob",
