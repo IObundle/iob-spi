@@ -1,293 +1,313 @@
-#!/usr/bin/env python3
-
-import os
-
-from iob_module import iob_module
-
-# Submodules
-from iob_utils import iob_utils
-from iob_reg import iob_reg
-from iob_reg_e import iob_reg_e
-from iob_iobuf import iob_iobuf
+# SPDX-FileCopyrightText: 2025 IObundle
+#
+# SPDX-License-Identifier: MIT
 
 
-class iob_spi_master(iob_module):
-    name = "iob_spi_master"
-    version = "V0.10"
-    flows = "sim emb doc fpga"
-    setup_dir = os.path.dirname(__file__)
-
-    @classmethod
-    def _create_submodules_list(cls):
-        """Create submodules list with dependencies of this module"""
-        super()._create_submodules_list(
-            [
-                {"interface": "iob_wire"},
-                {"interface": "iob_s_port"},
-                {"interface": "iob_s_portmap"},
-                {"interface": "clk_en_rst_s_s_portmap"},
-                {"interface": "clk_en_rst_s_port"},
-                iob_utils,
-                iob_reg,
-                iob_reg_e,
-                iob_iobuf,
-            ]
-        )
-
-    @classmethod
-    def _setup_confs(cls):
-        super()._setup_confs(
-            [
-                # Macros
-                # Parameters
-                {
-                    "name": "DATA_W",
-                    "type": "P",
-                    "val": "32",
-                    "min": "NA",
-                    "max": "NA",
-                    "descr": "Data bus width",
-                },
-                {
-                    "name": "ADDR_W",
-                    "type": "P",
-                    "val": "`IOB_SPI_MASTER_SWREG_ADDR_W",
-                    "min": "NA",
-                    "max": "NA",
-                    "descr": "Address bus width",
-                },
-                {
-                    "name": "FL_ADDR_W",
-                    "type": "P",
-                    "val": "`IOB_SPI_MASTER_SWREG_ADDR_W",
-                    "min": "NA",
-                    "max": "NA",
-                    "descr": "",
-                },
-                {
-                    "name": "FL_WDATA_W",
-                    "type": "P",
-                    "val": "32",
-                    "min": "NA",
-                    "max": "NA",
-                    "descr": "",
-                },
-                {
-                    "name": "RUN_FLASH",
-                    "type": "M",
-                    "val": False,
-                    "min": "NA",
-                    "max": "NA",
-                    "descr": "",
-                },
-            ]
-        )
-
-    @classmethod
-    def _setup_ios(cls):
-        cls.ios += [
-            {"name": "iob_s_port", "descr": "CPU native interface", "ports": []},
+def setup(py_params_dict):
+    attributes_dict = {
+        "generate_hw": True,
+        "confs": [
             {
-                "name": "iob_s_cache",
-                "descr": "Cache interface.",
-                "if_defined": "RUN_FLASH",
-                "ports": [
-                    {
-                        "name": "avalid_cache",
-                        "type": "I",
-                        "n_bits": "1",
-                        "descr": "",
-                    },
-                    {
-                        "name": "address_cache",
-                        "type": "I",
-                        "n_bits": "1",
-                        "descr": "",
-                    },
-                    {
-                        "name": "wdata_cache",
-                        "type": "I",
-                        "n_bits": "1",
-                        "descr": "",
-                    },
-                    {
-                        "name": "wstrb_cache",
-                        "type": "I",
-                        "n_bits": "1",
-                        "descr": "",
-                    },
-                    {
-                        "name": "rdata_cache",
-                        "type": "O",
-                        "n_bits": "1",
-                        "descr": "",
-                    },
-                    {
-                        "name": "rvalid_cache",
-                        "type": "O",
-                        "n_bits": "1",
-                        "descr": "",
-                    },
-                    {
-                        "name": "ready_cache",
-                        "type": "O",
-                        "n_bits": "1",
-                        "descr": "",
-                    },
-                ],
+                "name": "RUN_FLASH",
+                "descr": "",
+                "type": "M",
+                "val": False,
+                "min": "NA",
+                "max": "NA",
+            },
+            # Parameters
+            {
+                "name": "DATA_W",
+                "descr": "Data bus width",
+                "type": "P",
+                "val": "32",
+                "min": "NA",
+                "max": "NA",
             },
             {
-                "name": "general",
-                "descr": "GENERAL INTERFACE SIGNALS",
-                "ports": [
+                "name": "ADDR_W",
+                "descr": "Address bus width",
+                "type": "P",
+                "val": "`IOB_SPI_MASTER_SWREG_ADDR_W",
+                "min": "NA",
+                "max": "NA",
+            },
+            {
+                "name": "FL_ADDR_W",
+                "descr": "",
+                "type": "P",
+                "val": "`IOB_SPI_MASTER_SWREG_ADDR_W",
+                "min": "NA",
+                "max": "NA",
+            },
+            {
+                "name": "FL_WDATA_W",
+                "descr": "",
+                "type": "P",
+                "val": "32",
+                "min": "NA",
+                "max": "NA",
+            },
+        ],
+        "ports": [
+            {
+                "name": "clk_en_rst_s",
+                "descr": "Clock, clock enable and reset",
+                "signals": {
+                    "type": "iob_clk",
+                },
+            },
+            {
+                "name": "iob_s",
+                "descr": "CPU native interface",
+                "signals": {
+                    "type": "iob",
+                },
+            },
+            {
+                "name": "iob_s_cache_io",
+                "descr": "Cache interface.",
+                "if_defined": "RUN_FLASH",
+                "signals": [
                     {
-                        "name": "clk_i",
-                        "type": "I",
+                        "name": "avalid_cache_i",
                         "n_bits": "1",
-                        "descr": "System clock input",
+                        "descr": "",
                     },
                     {
-                        "name": "arst_i",
-                        "type": "I",
+                        "name": "address_cache_i",
                         "n_bits": "1",
-                        "descr": "System reset, asynchronous and active high",
+                        "descr": "",
                     },
                     {
-                        "name": "cke_i",
-                        "type": "I",
+                        "name": "wdata_cache_i",
                         "n_bits": "1",
-                        "descr": "System reset, asynchronous and active high",
+                        "descr": "",
+                    },
+                    {
+                        "name": "wstrb_cache_i",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "rdata_cache_o",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "rvalid_cache_o",
+                        "n_bits": "1",
+                        "descr": "",
+                    },
+                    {
+                        "name": "ready_cache_o",
+                        "n_bits": "1",
+                        "descr": "",
                     },
                 ],
             },
             {
                 "name": "flash_if",
                 "descr": "Flash memory interface signals",
-                "ports": [
-                    # {'name':'interrupt', 'type':'O', 'n_bits':'1', 'descr':'be done'},
+                "signals": [
+                    # {'name':'interrupt_o', 'n_bits':'1', 'descr':'be done'},
                     {
-                        "name": "SS",
-                        "type": "O",
+                        "name": "SS_o",
                         "n_bits": "1",
                         "descr": "",
                     },
                     {
-                        "name": "SCLK",
-                        "type": "O",
+                        "name": "SCLK_o",
                         "n_bits": "1",
                         "descr": "",
                     },
                     {
-                        "name": "MISO",
-                        "type": "IO",
+                        "name": "MISO_io",
                         "n_bits": "1",
                         "descr": "",
                     },
                     {
-                        "name": "MOSI",
-                        "type": "IO",
+                        "name": "MOSI_io",
                         "n_bits": "1",
                         "descr": "",
                     },
                     {
-                        "name": "WP_N",
-                        "type": "IO",
+                        "name": "WP_N_io",
                         "n_bits": "1",
                         "descr": "",
                     },
                     {
-                        "name": "HOLD_N",
-                        "type": "IO",
+                        "name": "HOLD_N_io",
                         "n_bits": "1",
                         "descr": "",
                     },
                 ],
             },
-        ]
-
-    @classmethod
-    def _setup_regs(cls):
-        cls.regs += [
+        ],
+        "wires": [
+            # Wires for CSRs
             {
-                "name": "uart",
-                "descr": "UART software accessible registers.",
-                "regs": [
+                "name": "fl_reset",
+                "descr": "",
+                "signals": [
+                    {"name": "fl_reset_wr", "width": 1},
+                ],
+            },
+            {
+                "name": "fl_datain",
+                "descr": "",
+                "signals": [
+                    {"name": "fl_datain_wr", "width": 32},
+                ],
+            },
+            {
+                "name": "fl_address",
+                "descr": "",
+                "signals": [
+                    {"name": "fl_address_wr", "width": 32},
+                ],
+            },
+            {
+                "name": "fl_command",
+                "descr": "",
+                "signals": [
+                    {"name": "fl_command_wr", "width": 32},
+                ],
+            },
+            {
+                "name": "fl_commandtp",
+                "descr": "",
+                "signals": [
+                    {"name": "fl_commandtp_wr", "width": 32},
+                ],
+            },
+            {
+                "name": "fl_validflg",
+                "descr": "",
+                "signals": [
+                    {"name": "fl_validflg_wr", "width": 1},
+                ],
+            },
+            {
+                "name": "fl_ready",
+                "descr": "",
+                "signals": [
+                    {"name": "fl_ready_rd", "width": 1},
+                ],
+            },
+            {
+                "name": "fl_dataout",
+                "descr": "",
+                "signals": [
+                    {"name": "fl_dataout_rd", "width": 32},
+                ],
+            },
+        ],
+        "subblocks": [
+            {
+                "core_name": "iob_csrs",
+                "instance_name": "iob_csrs",
+                "instance_description": "Control/Status Registers",
+                "csrs": [
                     {
-                        "name": "FL_RESET",
-                        "type": "W",
-                        "n_bits": 1,
-                        "rst_val": 0,
-                        "log2n_items": 0,
-                        "autoreg": True,
+                        "name": "fl_reset",
                         "descr": "FL soft reset",
-                    },
-                    {
-                        "name": "FL_DATAIN",
-                        "type": "W",
-                        "n_bits": 32,
+                        "mode": "W",
+                        "n_bits": 1,
                         "rst_val": 0,
                         "log2n_items": 0,
                         "autoreg": True,
+                    },
+                    {
+                        "name": "fl_datain",
                         "descr": "FL data_in",
-                    },
-                    {
-                        "name": "FL_ADDRESS",
-                        "type": "W",
+                        "mode": "W",
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
                         "autoreg": True,
+                    },
+                    {
+                        "name": "fl_address",
                         "descr": "FL address",
-                    },
-                    {
-                        "name": "FL_COMMAND",
-                        "type": "W",
+                        "mode": "W",
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
                         "autoreg": True,
+                    },
+                    {
+                        "name": "fl_command",
                         "descr": "FL command: [31:30]xipbit_en|[29:20]frame_struct|[19:16]dummy_cycles|[14:8]ndata_bits|[7:0]command",
-                    },
-                    {
-                        "name": "FL_COMMANDTP",
-                        "type": "W",
+                        "mode": "W",
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
                         "autoreg": True,
+                    },
+                    {
+                        "name": "fl_commandtp",
                         "descr": "FL command type: [31:30]spimode|[29:22]N/A|[21]fourbyteaddr|[20]dtr|[19:3]N/A|[2:0]commtype",
-                    },
-                    {
-                        "name": "FL_VALIDFLG",
-                        "type": "W",
-                        "n_bits": 1,
-                        "rst_val": 0,
-                        "log2n_items": 0,
-                        "autoreg": True,
-                        "descr": "FL valigflag",
-                    },
-                    {
-                        "name": "FL_READY",
-                        "type": "R",
-                        "n_bits": 1,
-                        "rst_val": 0,
-                        "log2n_items": 0,
-                        "autoreg": True,
-                        "descr": "FL ready flag",
-                    },
-                    {
-                        "name": "FL_DATAOUT",
-                        "type": "R",
+                        "mode": "W",
                         "n_bits": 32,
                         "rst_val": 0,
                         "log2n_items": 0,
                         "autoreg": True,
+                    },
+                    {
+                        "name": "fl_validflg",
+                        "descr": "FL valigflag",
+                        "mode": "W",
+                        "n_bits": 1,
+                        "rst_val": 0,
+                        "log2n_items": 0,
+                        "autoreg": True,
+                    },
+                    {
+                        "name": "fl_ready",
+                        "descr": "FL ready flag",
+                        "mode": "R",
+                        "n_bits": 1,
+                        "rst_val": 0,
+                        "log2n_items": 0,
+                        "autoreg": True,
+                    },
+                    {
+                        "name": "fl_dataout",
                         "descr": "FL data_out",
+                        "mode": "R",
+                        "n_bits": 32,
+                        "rst_val": 0,
+                        "log2n_items": 0,
+                        "autoreg": True,
                     },
                 ],
-            }
-        ]
+                "csr_if": "iob",
+                "connect": {
+                    "clk_en_rst_s": "clk_en_rst_s",
+                    # 'control_if_m' port connected automatically
+                    # Register interfaces
+                    "fl_reset_o": "fl_reset",
+                    "fl_datain_o": "fl_datain",
+                    "fl_address_o": "fl_address",
+                    "fl_command_o": "fl_command",
+                    "fl_commandtp_o": "fl_commandtp",
+                    "fl_validflg_o": "fl_validflg",
+                    "fl_ready_i": "fl_ready",
+                    "fl_dataout_i": "fl_dataout",
+                },
+            },
+            {
+                "core_name": "iob_iobuf",
+                "instantiate": False,
+            },
+        ],
+        "snippets": [
+            {
+                "verilog_code": """
+""",
+            },
+        ],
+    }
 
-    @classmethod
-    def _setup_block_groups(cls):
-        cls.block_groups += []
+    return attributes_dict
