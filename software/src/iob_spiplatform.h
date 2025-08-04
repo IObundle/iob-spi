@@ -1,7 +1,7 @@
 #pragma once
 
 #include "iob_spi_master_conf.h"
-#include "iob_spi_master_swreg.h"
+#include "iob_spi_master_csrs.h"
 
 // Functions
 

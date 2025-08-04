@@ -25,7 +25,7 @@ static int iob_spi_remove(struct platform_device *);
 
 static ssize_t iob_spi_read(struct file *, char __user *, size_t, loff_t *);
 static ssize_t iob_spi_write(struct file *, const char __user *, size_t,
-                              loff_t *);
+                             loff_t *);
 static loff_t iob_spi_llseek(struct file *, loff_t, int);
 static int iob_spi_open(struct inode *, struct file *);
 static int iob_spi_release(struct inode *, struct file *);
@@ -80,7 +80,8 @@ static int iob_spi_probe(struct platform_device *pdev) {
 
   mutex_lock(&iob_spi_master_mutex);
   if (MINOR(spi_driver.devnum) >= NUM_DEVICES) {
-    pr_err("[Driver] %s: No more devices allowed!\n", IOB_SPI_MASTER_DRIVER_NAME);
+    pr_err("[Driver] %s: No more devices allowed!\n",
+           IOB_SPI_MASTER_DRIVER_NAME);
     return -ENODEV;
   }
   mutex_unlock(&iob_spi_master_mutex);
@@ -136,12 +137,13 @@ static int iob_spi_probe(struct platform_device *pdev) {
       spi_driver.class, NULL, iob_spi_data->devnum, iob_spi_data, "%s%d",
       IOB_SPI_MASTER_DRIVER_NAME, MINOR(iob_spi_data->devnum));
   if (iob_spi_data->device == NULL) {
-    pr_err("[Driver] %s: Can not create device file!\n", IOB_SPI_MASTER_DRIVER_NAME);
+    pr_err("[Driver] %s: Can not create device file!\n",
+           IOB_SPI_MASTER_DRIVER_NAME);
     goto r_device;
   }
 
   // Associate iob_data to device
-  pdev->dev.platform_data = iob_spi_data;              // pdev functions
+  pdev->dev.platform_data = iob_spi_data;             // pdev functions
   iob_spi_data->device->platform_data = iob_spi_data; // sysfs functions
 
   result = iob_spi_master_create_device_attr_files(iob_spi_data->device);
@@ -197,8 +199,8 @@ static int __init iob_spi_init(void) {
 
   // Create device class // todo: make a dummy driver just to create and own the
   // class: https://stackoverflow.com/a/16365027/8228163
-  if ((spi_driver.class = class_create(THIS_MODULE, IOB_SPI_MASTER_DRIVER_CLASS)) ==
-      NULL) {
+  if ((spi_driver.class =
+           class_create(THIS_MODULE, IOB_SPI_MASTER_DRIVER_CLASS)) == NULL) {
     printk("Device class can not be created!\n");
     goto r_alloc_region;
   }
@@ -265,7 +267,7 @@ static int iob_spi_release(struct inode *inode, struct file *file) {
 }
 
 static ssize_t iob_spi_read(struct file *file, char __user *buf, size_t count,
-                             loff_t *ppos) {
+                            loff_t *ppos) {
   int size = 0;
   u32 value = 0;
   struct iob_data *iob_spi_data = (struct iob_data *)file->private_data;
@@ -289,10 +291,12 @@ static ssize_t iob_spi_read(struct file *file, char __user *buf, size_t count,
             value);
     break;
   case IOB_SPI_MASTER_VERSION_ADDR:
-    value = iob_data_read_reg(iob_spi_data->regbase, IOB_SPI_MASTER_VERSION_ADDR,
-                              IOB_SPI_MASTER_VERSION_W);
+    value =
+        iob_data_read_reg(iob_spi_data->regbase, IOB_SPI_MASTER_VERSION_ADDR,
+                          IOB_SPI_MASTER_VERSION_W);
     size = (IOB_SPI_MASTER_VERSION_W >> 3); // bit to bytes
-    pr_info("[Driver] %s: Read version 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME, value);
+    pr_info("[Driver] %s: Read version 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME,
+            value);
     break;
   default:
     // invalid address - no bytes read
@@ -310,7 +314,7 @@ static ssize_t iob_spi_read(struct file *file, char __user *buf, size_t count,
 }
 
 static ssize_t iob_spi_write(struct file *file, const char __user *buf,
-                              size_t count, loff_t *ppos) {
+                             size_t count, loff_t *ppos) {
   int size = 0;
   u32 value = 0;
   struct iob_data *iob_spi_data = (struct iob_data *)file->private_data;
@@ -321,61 +325,65 @@ static ssize_t iob_spi_write(struct file *file, const char __user *buf,
     if (read_user_data(buf, size, &value))
       return -EFAULT;
     iob_data_write_reg(iob_spi_data->regbase, value,
-                       IOB_SPI_MASTER_FL_RESET_ADDR,
-                       IOB_SPI_MASTER_FL_RESET_W);
-    pr_info("[Driver] %s: FL_RESET iob_spi: 0x%x\n",
-            IOB_SPI_MASTER_DRIVER_NAME, value);
+                       IOB_SPI_MASTER_FL_RESET_ADDR, IOB_SPI_MASTER_FL_RESET_W);
+    pr_info("[Driver] %s: FL_RESET iob_spi: 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME,
+            value);
     break;
   case IOB_SPI_MASTER_FL_DATAIN_ADDR:
     size = (IOB_SPI_MASTER_FL_DATAIN_W >> 3); // bit to bytes
     if (read_user_data(buf, size, &value))
       return -EFAULT;
-    iob_data_write_reg(iob_spi_data->regbase, value, IOB_SPI_MASTER_FL_DATAIN_ADDR,
+    iob_data_write_reg(iob_spi_data->regbase, value,
+                       IOB_SPI_MASTER_FL_DATAIN_ADDR,
                        IOB_SPI_MASTER_FL_DATAIN_W);
-    pr_info("[Driver] %s: FL_DATAIN iob_spi: 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME,
-            value);
+    pr_info("[Driver] %s: FL_DATAIN iob_spi: 0x%x\n",
+            IOB_SPI_MASTER_DRIVER_NAME, value);
     break;
   case IOB_SPI_MASTER_FL_ADDRESS_ADDR:
     size = (IOB_SPI_MASTER_FL_ADDRESS_W >> 3); // bit to bytes
     if (read_user_data(buf, size, &value))
       return -EFAULT;
-    iob_data_write_reg(iob_spi_data->regbase, value, IOB_SPI_MASTER_FL_ADDRESS_ADDR,
+    iob_data_write_reg(iob_spi_data->regbase, value,
+                       IOB_SPI_MASTER_FL_ADDRESS_ADDR,
                        IOB_SPI_MASTER_FL_ADDRESS_W);
-    pr_info("[Driver] %s: FL_ADDRESS iob_spi: 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME,
-            value);
+    pr_info("[Driver] %s: FL_ADDRESS iob_spi: 0x%x\n",
+            IOB_SPI_MASTER_DRIVER_NAME, value);
     break;
   case IOB_SPI_MASTER_FL_COMMAND_ADDR:
     size = (IOB_SPI_MASTER_FL_COMMAND_W >> 3); // bit to bytes
     if (read_user_data(buf, size, &value))
       return -EFAULT;
-    iob_data_write_reg(iob_spi_data->regbase, value, IOB_SPI_MASTER_FL_COMMAND_ADDR,
+    iob_data_write_reg(iob_spi_data->regbase, value,
+                       IOB_SPI_MASTER_FL_COMMAND_ADDR,
                        IOB_SPI_MASTER_FL_COMMAND_W);
-    pr_info("[Driver] %s: FL_COMMAND iob_spi: 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME,
-            value);
+    pr_info("[Driver] %s: FL_COMMAND iob_spi: 0x%x\n",
+            IOB_SPI_MASTER_DRIVER_NAME, value);
     break;
   case IOB_SPI_MASTER_FL_COMMANDTP_ADDR:
     size = (IOB_SPI_MASTER_FL_COMMANDTP_W >> 3); // bit to bytes
     if (read_user_data(buf, size, &value))
       return -EFAULT;
-    iob_data_write_reg(iob_spi_data->regbase, value, IOB_SPI_MASTER_FL_COMMANDTP_ADDR,
+    iob_data_write_reg(iob_spi_data->regbase, value,
+                       IOB_SPI_MASTER_FL_COMMANDTP_ADDR,
                        IOB_SPI_MASTER_FL_COMMANDTP_W);
-    pr_info("[Driver] %s: FL_COMMANDTP iob_spi: 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME,
-            value);
+    pr_info("[Driver] %s: FL_COMMANDTP iob_spi: 0x%x\n",
+            IOB_SPI_MASTER_DRIVER_NAME, value);
     break;
   case IOB_SPI_MASTER_FL_VALIDFLG_ADDR:
     size = (IOB_SPI_MASTER_FL_VALIDFLG_W >> 3); // bit to bytes
     if (read_user_data(buf, size, &value))
       return -EFAULT;
-    iob_data_write_reg(iob_spi_data->regbase, value, IOB_SPI_MASTER_FL_VALIDFLG_ADDR,
+    iob_data_write_reg(iob_spi_data->regbase, value,
+                       IOB_SPI_MASTER_FL_VALIDFLG_ADDR,
                        IOB_SPI_MASTER_FL_VALIDFLG_W);
-    pr_info("[Driver] %s: FL_VALIDFLG iob_spi: 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME,
-            value);
+    pr_info("[Driver] %s: FL_VALIDFLG iob_spi: 0x%x\n",
+            IOB_SPI_MASTER_DRIVER_NAME, value);
     break;
   default:
-      pr_info("[Driver] %s: Invalid write address 0x%x\n", IOB_SPI_MASTER_DRIVER_NAME,
-              (unsigned int)*ppos);
-      // invalid address - no bytes written
-      return 0;
+    pr_info("[Driver] %s: Invalid write address 0x%x\n",
+            IOB_SPI_MASTER_DRIVER_NAME, (unsigned int)*ppos);
+    // invalid address - no bytes written
+    return 0;
   }
 
   return count;
@@ -396,7 +404,7 @@ static loff_t iob_spi_llseek(struct file *filp, loff_t offset, int whence) {
     new_pos = filp->f_pos + offset;
     break;
   case SEEK_END:
-    new_pos = (1 << IOB_SPI_MASTER_SWREG_ADDR_W) + offset;
+    new_pos = (1 << IOB_SPI_MASTER_CSRS_CSRS_ADDR_W) + offset;
     break;
   default:
     return -EINVAL;
