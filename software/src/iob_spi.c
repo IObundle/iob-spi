@@ -1,6 +1,6 @@
-#include "iob-spi.h"
-#include "iob-spidefs.h"
-#include "iob-spiplatform.h"
+#include "iob_spi.h"
+#include "iob_spidefs.h"
+#include "iob_spiplatform.h"
 #include "stdint.h"
 #include <stddef.h>
 
@@ -458,7 +458,6 @@ void spiflash_erase_subsector(unsigned int subsector_address) {
   do {
     spiflash_readStatusReg(&statusReg);
   } while ((statusReg & 0x01));
-
 }
 
 void spiflash_erase_sector(unsigned int sector_address) {
@@ -479,44 +478,45 @@ void spiflash_erase_sector(unsigned int sector_address) {
   do {
     spiflash_readStatusReg(&statusReg);
   } while ((statusReg & 0x01));
-
 }
 
-void spiflash_erase_address_range(unsigned int start, unsigned int size){
-    unsigned int end_addr = start + size - 1;
-    int full_sector_first = ((start + SECTOR_SIZE - 1) / SECTOR_SIZE);
-    int full_sector_last = ((end_addr + 1) / SECTOR_SIZE) - 1;
-    int pre_subsector_first = start / SUBSECTOR_SIZE;
-    int pre_subsector_last =
-        ((full_sector_first * SECTOR_SIZE) - 1) / SUBSECTOR_SIZE;
-    int post_subsector_first =
-        ((full_sector_last + 1) * SECTOR_SIZE) / SUBSECTOR_SIZE;
-    int post_subsector_last = end_addr / SUBSECTOR_SIZE;
-    int sector = 0, subsector = 0;
+void spiflash_erase_address_range(unsigned int start, unsigned int size) {
+  unsigned int end_addr = start + size - 1;
+  int full_sector_first = ((start + SECTOR_SIZE - 1) / SECTOR_SIZE);
+  int full_sector_last = ((end_addr + 1) / SECTOR_SIZE) - 1;
+  int pre_subsector_first = start / SUBSECTOR_SIZE;
+  int pre_subsector_last =
+      ((full_sector_first * SECTOR_SIZE) - 1) / SUBSECTOR_SIZE;
+  int post_subsector_first =
+      ((full_sector_last + 1) * SECTOR_SIZE) / SUBSECTOR_SIZE;
+  int post_subsector_last = end_addr / SUBSECTOR_SIZE;
+  int sector = 0, subsector = 0;
 
-    int min_subsector = start / SUBSECTOR_SIZE;
-    int max_subsector = end_addr / SUBSECTOR_SIZE;
+  int min_subsector = start / SUBSECTOR_SIZE;
+  int max_subsector = end_addr / SUBSECTOR_SIZE;
 
-    // limit for cases without sector erase
-    if (pre_subsector_last > max_subsector) {
-      pre_subsector_last = max_subsector;
-    }
-    if (post_subsector_first < min_subsector) {
-      post_subsector_first = min_subsector;
-    }
+  // limit for cases without sector erase
+  if (pre_subsector_last > max_subsector) {
+    pre_subsector_last = max_subsector;
+  }
+  if (post_subsector_first < min_subsector) {
+    post_subsector_first = min_subsector;
+  }
 
-    // erase subsectors at address range start
-    for(subsector=pre_subsector_first;subsector<=pre_subsector_last;subsector++){
-        spiflash_erase_subsector(subsector*SUBSECTOR_SIZE);
-    }
+  // erase subsectors at address range start
+  for (subsector = pre_subsector_first; subsector <= pre_subsector_last;
+       subsector++) {
+    spiflash_erase_subsector(subsector * SUBSECTOR_SIZE);
+  }
 
-    // erase complete sectors in address range
-    for(sector=full_sector_first; sector<=full_sector_last;sector++){
-        spiflash_erase_sector(sector*SECTOR_SIZE);
-    }
-    
-    // erase subsectors at address range end
-    for(subsector=post_subsector_first;subsector<=post_subsector_last;subsector++){
-        spiflash_erase_subsector(subsector*SUBSECTOR_SIZE);
-    }
+  // erase complete sectors in address range
+  for (sector = full_sector_first; sector <= full_sector_last; sector++) {
+    spiflash_erase_sector(sector * SECTOR_SIZE);
+  }
+
+  // erase subsectors at address range end
+  for (subsector = post_subsector_first; subsector <= post_subsector_last;
+       subsector++) {
+    spiflash_erase_subsector(subsector * SUBSECTOR_SIZE);
+  }
 }

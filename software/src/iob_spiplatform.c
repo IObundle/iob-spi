@@ -1,48 +1,48 @@
-#include "iob-spiplatform.h"
-#include "iob-spidefs.h"
+#include "iob_spiplatform.h"
+#include "iob_spidefs.h"
 #include <stddef.h>
 #include <stdint.h>
 
 // SET
 void spiflash_reset() {
-  IOB_SPI_MASTER_SET_FL_RESET(1); // soft reset
-  IOB_SPI_MASTER_SET_FL_RESET(0);
+  iob_spi_master_csrs_set_fl_reset(1); // soft reset
+  iob_spi_master_csrs_set_fl_reset(0);
 }
 
 void spiflash_setDATAIN(unsigned int datain) {
-  IOB_SPI_MASTER_SET_FL_DATAIN(datain);
+  iob_spi_master_csrs_set_fl_datain(datain);
 }
 
 void spiflash_setADDRESS(unsigned int address) {
-  IOB_SPI_MASTER_SET_FL_ADDRESS(address);
+  iob_spi_master_csrs_set_fl_address(address);
 }
 
 void spiflash_setCOMMAND(unsigned int command) {
-  IOB_SPI_MASTER_SET_FL_COMMAND(command);
+  iob_spi_master_csrs_set_fl_command(command);
 }
 
 void spiflash_setCOMMTYPE(unsigned int commtype) {
-  IOB_SPI_MASTER_SET_FL_COMMANDTP(commtype);
+  iob_spi_master_csrs_set_fl_commandtp(commtype);
 }
 
 void spiflash_setVALIDIN(unsigned int validin) {
-  IOB_SPI_MASTER_SET_FL_VALIDFLG(validin);
+  iob_spi_master_csrs_set_fl_validflg(validin);
 }
 
 // GET
 unsigned int spiflash_getDATAOUT() {
   unsigned int dataout;
-  dataout = (unsigned int)IOB_SPI_MASTER_GET_FL_DATAOUT();
+  dataout = (unsigned int)iob_spi_master_csrs_get_fl_dataout();
   return dataout;
 }
 
 inline unsigned spiflash_getREADY() {
-  return (unsigned int)IOB_SPI_MASTER_GET_FL_READY();
+  return (unsigned int)iob_spi_master_csrs_get_fl_ready();
 }
 
 // Higher functions
 void spiflash_init(int base_address) {
-  IOB_SPI_MASTER_INIT_BASEADDR(base_address);
+  iob_spi_master_csrs_init_baseaddr(base_address);
 }
 
 void spiflash_executecommand(int typecode, unsigned int datain,
