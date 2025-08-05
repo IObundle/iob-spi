@@ -65,13 +65,6 @@ def setup(py_params_dict):
                     "type": "iob_clk",
                 },
             },
-            {
-                "name": "iob_s",
-                "descr": "CPU native interface",
-                "signals": {
-                    "type": "iob",
-                },
-            },
             # { FIXME: Find alternative for 'if_defined'
             #     "name": "cache_iob_s",
             #     "descr": "Cache interface.",
