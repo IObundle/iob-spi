@@ -143,10 +143,10 @@ def setup(py_params_dict):
                 ],
             },
             {
-                "name": "fl_commandtp",
+                "name": "fl_command_type",
                 "descr": "",
                 "signals": [
-                    {"name": "fl_commandtp_wr", "width": 32},
+                    {"name": "fl_command_type_wr", "width": 32},
                 ],
             },
             {
@@ -210,7 +210,7 @@ def setup(py_params_dict):
                         "log2n_items": 0,
                     },
                     {
-                        "name": "fl_commandtp",
+                        "name": "fl_command_type",
                         "descr": "FL command type: [31:30]spimode|[29:22]N/A|[21]fourbyteaddr|[20]dtr|[19:3]N/A|[2:0]commtype",
                         "mode": "W",
                         "n_bits": 32,
@@ -251,7 +251,7 @@ def setup(py_params_dict):
                     "fl_datain_o": "fl_datain",
                     "fl_address_o": "fl_address",
                     "fl_command_o": "fl_command",
-                    "fl_commandtp_o": "fl_commandtp",
+                    "fl_command_type_o": "fl_command_type",
                     "fl_validflg_o": "fl_validflg",
                     "fl_ready_i": "fl_ready",
                     "fl_dataout_i": "fl_dataout",

@@ -22,7 +22,7 @@ void spiflash_setCOMMAND(unsigned int command) {
 }
 
 void spiflash_setCOMMTYPE(unsigned int commtype) {
-  iob_spi_master_csrs_set_fl_commandtp(commtype);
+  iob_spi_master_csrs_set_fl_command_type(commtype);
 }
 
 void spiflash_setVALIDIN(unsigned int validin) {
