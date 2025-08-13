@@ -28,7 +28,7 @@ def setup(py_params_dict):
                 "name": "ADDR_W",
                 "descr": "Address bus width",
                 "type": "P",
-                "val": "`IOB_SPI_MASTER_CSRS_CSRS_ADDR_W",
+                "val": "`IOB_SPI_MASTER_CSRS_ADDR_W",
                 "min": "NA",
                 "max": "NA",
             },
@@ -36,7 +36,7 @@ def setup(py_params_dict):
                 "name": "FL_ADDR_W",
                 "descr": "",
                 "type": "P",
-                "val": "`IOB_SPI_MASTER_CSRS_CSRS_ADDR_W",
+                "val": "`IOB_SPI_MASTER_CSRS_ADDR_W",
                 "min": "NA",
                 "max": "NA",
             },
@@ -48,6 +48,14 @@ def setup(py_params_dict):
                 "min": "NA",
                 "max": "NA",
             },
+            {  # For iob_iobuf
+                "name": "FPGA_TOOL",
+                "descr": "Use IPs from fpga tool. Avaliable options: 'XILINX', 'other'.",
+                "type": "P",
+                "val": '"XILINX"',
+                "min": "NA",
+                "max": "NA",
+            },
         ],
         "ports": [
             {
@@ -55,13 +63,6 @@ def setup(py_params_dict):
                 "descr": "Clock, clock enable and reset",
                 "signals": {
                     "type": "iob_clk",
-                },
-            },
-            {
-                "name": "iob_s",
-                "descr": "CPU native interface",
-                "signals": {
-                    "type": "iob",
                 },
             },
             # { FIXME: Find alternative for 'if_defined'
@@ -142,10 +143,10 @@ def setup(py_params_dict):
                 ],
             },
             {
-                "name": "fl_commandtp",
+                "name": "fl_command_type",
                 "descr": "",
                 "signals": [
-                    {"name": "fl_commandtp_wr", "width": 32},
+                    {"name": "fl_command_type_wr", "width": 32},
                 ],
             },
             {
@@ -209,7 +210,7 @@ def setup(py_params_dict):
                         "log2n_items": 0,
                     },
                     {
-                        "name": "fl_commandtp",
+                        "name": "fl_command_type",
                         "descr": "FL command type: [31:30]spimode|[29:22]N/A|[21]fourbyteaddr|[20]dtr|[19:3]N/A|[2:0]commtype",
                         "mode": "W",
                         "n_bits": 32,
@@ -250,7 +251,7 @@ def setup(py_params_dict):
                     "fl_datain_o": "fl_datain",
                     "fl_address_o": "fl_address",
                     "fl_command_o": "fl_command",
-                    "fl_commandtp_o": "fl_commandtp",
+                    "fl_command_type_o": "fl_command_type",
                     "fl_validflg_o": "fl_validflg",
                     "fl_ready_i": "fl_ready",
                     "fl_dataout_i": "fl_dataout",

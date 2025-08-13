@@ -1,7 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "iob_spi_master_conf.vh"
-`include "iob_spi_master_csrs_def.vh"
+`include "iob_spi_master_csrs_conf.vh"
 
 `ifdef FLASH_ADDR_W
 `define FLASH_CACHE_ADDR_W `FLASH_ADDR_W
@@ -76,42 +76,50 @@ module iob_spi_master #(
    wire dq0_tri_in;
    wire dq0_tri_en;
    wire dq0_tri_out;
-   iob_iobuf dq0_buf (
-      .i_i(dq0_tri_in),
-      .t_i(dq0_tri_en),
-      .n_i(1'b0),
-      .o_o(dq0_tri_out),
-      .io (mosi_io)
+   iob_iobuf #(
+      .FPGA_TOOL(FPGA_TOOL)
+   ) dq0_buf (
+      .i_i  (dq0_tri_in),
+      .t_i  (dq0_tri_en),
+      .n_i  (1'b0),
+      .o_o  (dq0_tri_out),
+      .io_io(mosi_io)
    );
    wire dq1_tri_in;
    wire dq1_tri_en;
    wire dq1_tri_out;
-   iob_iobuf dq1_buf (
-      .i_i(dq1_tri_in),
-      .t_i(dq1_tri_en),
-      .n_i(1'b0),
-      .o_o(dq1_tri_out),
-      .io (miso_io)
+   iob_iobuf #(
+      .FPGA_TOOL(FPGA_TOOL)
+   ) dq1_buf (
+      .i_i  (dq1_tri_in),
+      .t_i  (dq1_tri_en),
+      .n_i  (1'b0),
+      .o_o  (dq1_tri_out),
+      .io_io(miso_io)
    );
    wire dq2_tri_in;
    wire dq2_tri_en;
    wire dq2_tri_out;
-   iob_iobuf dq2_buf (
-      .i_i(dq2_tri_in),
-      .t_i(dq2_tri_en),
-      .n_i(1'b0),
-      .o_o(dq2_tri_out),
-      .io (wp_n_io)
+   iob_iobuf #(
+      .FPGA_TOOL(FPGA_TOOL)
+   ) dq2_buf (
+      .i_i  (dq2_tri_in),
+      .t_i  (dq2_tri_en),
+      .n_i  (1'b0),
+      .o_o  (dq2_tri_out),
+      .io_io(wp_n_io)
    );
    wire dq3_tri_in;
    wire dq3_tri_en;
    wire dq3_tri_out;
-   iob_iobuf dq3_buf (
-      .i_i(dq3_tri_in),
-      .t_i(dq3_tri_en),
-      .n_i(1'b0),
-      .o_o(dq3_tri_out),
-      .io (hold_n_io)
+   iob_iobuf #(
+      .FPGA_TOOL(FPGA_TOOL)
+   ) dq3_buf (
+      .i_i  (dq3_tri_in),
+      .t_i  (dq3_tri_en),
+      .n_i  (1'b0),
+      .o_o  (dq3_tri_out),
+      .io_io(hold_n_io)
    );
 
    //Instantiate core
@@ -129,10 +137,10 @@ module iob_spi_master #(
       .dummy_cycles_i   (fl_command_wr[19:16]),
       .frame_struct_i   (fl_command_wr[29:20]),
       .xipbit_en_i      (fl_command_wr[31:30]),
-      .commtype_i       (fl_commandtP_wr[2:0]),
-      .dtr_en_i         (fl_commandtP_wr[20]),
-      .fourbyteaddr_on_i(fl_commandtP_wr[21]),
-      .spimode_i        (fl_commandtP_wr[31:30]),
+      .commtype_i       (fl_command_type_wr[2:0]),
+      .dtr_en_i         (fl_command_type_wr[20]),
+      .fourbyteaddr_on_i(fl_command_type_wr[21]),
+      .spimode_i        (fl_command_type_wr[31:30]),
       .validflag_i      (valid_int),
       .tready_o         (readyflash_int),
 

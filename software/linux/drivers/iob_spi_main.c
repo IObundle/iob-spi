@@ -359,14 +359,14 @@ static ssize_t iob_spi_write(struct file *file, const char __user *buf,
     pr_info("[Driver] %s: FL_COMMAND iob_spi: 0x%x\n",
             IOB_SPI_MASTER_DRIVER_NAME, value);
     break;
-  case IOB_SPI_MASTER_FL_COMMANDTP_ADDR:
-    size = (IOB_SPI_MASTER_FL_COMMANDTP_W >> 3); // bit to bytes
+  case IOB_SPI_MASTER_FL_COMMAND_TYPE_ADDR:
+    size = (IOB_SPI_MASTER_FL_COMMAND_TYPE_W >> 3); // bit to bytes
     if (read_user_data(buf, size, &value))
       return -EFAULT;
     iob_data_write_reg(iob_spi_data->regbase, value,
-                       IOB_SPI_MASTER_FL_COMMANDTP_ADDR,
-                       IOB_SPI_MASTER_FL_COMMANDTP_W);
-    pr_info("[Driver] %s: FL_COMMANDTP iob_spi: 0x%x\n",
+                       IOB_SPI_MASTER_FL_COMMAND_TYPE_ADDR,
+                       IOB_SPI_MASTER_FL_COMMAND_TYPE_W);
+    pr_info("[Driver] %s: FL_COMMAND_TYPE iob_spi: 0x%x\n",
             IOB_SPI_MASTER_DRIVER_NAME, value);
     break;
   case IOB_SPI_MASTER_FL_VALIDFLG_ADDR:
@@ -404,7 +404,7 @@ static loff_t iob_spi_llseek(struct file *filp, loff_t offset, int whence) {
     new_pos = filp->f_pos + offset;
     break;
   case SEEK_END:
-    new_pos = (1 << IOB_SPI_MASTER_CSRS_CSRS_ADDR_W) + offset;
+    new_pos = (1 << IOB_SPI_MASTER_CSRS_ADDR_W) + offset;
     break;
   default:
     return -EINVAL;
