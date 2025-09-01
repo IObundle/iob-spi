@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------------
-# IOb_spi Example Constrain File
+# IOb_spi Example Constraint File
 #
 # This file contains the SPI core constraints for the AES-KU040-DB-G board.
 # ----------------------------------------------------------------------------
