@@ -27,7 +27,7 @@ def setup(py_params_dict):
             {
                 "name": "ADDR_W",
                 "descr": "Address bus width",
-                "type": "P",
+                "type": "D",
                 "val": "`IOB_SPI_MASTER_CSRS_ADDR_W",
                 "min": "NA",
                 "max": "NA",
@@ -35,7 +35,7 @@ def setup(py_params_dict):
             {
                 "name": "FL_ADDR_W",
                 "descr": "",
-                "type": "P",
+                "type": "D",
                 "val": "`IOB_SPI_MASTER_CSRS_ADDR_W",
                 "min": "NA",
                 "max": "NA",
