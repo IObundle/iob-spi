@@ -262,6 +262,12 @@ def setup(py_params_dict):
                 "instantiate": False,
             },
         ],
+        "sw_modules": [
+            # Software modules
+            {
+                "core_name": "iob_linux_device_drivers",
+            },
+        ],
         "snippets": [
             {
                 "verilog_code": """
