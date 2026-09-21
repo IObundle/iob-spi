@@ -173,7 +173,7 @@ def setup(py_params_dict):
         ],
         "subblocks": [
             {
-                "core_name": "iob_csrs",
+                "core": "iob_csrs",
                 "instance_name": "csrs",
                 "instance_description": "Control/Status Registers",
                 "csrs": [
@@ -258,14 +258,14 @@ def setup(py_params_dict):
                 },
             },
             {
-                "core_name": "iob_iobuf",
+                "core": "iob_iobuf",
                 "instantiate": False,
             },
         ],
         "sw_modules": [
             # Software modules
             {
-                "core_name": "iob_linux_device_drivers",
+                "core": "iob_linux_device_drivers",
             },
         ],
         "snippets": [
